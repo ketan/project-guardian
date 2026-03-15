@@ -23,10 +23,12 @@ export const MqttPublisherInput = zod.object({
   "includeHistoryWindowMinutes": zod.number().min(1).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
-  "brokerUrl": zod.url(),
+  "brokerUrl": zod.string(),
   "topic": zod.string(),
   "username": zod.string(),
   "password": zod.string().optional()
+})).and(zod.object({
+  "type": zod.enum(['mqtt'])
 }))
 
 export type MqttPublisherInput = zod.input<typeof MqttPublisherInput>;

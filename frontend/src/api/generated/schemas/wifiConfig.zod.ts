@@ -16,7 +16,7 @@ export const WifiConfig = zod.object({
   "ssid": zod.string(),
   "password": zod.string().optional(),
   "passwordConfigured": zod.boolean().optional(),
-  "allowedOrigins": zod.array(zod.url()).optional()
+  "allowedOrigins": zod.array(zod.string()).optional()
 })
 
 export type WifiConfig = zod.input<typeof WifiConfig>;

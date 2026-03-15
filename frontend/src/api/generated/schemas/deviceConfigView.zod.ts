@@ -100,7 +100,7 @@ export const DeviceConfigView = zod.object({
   "ssid": zod.string(),
   "password": zod.string().optional(),
   "passwordConfigured": zod.boolean().optional(),
-  "allowedOrigins": zod.array(zod.url()).optional()
+  "allowedOrigins": zod.array(zod.string()).optional()
 }),
   "cellular": zod.object({
   "enabled": zod.boolean(),
@@ -120,7 +120,7 @@ export const DeviceConfigView = zod.object({
 }),
   "webUi": zod.object({
   "tokenTtlMinutes": zod.number().min(1).max(deviceConfigViewWebUiTokenTtlMinutesMax).default(deviceConfigViewWebUiTokenTtlMinutesDefault),
-  "allowedOrigins": zod.array(zod.url())
+  "allowedOrigins": zod.array(zod.string())
 }),
   "sensors": zod.array(zod.object({
   "id": zod.string(),
@@ -140,6 +140,8 @@ export const DeviceConfigView = zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['wunderground'])
 })),zod.object({
   "id": zod.string(),
   "type": zod.string(),
@@ -150,6 +152,8 @@ export const DeviceConfigView = zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['windy'])
 })),zod.object({
   "id": zod.string(),
   "type": zod.string(),
@@ -158,8 +162,10 @@ export const DeviceConfigView = zod.object({
   "includeHistoryWindowMinutes": zod.number().min(1).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
-  "endpoint": zod.url(),
+  "endpoint": zod.string(),
   "authHeaderConfigured": zod.boolean().optional()
+})).and(zod.object({
+  "type": zod.enum(['webhook'])
 })),zod.object({
   "id": zod.string(),
   "type": zod.string(),
@@ -168,10 +174,12 @@ export const DeviceConfigView = zod.object({
   "includeHistoryWindowMinutes": zod.number().min(1).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
-  "brokerUrl": zod.url(),
+  "brokerUrl": zod.string(),
   "topic": zod.string(),
   "username": zod.string(),
   "passwordConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['mqtt'])
 }))]))
 })
 

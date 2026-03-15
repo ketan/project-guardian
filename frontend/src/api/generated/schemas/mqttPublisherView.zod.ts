@@ -23,10 +23,12 @@ export const MqttPublisherView = zod.object({
   "includeHistoryWindowMinutes": zod.number().min(1).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
-  "brokerUrl": zod.url(),
+  "brokerUrl": zod.string(),
   "topic": zod.string(),
   "username": zod.string(),
   "passwordConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['mqtt'])
 }))
 
 export type MqttPublisherView = zod.input<typeof MqttPublisherView>;

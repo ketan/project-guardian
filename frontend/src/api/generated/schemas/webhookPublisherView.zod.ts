@@ -23,8 +23,10 @@ export const WebhookPublisherView = zod.object({
   "includeHistoryWindowMinutes": zod.number().min(1).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
-  "endpoint": zod.url(),
+  "endpoint": zod.string(),
   "authHeaderConfigured": zod.boolean().optional()
+})).and(zod.object({
+  "type": zod.enum(['webhook'])
 }))
 
 export type WebhookPublisherView = zod.input<typeof WebhookPublisherView>;

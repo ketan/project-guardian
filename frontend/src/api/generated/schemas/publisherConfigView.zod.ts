@@ -34,6 +34,8 @@ export const PublisherConfigView = zod.union([zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['wunderground'])
 })),zod.object({
   "id": zod.string(),
   "type": zod.string(),
@@ -44,6 +46,8 @@ export const PublisherConfigView = zod.union([zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['windy'])
 })),zod.object({
   "id": zod.string(),
   "type": zod.string(),
@@ -52,8 +56,10 @@ export const PublisherConfigView = zod.union([zod.object({
   "includeHistoryWindowMinutes": zod.number().min(1).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
-  "endpoint": zod.url(),
+  "endpoint": zod.string(),
   "authHeaderConfigured": zod.boolean().optional()
+})).and(zod.object({
+  "type": zod.enum(['webhook'])
 })),zod.object({
   "id": zod.string(),
   "type": zod.string(),
@@ -62,10 +68,12 @@ export const PublisherConfigView = zod.union([zod.object({
   "includeHistoryWindowMinutes": zod.number().min(1).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
-  "brokerUrl": zod.url(),
+  "brokerUrl": zod.string(),
   "topic": zod.string(),
   "username": zod.string(),
   "passwordConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['mqtt'])
 }))])
 
 export type PublisherConfigView = zod.input<typeof PublisherConfigView>;

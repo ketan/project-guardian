@@ -17,7 +17,7 @@ export const webUiConfigTokenTtlMinutesMax = 1440;
 
 export const WebUiConfig = zod.object({
   "tokenTtlMinutes": zod.number().min(1).max(webUiConfigTokenTtlMinutesMax).default(webUiConfigTokenTtlMinutesDefault),
-  "allowedOrigins": zod.array(zod.url())
+  "allowedOrigins": zod.array(zod.string())
 })
 
 export type WebUiConfig = zod.input<typeof WebUiConfig>;

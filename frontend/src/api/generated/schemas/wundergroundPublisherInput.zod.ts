@@ -25,6 +25,8 @@ export const WundergroundPublisherInput = zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
   "apiKey": zod.string().optional()
+})).and(zod.object({
+  "type": zod.enum(['wunderground'])
 }))
 
 export type WundergroundPublisherInput = zod.input<typeof WundergroundPublisherInput>;

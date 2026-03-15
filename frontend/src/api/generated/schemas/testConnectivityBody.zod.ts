@@ -13,7 +13,7 @@ import { z as zod } from 'zod';
 
 export const TestConnectivityBody = zod.object({
   "transport": zod.enum(['auto', 'wifi', 'cellular']).optional(),
-  "targetUrl": zod.url().optional()
+  "targetUrl": zod.string().optional()
 })
 
 export type TestConnectivityBody = zod.input<typeof TestConnectivityBody>;

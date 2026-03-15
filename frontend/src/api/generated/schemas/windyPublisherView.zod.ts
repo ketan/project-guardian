@@ -25,6 +25,8 @@ export const WindyPublisherView = zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
+})).and(zod.object({
+  "type": zod.enum(['windy'])
 }))
 
 export type WindyPublisherView = zod.input<typeof WindyPublisherView>;

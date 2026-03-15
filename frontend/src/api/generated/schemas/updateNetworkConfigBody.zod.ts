@@ -18,7 +18,7 @@ export const UpdateNetworkConfigBody = zod.object({
   "ssid": zod.string(),
   "password": zod.string().optional(),
   "passwordConfigured": zod.boolean().optional(),
-  "allowedOrigins": zod.array(zod.url()).optional()
+  "allowedOrigins": zod.array(zod.string()).optional()
 }),
   "cellular": zod.object({
   "enabled": zod.boolean(),

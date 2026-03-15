@@ -4,7 +4,6 @@ import {
   Alert,
   AppShell,
   Badge,
-  Box,
   Burger,
   Button,
   Container,
@@ -22,6 +21,7 @@ import { UiConfigSchema, type UiConfig, type UiPublisher } from "./api/contracts
 import type { DeviceConfig } from "./types/ui";
 import { NavigationPanel } from "./components/NavigationPanel";
 import { SummaryCards } from "./components/SummaryCards";
+import { BackendConnectionSection } from "./components/sections/BackendConnectionSection";
 import { HealthSection } from "./components/sections/HealthSection";
 import { NetworkSection } from "./components/sections/NetworkSection";
 import { PublishersSection } from "./components/sections/PublishersSection";
@@ -31,6 +31,7 @@ import { SmoothingSection } from "./components/sections/SmoothingSection";
 import { SmsAdminSection } from "./components/sections/SmsAdminSection";
 import { StationSection } from "./components/sections/StationSection";
 import { initialConfig, initialStatus, navItems } from "./data/mockDevice";
+import { useApiConnectionSettings } from "./hooks/useApiConnectionSettings";
 import { useDeviceConfig, useSequentialConfigSave } from "./hooks/useDeviceConfig";
 
 function deepEqual(left: unknown, right: unknown) {
@@ -41,8 +42,12 @@ function App() {
   const [opened, { toggle, close }] = useDisclosure(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const status = initialStatus;
-  const { config: loadedConfig, isLoading, loadError, reload } = useDeviceConfig();
-  const { save, isSaving, saveError, savingSection, lastSavedAt } = useSequentialConfigSave();
+  const { settings: apiSettings, normalizedBaseUrl, updateApiKey, updateBaseUrl } =
+    useApiConnectionSettings();
+  const { config: loadedConfig, isLoading, loadError, reload, canConnect } =
+    useDeviceConfig(apiSettings);
+  const { save, isSaving, saveError, savingSection, lastSavedAt } =
+    useSequentialConfigSave(apiSettings);
 
   const {
     watch,
@@ -153,7 +158,7 @@ function App() {
             <Button
               leftSection={isSaving ? <Loader color="currentColor" size={14} /> : <FiSave />}
               color="teal"
-              disabled={isLoading}
+              disabled={isLoading || !canConnect}
               loading={isSaving}
               onClick={() => void onSubmit()}
             >
@@ -177,6 +182,14 @@ function App() {
                 pilots can compare against forecast models over the last few days.
               </Text>
             </Stack>
+
+            {!canConnect ? (
+              <Alert color="blue" title="Backend connection required" variant="light">
+                <Text size="sm">
+                  Enter both the backend API base URL and API key below to load and save device configuration.
+                </Text>
+              </Alert>
+            ) : null}
 
             {loadError ? (
               <Alert
@@ -214,7 +227,14 @@ function App() {
               </Alert>
             ) : null}
 
-            <Box pos="relative">
+            <Stack gap="lg">
+              <BackendConnectionSection
+                settings={apiSettings}
+                normalizedBaseUrl={normalizedBaseUrl}
+                updateApiKey={updateApiKey}
+                updateBaseUrl={updateBaseUrl}
+              />
+
               {isLoading ? (
                 <Group justify="center" py="xl">
                   <Loader size="lg" />
@@ -259,7 +279,7 @@ function App() {
                   </>
                 )
               )}
-            </Box>
+            </Stack>
           </Stack>
         </Container>
       </AppShell.Main>
