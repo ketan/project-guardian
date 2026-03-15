@@ -22,6 +22,7 @@ export const initialConfig: UiConfig = {
   station: {
     stationName: "Kamshet Ridge Station",
     timezone: "Asia/Kolkata",
+    locationFromGPS: false,
     location: {
       latitude: 18.758,
       longitude: 73.536,
@@ -191,4 +192,3 @@ export const initialStatus: DeviceStatus = {
     },
   ],
 };
-

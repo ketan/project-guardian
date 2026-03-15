@@ -339,13 +339,15 @@ components:
       required:
         - stationName
         - timezone
-        - location
+        - locationFromGPS
       properties:
         stationName:
           type: string
         timezone:
           type: string
           examples: [Asia/Kolkata]
+        locationFromGPS:
+          type: boolean
         location:
           $ref: '#/components/schemas/GeoLocation'
         notes:

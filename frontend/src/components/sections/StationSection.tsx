@@ -1,4 +1,4 @@
-import { Badge, Grid, NumberInput, TextInput, Textarea } from "@mantine/core";
+import { Badge, Grid, NumberInput, SegmentedControl, Stack, Text, TextInput, Textarea } from "@mantine/core";
 import { SectionCard } from "../SectionCard";
 import type { DeviceConfig, UiConfig } from "../../types/ui";
 
@@ -12,6 +12,13 @@ type StationSectionProps = {
 };
 
 export function StationSection({ config, updateStationField, setConfig }: StationSectionProps) {
+  const autoGps = config.station.locationFromGPS;
+  const manualLocation = config.station.location ?? {
+    latitude: 0,
+    longitude: 0,
+    elevationMeters: 0,
+  };
+
   return (
     <SectionCard
       id="station"
@@ -36,18 +43,42 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
             onChange={(event) => updateStationField("timezone", event.currentTarget.value)}
           />
         </Grid.Col>
+        <Grid.Col span={12}>
+          <Stack gap={6}>
+            <Text fw={500} size="sm">
+              Location source
+            </Text>
+            <SegmentedControl
+              fullWidth
+              value={config.station.locationFromGPS ? "gps" : "manual"}
+              onChange={(value) => updateStationField("locationFromGPS", value === "gps")}
+              data={[
+                { label: "Manual", value: "manual" },
+                { label: "Auto GPS", value: "gps" },
+              ]}
+            />
+            <Text c="dimmed" size="sm">
+              When enabled, the device fills latitude, longitude, and elevation from the modem or
+              GNSS hardware and the manual fields stay disabled.
+            </Text>
+          </Stack>
+        </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 4 }}>
           <NumberInput
             label="Latitude"
-            value={config.station.location.latitude}
+            value={manualLocation.latitude}
             decimalScale={5}
+            disabled={autoGps}
             onChange={(value) =>
               typeof value === "number"
                 ? setConfig((current) => ({
                     ...current,
                     station: {
                       ...current.station,
-                      location: { ...current.station.location, latitude: value },
+                      location: {
+                        ...(current.station.location ?? manualLocation),
+                        latitude: value,
+                      },
                     },
                   }))
                 : undefined
@@ -57,15 +88,19 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
         <Grid.Col span={{ base: 12, sm: 4 }}>
           <NumberInput
             label="Longitude"
-            value={config.station.location.longitude}
+            value={manualLocation.longitude}
             decimalScale={5}
+            disabled={autoGps}
             onChange={(value) =>
               typeof value === "number"
                 ? setConfig((current) => ({
                     ...current,
                     station: {
                       ...current.station,
-                      location: { ...current.station.location, longitude: value },
+                      location: {
+                        ...(current.station.location ?? manualLocation),
+                        longitude: value,
+                      },
                     },
                   }))
                 : undefined
@@ -75,14 +110,18 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
         <Grid.Col span={{ base: 12, sm: 4 }}>
           <NumberInput
             label="Elevation (m)"
-            value={config.station.location.elevationMeters ?? 0}
+            value={manualLocation.elevationMeters ?? 0}
+            disabled={autoGps}
             onChange={(value) =>
               typeof value === "number"
                 ? setConfig((current) => ({
                     ...current,
                     station: {
                       ...current.station,
-                      location: { ...current.station.location, elevationMeters: value },
+                      location: {
+                        ...(current.station.location ?? manualLocation),
+                        elevationMeters: value,
+                      },
                     },
                   }))
                 : undefined

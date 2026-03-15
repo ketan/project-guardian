@@ -453,7 +453,8 @@ export interface components {
             stationName: string;
             /** @example Asia/Kolkata */
             timezone: string;
-            location: components["schemas"]["GeoLocation"];
+            locationFromGPS: boolean;
+            location?: components["schemas"]["GeoLocation"];
             notes?: string;
         };
         GeoLocation: {
