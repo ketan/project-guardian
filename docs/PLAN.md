@@ -27,6 +27,8 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 ### Sampling, smoothing, sleep, and storage
 - Use a 30-second sampling cadence as the base loop.
 - On each wake: load config, read sensors, apply smoothing, append a timestamped JSON record to SD, evaluate publisher schedules, publish if due, and return to sleep unless in an admin-online window.
+- If GPS-based location is enabled and GPS hardware is available, use the most recent GPS fix for station latitude/longitude/elevation instead of manual coordinates.
+- Poll GPS infrequently to save power, using a configurable refresh interval of every few hours and caching the last valid fix between GPS polls.
 - Implement configurable smoothing with rolling average and/or EMA, with per-measurement enable/disable controls.
 - Store runtime config primarily as JSON on microSD, with flash-backed fallback defaults for recovery if SD is missing or invalid.
 - Retain the last 14 days of logged weather data on microSD for local viewing through the web UI, with automatic pruning of older records.
@@ -77,13 +79,13 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - During the admin window, suspend normal deep sleep and keep the API responsive; resume normal sampling/deep-sleep behavior after the window expires.
 
 ## Public Interfaces and Contract Additions
-- `openapi.yaml` becomes the contract source for config schema, sensor status/read models, historical log document models, auth models, publisher settings, Meshtastic MQTT settings, OTA upload models, modem/network status, admin actions, and error responses.
+- `openapi.yaml` becomes the contract source for config schema, sensor status/read models, historical log document models, auth models, publisher settings, Meshtastic MQTT settings, OTA upload models, modem/network status, GPS location settings, admin actions, and error responses.
 - SMS configuration should include whitelisted administrator phone numbers and command authorization settings.
-- Core backend types should include `WeatherSample`, `SmoothedSample`, `DeviceConfig`, `SensorConfig`, `PublisherConfig`, `ConnectivityConfig`, `SmsCommandResult`, and `AdminWindowState`.
+- Core backend types should include `WeatherSample`, `SmoothedSample`, `DeviceConfig`, `SensorConfig`, `PublisherConfig`, `ConnectivityConfig`, `GpsLocationState`, `SmsCommandResult`, and `AdminWindowState`.
 - Config JSON should be versioned with a top-level schema version and a migration hook for future compatibility.
 
 ## Test Plan
-- Unit tests for config parsing/validation, smoothing algorithms, publish scheduling, SMS command parsing/auth including whitelist handling, modem abstraction behavior, Meshtastic protobuf encoding, OTA checksum verification, and sensor capability aggregation.
+- Unit tests for config parsing/validation, smoothing algorithms, publish scheduling, GPS poll scheduling and fallback behavior, SMS command parsing/auth including whitelist handling, modem abstraction behavior, Meshtastic protobuf encoding, OTA checksum verification, and sensor capability aggregation.
 - Integration-style tests for `SEN0658` sample acquisition with mocked Modbus responses, SD log append/readback, 14-day retention/pruning, publisher payload generation including Meshtastic MQTT protobuf messages, OTA staging file handling on microSD, and admin window state transitions.
 - Integration-style tests should verify streamed JSON responses for config, recent logs, and history without requiring full-file buffering in memory.
 - Integration-style tests should verify section-specific config updates so each endpoint can patch stored config safely without parsing a large full-config payload.

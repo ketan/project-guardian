@@ -58,10 +58,30 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
               ]}
             />
             <Text c="dimmed" size="sm">
-              When enabled, the device fills latitude, longitude, and elevation from the modem or
-              GNSS hardware and the manual fields stay disabled.
+              When enabled, the device uses the latest cached GPS fix for latitude, longitude, and
+              elevation, and the manual fields stay disabled.
             </Text>
           </Stack>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 4 }}>
+          <NumberInput
+            label="GPS refresh (hours)"
+            value={config.station.gpsPollIntervalHours}
+            min={1}
+            max={24}
+            disabled={!autoGps}
+            onChange={(value) =>
+              typeof value === "number"
+                ? updateStationField("gpsPollIntervalHours", value)
+                : undefined
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 8 }}>
+          <Text c="dimmed" mt={30} size="sm">
+            GPS is only polled on this interval to reduce power use. The device keeps using the
+            last valid fix between refreshes.
+          </Text>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 4 }}>
           <NumberInput

@@ -453,7 +453,14 @@ export interface components {
             stationName: string;
             /** @example Asia/Kolkata */
             timezone: string;
+            /** @description When true, the device should use the latest valid GPS fix for station coordinates whenever GPS hardware and a valid fix are available. */
             locationFromGPS: boolean;
+            /**
+             * @description How often to wake and refresh the cached GPS fix used for station coordinates.
+             * @default 6
+             */
+            gpsPollIntervalHours: number;
+            /** @description Manual fallback coordinates used when GPS-based location is disabled or no valid GPS fix is available. */
             location?: components["schemas"]["GeoLocation"];
             notes?: string;
         };

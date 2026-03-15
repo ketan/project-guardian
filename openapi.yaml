@@ -340,6 +340,7 @@ components:
         - stationName
         - timezone
         - locationFromGPS
+        - gpsPollIntervalHours
       properties:
         stationName:
           type: string
@@ -348,8 +349,16 @@ components:
           examples: [Asia/Kolkata]
         locationFromGPS:
           type: boolean
+          description: When true, the device should use the latest valid GPS fix for station coordinates whenever GPS hardware and a valid fix are available.
+        gpsPollIntervalHours:
+          type: integer
+          minimum: 1
+          maximum: 24
+          default: 6
+          description: How often to wake and refresh the cached GPS fix used for station coordinates.
         location:
           $ref: '#/components/schemas/GeoLocation'
+          description: Manual fallback coordinates used when GPS-based location is disabled or no valid GPS fix is available.
         notes:
           type: string
     GeoLocation:
