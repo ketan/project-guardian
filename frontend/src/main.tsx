@@ -12,6 +12,38 @@ const theme = createTheme({
   headings: {
     fontFamily: '"IBM Plex Sans", "Segoe UI", sans-serif',
   },
+  components: {
+    TextInput: {
+      defaultProps: {
+        size: "xs",
+      },
+    },
+    NumberInput: {
+      defaultProps: {
+        size: "xs",
+      },
+    },
+    Textarea: {
+      defaultProps: {
+        size: "xs",
+      },
+    },
+    Select: {
+      defaultProps: {
+        size: "xs",
+      },
+    },
+    TagsInput: {
+      defaultProps: {
+        size: "xs",
+      },
+    },
+    SegmentedControl: {
+      defaultProps: {
+        size: "xs",
+      },
+    },
+  },
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
