@@ -35,11 +35,36 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - For OTA updates, accept a firmware binary plus checksum over the API, write the upload to a temporary file on microSD, verify the checksum, move the verified image to a canonical OTA staging location on microSD, and reboot. If checksum verification fails, delete the uploaded file and return an error.
 
 ### Web API, auth, and frontend
-- Define OpenAPI endpoints for `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/status`, `GET /api/v1/config`, `PUT /api/v1/config`, `GET /api/v1/sensors/latest`, `GET /api/v1/logs/recent`, `GET /api/v1/logs/history`, `POST /api/v1/admin/connectivity/test`, `POST /api/v1/admin/publishers/test`, and `POST /api/v1/admin/ota`.
+- Define OpenAPI endpoints by category:
+  - Auth:
+    - `POST /api/v1/auth/login`
+    - `POST /api/v1/auth/logout`
+  - Status:
+    - `GET /api/v1/status`
+  - Config:
+    - `GET /api/v1/config`
+    - `PUT /api/v1/config/station`
+    - `PUT /api/v1/config/sampling`
+    - `PUT /api/v1/config/smoothing`
+    - `PUT /api/v1/config/storage`
+    - `PUT /api/v1/config/network`
+    - `PUT /api/v1/config/sms-admin`
+    - `PUT /api/v1/config/web-ui`
+    - `PUT /api/v1/config/sensors`
+    - `PUT /api/v1/config/publishers`
+  - Sensors and logs:
+    - `GET /api/v1/sensors/latest`
+    - `GET /api/v1/logs/recent`
+    - `GET /api/v1/logs/history`
+  - Admin:
+    - `POST /api/v1/admin/connectivity/test`
+    - `POST /api/v1/admin/publishers/test`
+    - `POST /api/v1/admin/ota`
 - Use login plus short-lived bearer tokens for API auth.
 - Expose CORS configuration for the production GitHub Pages origin and localhost dev origins.
 - Build the React app around login, system status, sensor/smoothing config, publisher config, connectivity/modem status, historical charts for the last 14 days, and SMS/admin diagnostics.
 - Keep config, log, and history access simple for device memory constraints: the config, recent-log, and history endpoints should stream the JSON documents currently stored by the ESP as-is, without server-side filtering, slicing, aggregation, or query parameters.
+- Split config updates into small section-specific endpoints so the ESP only parses one subsection at a time instead of a large full-config payload.
 - Keep the API contract compatible with both direct device access and a future relay/proxy without changing frontend behavior.
 
 ### SMS and remote admin flow
@@ -61,6 +86,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - Unit tests for config parsing/validation, smoothing algorithms, publish scheduling, SMS command parsing/auth including whitelist handling, modem abstraction behavior, Meshtastic protobuf encoding, OTA checksum verification, and sensor capability aggregation.
 - Integration-style tests for `SEN0658` sample acquisition with mocked Modbus responses, SD log append/readback, 14-day retention/pruning, publisher payload generation including Meshtastic MQTT protobuf messages, OTA staging file handling on microSD, and admin window state transitions.
 - Integration-style tests should verify streamed JSON responses for config, recent logs, and history without requiring full-file buffering in memory.
+- Integration-style tests should verify section-specific config updates so each endpoint can patch stored config safely without parsing a large full-config payload.
 - API contract checks to validate backend responses against `openapi.yaml` and verify/generated frontend client bindings.
 - Frontend tests for login, config editing, dashboard rendering, publisher forms, and API error handling.
 - Field acceptance scenarios for normal boot, recovery boot, 30-second logging, scheduled publishing, `OPEN SESAME` SMS wake-up flow, and admin window expiry.

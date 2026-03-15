@@ -333,32 +333,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublisherConfigView'
-    DeviceConfigUpdate:
-      type: object
-      additionalProperties: false
-      properties:
-        station:
-          $ref: '#/components/schemas/StationConfig'
-        sampling:
-          $ref: '#/components/schemas/SamplingConfig'
-        smoothing:
-          $ref: '#/components/schemas/SmoothingConfig'
-        storage:
-          $ref: '#/components/schemas/StorageConfig'
-        network:
-          $ref: '#/components/schemas/NetworkConfig'
-        smsAdmin:
-          $ref: '#/components/schemas/SmsAdminConfig'
-        webUi:
-          $ref: '#/components/schemas/WebUiConfig'
-        sensors:
-          type: array
-          items:
-            $ref: '#/components/schemas/SensorConfig'
-        publishers:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublisherConfigInput'
     StationConfig:
       type: object
       additionalProperties: false
@@ -1005,25 +979,242 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeviceConfigView'
+  /api/v1/config/station:
     put:
       tags: [config]
-      operationId: updateConfig
+      operationId: updateStationConfig
       security:
         - bearerAuth: []
-      summary: Update device configuration
+      summary: Update station configuration
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeviceConfigUpdate'
+              $ref: '#/components/schemas/StationConfig'
       responses:
         '200':
-          description: Updated configuration
+          description: Updated station configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceConfigView'
+                $ref: '#/components/schemas/StationConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/sampling:
+    put:
+      tags: [config]
+      operationId: updateSamplingConfig
+      security:
+        - bearerAuth: []
+      summary: Update sampling configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SamplingConfig'
+      responses:
+        '200':
+          description: Updated sampling configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SamplingConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/smoothing:
+    put:
+      tags: [config]
+      operationId: updateSmoothingConfig
+      security:
+        - bearerAuth: []
+      summary: Update smoothing configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmoothingConfig'
+      responses:
+        '200':
+          description: Updated smoothing configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmoothingConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/storage:
+    put:
+      tags: [config]
+      operationId: updateStorageConfig
+      security:
+        - bearerAuth: []
+      summary: Update storage configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorageConfig'
+      responses:
+        '200':
+          description: Updated storage configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/network:
+    put:
+      tags: [config]
+      operationId: updateNetworkConfig
+      security:
+        - bearerAuth: []
+      summary: Update network configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkConfig'
+      responses:
+        '200':
+          description: Updated network configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/sms-admin:
+    put:
+      tags: [config]
+      operationId: updateSmsAdminConfig
+      security:
+        - bearerAuth: []
+      summary: Update SMS admin configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsAdminConfig'
+      responses:
+        '200':
+          description: Updated SMS admin configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsAdminConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/web-ui:
+    put:
+      tags: [config]
+      operationId: updateWebUiConfig
+      security:
+        - bearerAuth: []
+      summary: Update web UI configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebUiConfig'
+      responses:
+        '200':
+          description: Updated web UI configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebUiConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/sensors:
+    put:
+      tags: [config]
+      operationId: updateSensorsConfig
+      security:
+        - bearerAuth: []
+      summary: Update sensor configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/SensorConfig'
+      responses:
+        '200':
+          description: Updated sensor configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensorConfig'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/publishers:
+    put:
+      tags: [config]
+      operationId: updatePublishersConfig
+      security:
+        - bearerAuth: []
+      summary: Update publisher configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PublisherConfigInput'
+      responses:
+        '200':
+          description: Updated publisher configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublisherConfigView'
         '400':
           description: Configuration validation failed
           content:
