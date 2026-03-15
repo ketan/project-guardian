@@ -46,7 +46,7 @@ export function NetworkSection({
             value={config.network.preferredTransport}
             onChange={(value) =>
               value
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     network: {
                       ...current.network,
@@ -63,7 +63,7 @@ export function NetworkSection({
             checked={config.network.wifi.enabled}
             label="Wi-Fi enabled"
             onChange={(event) =>
-              setConfig((current) => ({
+              setConfig((current: UiConfig) => ({
                 ...current,
                 network: {
                   ...current.network,
@@ -78,7 +78,7 @@ export function NetworkSection({
             label="Wi-Fi SSID"
             value={config.network.wifi.ssid}
             onChange={(event) =>
-              setConfig((current) => ({
+              setConfig((current: UiConfig) => ({
                 ...current,
                 network: {
                   ...current.network,
@@ -94,7 +94,7 @@ export function NetworkSection({
             placeholder={config.network.wifi.passwordConfigured ? "Configured" : "Enter password"}
             value={config.network.wifi.password ?? ""}
             onChange={(event) =>
-              setConfig((current) => ({
+              setConfig((current: UiConfig) => ({
                 ...current,
                 network: {
                   ...current.network,
@@ -110,7 +110,7 @@ export function NetworkSection({
             checked={config.network.cellular.enabled}
             label="Cellular enabled"
             onChange={(event) =>
-              setConfig((current) => ({
+              setConfig((current: UiConfig) => ({
                 ...current,
                 network: {
                   ...current.network,
@@ -125,7 +125,7 @@ export function NetworkSection({
             label="Cellular APN"
             value={config.network.cellular.apn ?? ""}
             onChange={(event) =>
-              setConfig((current) => ({
+              setConfig((current: UiConfig) => ({
                 ...current,
                 network: {
                   ...current.network,
@@ -141,7 +141,7 @@ export function NetworkSection({
             placeholder={config.network.cellular.pinConfigured ? "Configured" : "Optional"}
             value={config.network.cellular.pin ?? ""}
             onChange={(event) =>
-              setConfig((current) => ({
+              setConfig((current: UiConfig) => ({
                 ...current,
                 network: {
                   ...current.network,
@@ -179,7 +179,7 @@ export function NetworkSection({
             value={config.webUi.tokenTtlMinutes}
             onChange={(value) =>
               typeof value === "number"
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     webUi: { ...current.webUi, tokenTtlMinutes: value },
                   }))
@@ -192,7 +192,7 @@ export function NetworkSection({
             label="Allowed origins"
             value={config.webUi.allowedOrigins}
             onChange={(value) =>
-              setConfig((current) => ({
+              setConfig((current: UiConfig) => ({
                 ...current,
                 webUi: { ...current.webUi, allowedOrigins: value },
               }))

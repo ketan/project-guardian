@@ -84,7 +84,7 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
             disabled={autoGps}
             onChange={(value) =>
               typeof value === "number"
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     station: {
                       ...current.station,
@@ -106,7 +106,7 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
             disabled={autoGps}
             onChange={(value) =>
               typeof value === "number"
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     station: {
                       ...current.station,
@@ -127,7 +127,7 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
             disabled={autoGps}
             onChange={(value) =>
               typeof value === "number"
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     station: {
                       ...current.station,

@@ -63,7 +63,7 @@ export function SamplingSection({
             value={String(config.storage.retentionDays)}
             onChange={(value) =>
               value
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     storage: { ...current.storage, retentionDays: Number(value) },
                   }))
@@ -93,7 +93,7 @@ export function SamplingSection({
             value={config.storage.logFormat}
             onChange={(value) =>
               value
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     storage: { ...current.storage, logFormat: value as UiConfig["storage"]["logFormat"] },
                   }))
@@ -108,7 +108,7 @@ export function SamplingSection({
             value={config.storage.configSource ?? "sd_with_flash_fallback"}
             onChange={(value) =>
               value
-                ? setConfig((current) => ({
+                ? setConfig((current: UiConfig) => ({
                     ...current,
                     storage: {
                       ...current.storage,

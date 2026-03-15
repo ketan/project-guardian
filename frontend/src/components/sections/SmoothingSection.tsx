@@ -43,11 +43,11 @@ type SmoothingSectionProps = {
 
 export function SmoothingSection({ config, setConfig }: SmoothingSectionProps) {
   const updateField = (index: number, updates: Partial<SmoothingField>) => {
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
       smoothing: {
         ...current.smoothing,
-        fields: current.smoothing.fields.map((field, fieldIndex) =>
+        fields: current.smoothing.fields.map((field: SmoothingField, fieldIndex: number) =>
           fieldIndex === index ? { ...field, ...updates } : field,
         ),
       },
@@ -55,21 +55,21 @@ export function SmoothingSection({ config, setConfig }: SmoothingSectionProps) {
   };
 
   const removeField = (index: number) => {
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
       smoothing: {
         ...current.smoothing,
-        fields: current.smoothing.fields.filter((_, fieldIndex) => fieldIndex !== index),
+        fields: current.smoothing.fields.filter((_: SmoothingField, fieldIndex: number) => fieldIndex !== index),
       },
     }));
   };
 
   const addField = () => {
-    const usedMetrics = new Set(config.smoothing.fields.map((field) => field.metric));
+    const usedMetrics = new Set(config.smoothing.fields.map((field: SmoothingField) => field.metric));
     const nextMetric =
       metricOptions.find((option) => !usedMetrics.has(option.value))?.value ?? "windSpeed";
 
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
       smoothing: {
         ...current.smoothing,
@@ -97,14 +97,14 @@ export function SmoothingSection({ config, setConfig }: SmoothingSectionProps) {
           checked={config.smoothing.enabled}
           label="Smoothing enabled"
           onChange={(event) =>
-            setConfig((current) => ({
+            setConfig((current: UiConfig) => ({
               ...current,
               smoothing: { ...current.smoothing, enabled: event.currentTarget.checked },
             }))
           }
         />
 
-        {config.smoothing.fields.map((field, index) => (
+        {config.smoothing.fields.map((field: SmoothingField, index: number) => (
           <Card key={`${field.metric}-${index}`} withBorder padding="lg">
             <Stack gap="md">
               <Group justify="space-between" align="center">

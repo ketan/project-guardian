@@ -490,6 +490,9 @@ components:
           type: boolean
         ssid:
           type: string
+        password:
+          type: string
+          format: password
         passwordConfigured:
           type: boolean
         allowedOrigins:
@@ -511,6 +514,9 @@ components:
           enum: [SIM7670G]
         apn:
           type: string
+        pin:
+          type: string
+          format: password
         pinConfigured:
           type: boolean
         smsEnabled:
@@ -768,7 +774,6 @@ components:
             - brokerUrl
             - topic
             - username
-            - password
           properties:
             type:
               type: string

@@ -38,7 +38,7 @@ export function SummaryCards({ status }: SummaryCardsProps) {
     },
     {
       label: "Publishers",
-      value: `${status.publishers.filter((item) => item.enabled).length} active`,
+      value: `${status.publishers.filter((item: DeviceStatus["publishers"][number]) => item.enabled).length} active`,
       detail: "Windy + Meshtastic MQTT",
       icon: <FiSend />,
     },

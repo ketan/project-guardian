@@ -37,23 +37,23 @@ type SensorsSectionProps = {
 
 export function SensorsSection({ config, setConfig }: SensorsSectionProps) {
   const updateSensor = (index: number, updates: Partial<SensorConfig>) => {
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
-      sensors: current.sensors.map((sensor, sensorIndex) =>
+      sensors: current.sensors.map((sensor: SensorConfig, sensorIndex: number) =>
         sensorIndex === index ? { ...sensor, ...updates } : sensor,
       ),
     }));
   };
 
   const removeSensor = (index: number) => {
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
-      sensors: current.sensors.filter((_, sensorIndex) => sensorIndex !== index),
+      sensors: current.sensors.filter((_: SensorConfig, sensorIndex: number) => sensorIndex !== index),
     }));
   };
 
   const addSensor = () => {
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
       sensors: [
         ...current.sensors,
@@ -79,7 +79,7 @@ export function SensorsSection({ config, setConfig }: SensorsSectionProps) {
       }
     >
       <Stack gap="md">
-        {config.sensors.map((sensor, index) => (
+        {config.sensors.map((sensor: SensorConfig, index: number) => (
           <Card key={sensor.id} withBorder padding="lg">
             <Stack gap="md">
               <Group justify="space-between" align="center">

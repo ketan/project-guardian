@@ -26,7 +26,7 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
       return;
     }
 
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
       smsAdmin: {
         ...current.smsAdmin,
@@ -42,11 +42,11 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
     index: number,
     updates: Partial<UiConfig["smsAdmin"]["whitelist"][number]>,
   ) => {
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
       smsAdmin: {
         ...current.smsAdmin,
-        whitelist: current.smsAdmin.whitelist.map((entry, entryIndex) =>
+        whitelist: current.smsAdmin.whitelist.map((entry: UiConfig["smsAdmin"]["whitelist"][number], entryIndex: number) =>
           entryIndex === index ? { ...entry, ...updates } : entry,
         ),
       },
@@ -54,11 +54,11 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
   };
 
   const removeWhitelistEntry = (index: number) => {
-    setConfig((current) => ({
+    setConfig((current: UiConfig) => ({
       ...current,
       smsAdmin: {
         ...current.smsAdmin,
-        whitelist: current.smsAdmin.whitelist.filter((_, entryIndex) => entryIndex !== index),
+        whitelist: current.smsAdmin.whitelist.filter((_: UiConfig["smsAdmin"]["whitelist"][number], entryIndex: number) => entryIndex !== index),
       },
     }));
   };
@@ -84,7 +84,7 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
         <Switch
           checked={config.smsAdmin.enabled}
           onChange={(event) =>
-            setConfig((current) => ({
+            setConfig((current: UiConfig) => ({
               ...current,
               smsAdmin: { ...current.smsAdmin, enabled: event.currentTarget.checked },
             }))
@@ -96,7 +96,7 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
           <Badge variant="light" radius="sm">
             {config.smsAdmin.whitelist.length} / {MAX_SMS_ADMINS} trusted numbers
           </Badge>
-          {config.smsAdmin.whitelist.map((entry, index) => (
+          {config.smsAdmin.whitelist.map((entry: UiConfig["smsAdmin"]["whitelist"][number], index: number) => (
             <Card key={`${entry.phoneNumber}-${index}`} withBorder padding="md">
               <Stack gap="sm">
                 <Group justify="space-between" align="center">

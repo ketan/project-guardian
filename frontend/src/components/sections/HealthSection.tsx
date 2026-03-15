@@ -15,7 +15,7 @@ export function HealthSection({ status }: HealthSectionProps) {
       subtitle="Quick status snapshot for launch-day confidence checks."
     >
       <Stack gap="md">
-        {status.sensors.map((sensor) => (
+        {status.sensors.map((sensor: DeviceStatus["sensors"][number]) => (
           <Card key={sensor.id} withBorder padding="md">
             <Group justify="space-between" align="center">
               <Stack gap={2}>
