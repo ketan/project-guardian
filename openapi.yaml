@@ -521,26 +521,14 @@ components:
       required:
         - enabled
         - whitelist
-        - commands
       properties:
         enabled:
           type: boolean
         whitelist:
           type: array
+          maxItems: 5
           items:
             $ref: '#/components/schemas/PhoneWhitelistEntry'
-        commands:
-          type: array
-          items:
-            type: string
-            enum:
-              - OPEN_SESAME
-              - STATUS
-              - HELP
-              - CONFIG_GET
-              - CONFIG_SET
-              - NET
-              - PUBLISH_NOW
     PhoneWhitelistEntry:
       type: object
       additionalProperties: false
@@ -589,9 +577,13 @@ components:
         transport:
           type: string
           enum: [rs485_modbus, i2c, spi]
-        settings:
-          type: object
-          additionalProperties: true
+        pollIntervalSeconds:
+          type: integer
+          minimum: 1
+        address:
+          type: integer
+          minimum: 1
+          maximum: 247
     PublisherConfigView:
       oneOf:
         - $ref: '#/components/schemas/WundergroundPublisherView'

@@ -1,4 +1,4 @@
-import { Divider, Grid, Group, NumberInput, Stack, Switch, Text } from "@mantine/core";
+import { Grid, NumberInput, Select, Stack, Switch, Text } from "@mantine/core";
 import { SectionCard } from "../SectionCard";
 import type { DeviceConfig, UiConfig } from "../../types/ui";
 
@@ -54,63 +54,83 @@ export function SamplingSection({
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <NumberInput
+          <Select
             label="History retention"
-            suffix=" days"
-            value={config.storage.retentionDays}
+            data={Array.from({ length: 30 }, (_, index) => ({
+              value: String(index + 1),
+              label: `${index + 1} day${index === 0 ? "" : "s"}`,
+            }))}
+            value={String(config.storage.retentionDays)}
             onChange={(value) =>
-              typeof value === "number"
+              value
                 ? setConfig((current) => ({
                     ...current,
-                    storage: { ...current.storage, retentionDays: value },
+                    storage: { ...current.storage, retentionDays: Number(value) },
                   }))
                 : undefined
             }
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <NumberInput
+          <Select
             label="History aggregation"
-            suffix=" min"
-            value={config.sampling.historyAggregationMinutes ?? 0}
+            data={[
+              { value: "5", label: "5 min" },
+              { value: "15", label: "15 min" },
+              { value: "30", label: "30 min" },
+              { value: "60", label: "60 min" },
+            ]}
+            value={String(config.sampling.historyAggregationMinutes ?? 30)}
             onChange={(value) =>
-              typeof value === "number"
-                ? updateSamplingField("historyAggregationMinutes", value)
+              value ? updateSamplingField("historyAggregationMinutes", Number(value)) : undefined
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Select
+            label="Log format"
+            data={[{ value: "jsonl", label: "JSONL" }]}
+            value={config.storage.logFormat}
+            onChange={(value) =>
+              value
+                ? setConfig((current) => ({
+                    ...current,
+                    storage: { ...current.storage, logFormat: value as UiConfig["storage"]["logFormat"] },
+                  }))
+                : undefined
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Select
+            label="Config source"
+            data={[{ value: "sd_with_flash_fallback", label: "SD with flash fallback" }]}
+            value={config.storage.configSource ?? "sd_with_flash_fallback"}
+            onChange={(value) =>
+              value
+                ? setConfig((current) => ({
+                    ...current,
+                    storage: {
+                      ...current.storage,
+                      configSource: value as UiConfig["storage"]["configSource"],
+                    },
+                  }))
                 : undefined
             }
           />
         </Grid.Col>
       </Grid>
 
-      <Divider />
-
-      <Group grow align="flex-start">
-        <Stack gap={2}>
-          <Switch
-            checked={config.sampling.deepSleepEnabled}
-            onChange={(event) => updateSamplingField("deepSleepEnabled", event.currentTarget.checked)}
-            label="Deep sleep enabled"
-          />
-          <Text c="dimmed" size="sm">
-            Let the ESP32 sleep between samples to preserve battery and reduce thermal noise.
-          </Text>
-        </Stack>
-        <Stack gap={2}>
-          <Switch
-            checked={config.smoothing.enabled}
-            onChange={(event) =>
-              setConfig((current) => ({
-                ...current,
-                smoothing: { ...current.smoothing, enabled: event.currentTarget.checked },
-              }))
-            }
-            label="Smoothing enabled"
-          />
-          <Text c="dimmed" size="sm">
-            Keep short-term spikes from dominating charts and downstream weather-site uploads.
-          </Text>
-        </Stack>
-      </Group>
+      <Stack gap={2}>
+        <Switch
+          checked={config.sampling.deepSleepEnabled}
+          onChange={(event) => updateSamplingField("deepSleepEnabled", event.currentTarget.checked)}
+          label="Deep sleep enabled"
+        />
+        <Text c="dimmed" size="sm">
+          Let the ESP32 sleep between samples to preserve battery and reduce thermal noise.
+        </Text>
+      </Stack>
     </SectionCard>
   );
 }

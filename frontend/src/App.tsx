@@ -8,10 +8,12 @@ import { HealthSection } from "./components/sections/HealthSection";
 import { NetworkSection } from "./components/sections/NetworkSection";
 import { PublishersSection } from "./components/sections/PublishersSection";
 import { SamplingSection } from "./components/sections/SamplingSection";
+import { SensorsSection } from "./components/sections/SensorsSection";
+import { SmoothingSection } from "./components/sections/SmoothingSection";
 import { SmsAdminSection } from "./components/sections/SmsAdminSection";
 import { StationSection } from "./components/sections/StationSection";
 import { initialConfig, initialStatus, navItems } from "./data/mockDevice";
-import type { DeviceConfig, UiConfig } from "./types/ui";
+import type { DeviceConfig, UiConfig, UiPublisher } from "./types/ui";
 
 function App() {
   const [opened, { toggle, close }] = useDisclosure(false);
@@ -41,6 +43,15 @@ function App() {
         ...current.sampling,
         [key]: value,
       },
+    }));
+  };
+
+  const updatePublisher = (publisherId: string, updates: Partial<UiPublisher>) => {
+    setConfig((current) => ({
+      ...current,
+      publishers: current.publishers.map((publisher) =>
+        publisher.id === publisherId ? { ...publisher, ...updates } : publisher,
+      ),
     }));
   };
 
@@ -109,6 +120,8 @@ function App() {
                   updateSamplingField={updateSamplingField}
                   setConfig={setConfig}
                 />
+                <SmoothingSection config={config} setConfig={setConfig} />
+                <SensorsSection config={config} setConfig={setConfig} />
                 <NetworkSection
                   config={config}
                   setConfig={setConfig}
@@ -118,7 +131,7 @@ function App() {
               </Stack>
 
               <Stack gap="lg">
-                <PublishersSection publishers={config.publishers} />
+                <PublishersSection publishers={config.publishers} updatePublisher={updatePublisher} />
                 <SmsAdminSection config={config} setConfig={setConfig} />
                 <HealthSection status={status} />
               </Stack>

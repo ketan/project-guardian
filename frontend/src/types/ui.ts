@@ -9,15 +9,29 @@ export type UiPublisher = {
   type: "windy" | "wunderground" | "webhook" | "mqtt";
   enabled: boolean;
   publishIntervalSeconds: number;
+  includeHistoryWindowMinutes?: number;
   stationId?: string;
+  endpoint?: string;
   brokerUrl?: string;
   topic?: string;
   username?: string;
+  apiKey?: string;
+  password?: string;
+  authHeader?: string;
   passwordConfigured?: boolean;
   apiKeyConfigured?: boolean;
+  authHeaderConfigured?: boolean;
 };
 
-export type UiConfig = Omit<DeviceConfig, "publishers"> & {
+export type UiConfig = Omit<DeviceConfig, "publishers" | "network"> & {
+  network: Omit<DeviceConfig["network"], "wifi" | "cellular"> & {
+    wifi: DeviceConfig["network"]["wifi"] & {
+      password?: string;
+    };
+    cellular: DeviceConfig["network"]["cellular"] & {
+      pin?: string;
+    };
+  };
   publishers: UiPublisher[];
 };
 
@@ -26,4 +40,3 @@ export type NavItem = {
   label: string;
   icon: ReactNode;
 };
-

@@ -1,4 +1,15 @@
-import { Badge, Card, Group, Stack, Switch, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Grid,
+  Group,
+  Stack,
+  Switch,
+  TextInput,
+} from "@mantine/core";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { SectionCard } from "../SectionCard";
 import type { UiConfig } from "../../types/ui";
 
@@ -7,12 +18,67 @@ type SmsAdminSectionProps = {
   setConfig: React.Dispatch<React.SetStateAction<UiConfig>>;
 };
 
+const MAX_SMS_ADMINS = 5;
+
 export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
+  const addWhitelistEntry = () => {
+    if (config.smsAdmin.whitelist.length >= MAX_SMS_ADMINS) {
+      return;
+    }
+
+    setConfig((current) => ({
+      ...current,
+      smsAdmin: {
+        ...current.smsAdmin,
+        whitelist: [
+          ...current.smsAdmin.whitelist,
+          { label: "New contact", phoneNumber: "+91" },
+        ],
+      },
+    }));
+  };
+
+  const updateWhitelistEntry = (
+    index: number,
+    updates: Partial<UiConfig["smsAdmin"]["whitelist"][number]>,
+  ) => {
+    setConfig((current) => ({
+      ...current,
+      smsAdmin: {
+        ...current.smsAdmin,
+        whitelist: current.smsAdmin.whitelist.map((entry, entryIndex) =>
+          entryIndex === index ? { ...entry, ...updates } : entry,
+        ),
+      },
+    }));
+  };
+
+  const removeWhitelistEntry = (index: number) => {
+    setConfig((current) => ({
+      ...current,
+      smsAdmin: {
+        ...current.smsAdmin,
+        whitelist: current.smsAdmin.whitelist.filter((_, entryIndex) => entryIndex !== index),
+      },
+    }));
+  };
+
   return (
     <SectionCard
       id="sms"
       title="SMS administration"
       subtitle="Trusted numbers can wake the station and manage connectivity without a password."
+      action={
+        <Button
+          leftSection={<FiPlus />}
+          size="compact-sm"
+          variant="light"
+          onClick={addWhitelistEntry}
+          disabled={config.smsAdmin.whitelist.length >= MAX_SMS_ADMINS}
+        >
+          Add number
+        </Button>
+      }
     >
       <Stack gap="md">
         <Switch
@@ -26,24 +92,51 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
           label="SMS admin enabled"
         />
 
-        {config.smsAdmin.whitelist.map((entry) => (
-          <Card key={entry.phoneNumber} withBorder padding="md">
-            <Stack gap={2}>
-              <Text fw={700}>{entry.label}</Text>
-              <Text size="sm" c="dimmed">
-                {entry.phoneNumber}
-              </Text>
-            </Stack>
-          </Card>
-        ))}
+        <Stack gap="sm">
+          <Badge variant="light" radius="sm">
+            {config.smsAdmin.whitelist.length} / {MAX_SMS_ADMINS} trusted numbers
+          </Badge>
+          {config.smsAdmin.whitelist.map((entry, index) => (
+            <Card key={`${entry.phoneNumber}-${index}`} withBorder padding="md">
+              <Stack gap="sm">
+                <Group justify="space-between" align="center">
+                  <Badge variant="light" radius="sm">
+                    Trusted number
+                  </Badge>
+                  <ActionIcon
+                    color="red"
+                    variant="light"
+                    onClick={() => removeWhitelistEntry(index)}
+                    aria-label={`Remove ${entry.label}`}
+                  >
+                    <FiTrash2 />
+                  </ActionIcon>
+                </Group>
 
-        <Group gap="xs">
-          {config.smsAdmin.commands.map((command) => (
-            <Badge key={command} variant="outline" radius="sm">
-              {command.replaceAll("_", " ")}
-            </Badge>
+                <Grid>
+                  <Grid.Col span={{ base: 12, sm: 5 }}>
+                    <TextInput
+                      label="Label"
+                      value={entry.label}
+                      onChange={(event) =>
+                        updateWhitelistEntry(index, { label: event.currentTarget.value })
+                      }
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, sm: 7 }}>
+                    <TextInput
+                      label="Phone number"
+                      value={entry.phoneNumber}
+                      onChange={(event) =>
+                        updateWhitelistEntry(index, { phoneNumber: event.currentTarget.value })
+                      }
+                    />
+                  </Grid.Col>
+                </Grid>
+              </Stack>
+            </Card>
           ))}
-        </Group>
+        </Stack>
       </Stack>
     </SectionCard>
   );

@@ -521,7 +521,6 @@ export interface components {
         SmsAdminConfig: {
             enabled: boolean;
             whitelist: components["schemas"]["PhoneWhitelistEntry"][];
-            commands: ("OPEN_SESAME" | "STATUS" | "HELP" | "CONFIG_GET" | "CONFIG_SET" | "NET" | "PUBLISH_NOW")[];
         };
         PhoneWhitelistEntry: {
             label: string;
@@ -543,9 +542,8 @@ export interface components {
             enabled: boolean;
             /** @enum {string} */
             transport?: "rs485_modbus" | "i2c" | "spi";
-            settings?: {
-                [key: string]: unknown;
-            };
+            pollIntervalSeconds?: number;
+            address?: number;
         };
         PublisherConfigView: components["schemas"]["WundergroundPublisherView"] | components["schemas"]["WindyPublisherView"] | components["schemas"]["WebhookPublisherView"] | components["schemas"]["MqttPublisherView"];
         PublisherConfigInput: components["schemas"]["WundergroundPublisherInput"] | components["schemas"]["WindyPublisherInput"] | components["schemas"]["WebhookPublisherInput"] | components["schemas"]["MqttPublisherInput"];

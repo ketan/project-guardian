@@ -1,4 +1,16 @@
-import { Badge, Grid, Group, Select, TagsInput, Text, TextInput } from "@mantine/core";
+import {
+  Badge,
+  Grid,
+  Group,
+  NumberInput,
+  PasswordInput,
+  Select,
+  Stack,
+  Switch,
+  TagsInput,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { FiShield, FiSmartphone, FiWifi } from "react-icons/fi";
 import { SectionCard } from "../SectionCard";
 import type { UiConfig } from "../../types/ui";
@@ -46,6 +58,22 @@ export function NetworkSection({
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Switch
+            mt={28}
+            checked={config.network.wifi.enabled}
+            label="Wi-Fi enabled"
+            onChange={(event) =>
+              setConfig((current) => ({
+                ...current,
+                network: {
+                  ...current.network,
+                  wifi: { ...current.network.wifi, enabled: event.currentTarget.checked },
+                },
+              }))
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
           <TextInput
             label="Wi-Fi SSID"
             value={config.network.wifi.ssid}
@@ -55,6 +83,38 @@ export function NetworkSection({
                 network: {
                   ...current.network,
                   wifi: { ...current.network.wifi, ssid: event.currentTarget.value },
+                },
+              }))
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <PasswordInput
+            label="Wi-Fi password"
+            placeholder={config.network.wifi.passwordConfigured ? "Configured" : "Enter password"}
+            value={config.network.wifi.password ?? ""}
+            onChange={(event) =>
+              setConfig((current) => ({
+                ...current,
+                network: {
+                  ...current.network,
+                  wifi: { ...current.network.wifi, password: event.currentTarget.value },
+                },
+              }))
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Switch
+            mt={28}
+            checked={config.network.cellular.enabled}
+            label="Cellular enabled"
+            onChange={(event) =>
+              setConfig((current) => ({
+                ...current,
+                network: {
+                  ...current.network,
+                  cellular: { ...current.network.cellular, enabled: event.currentTarget.checked },
                 },
               }))
             }
@@ -76,6 +136,58 @@ export function NetworkSection({
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
+          <PasswordInput
+            label="SIM PIN"
+            placeholder={config.network.cellular.pinConfigured ? "Configured" : "Optional"}
+            value={config.network.cellular.pin ?? ""}
+            onChange={(event) =>
+              setConfig((current) => ({
+                ...current,
+                network: {
+                  ...current.network,
+                  cellular: { ...current.network.cellular, pin: event.currentTarget.value },
+                },
+              }))
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <Switch
+            mt={28}
+            checked={config.network.cellular.smsEnabled ?? false}
+            label="SMS over cellular enabled"
+            onChange={(event) =>
+              setConfig((current) => ({
+                ...current,
+                network: {
+                  ...current.network,
+                  cellular: {
+                    ...current.network.cellular,
+                    smsEnabled: event.currentTarget.checked,
+                  },
+                },
+              }))
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
+          <NumberInput
+            label="Token TTL"
+            suffix=" min"
+            min={1}
+            max={1440}
+            value={config.webUi.tokenTtlMinutes}
+            onChange={(value) =>
+              typeof value === "number"
+                ? setConfig((current) => ({
+                    ...current,
+                    webUi: { ...current.webUi, tokenTtlMinutes: value },
+                  }))
+                : undefined
+            }
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
           <TagsInput
             label="Allowed origins"
             value={config.webUi.allowedOrigins}
@@ -89,6 +201,13 @@ export function NetworkSection({
         </Grid.Col>
       </Grid>
 
+      <Stack gap={2}>
+        <Text c="dimmed" size="sm">
+          GitHub Pages and localhost are treated as allowed origins for the admin UI, while the
+          device still keeps data delivery simple by streaming stored JSON files directly.
+        </Text>
+      </Stack>
+
       <Group gap="sm" mt="sm">
         <Badge leftSection={<FiWifi />} variant="light" radius="sm">
           Wi-Fi {wifiConnected ? "connected" : "offline"}
@@ -100,11 +219,6 @@ export function NetworkSection({
           Token TTL {config.webUi.tokenTtlMinutes} min
         </Badge>
       </Group>
-
-      <Text c="dimmed" size="sm">
-        GitHub Pages and localhost are treated as allowed origins for the admin UI, while the
-        device still keeps data delivery simple by streaming stored JSON files directly.
-      </Text>
     </SectionCard>
   );
 }
