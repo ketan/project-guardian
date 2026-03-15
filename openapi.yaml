@@ -1,0 +1,1116 @@
+openapi: 3.1.0
+info:
+  title: Project Guardian Device API
+  version: 0.1.0
+  summary: API contract for configuring and monitoring the weather station.
+  description: |
+    This contract defines the interface between the ESP32-S3 backend and the
+    frontend web application. It covers authentication, device configuration,
+    live sensor data, retained historical weather data, publisher management,
+    and administrative actions such as opening a temporary online window.
+tags:
+  - name: auth
+  - name: status
+  - name: config
+  - name: sensors
+  - name: logs
+  - name: admin
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          examples: [validation_error]
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - accessToken
+        - tokenType
+        - expiresAt
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          enum: [Bearer]
+        expiresAt:
+          type: string
+          format: date-time
+    LogoutResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - loggedOut
+      properties:
+        loggedOut:
+          type: boolean
+    DeviceStatusResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - device
+        - connectivity
+        - storage
+        - sampling
+        - adminWindow
+        - sensors
+        - publishers
+      properties:
+        device:
+          $ref: '#/components/schemas/DeviceSummary'
+        connectivity:
+          $ref: '#/components/schemas/ConnectivityStatus'
+        storage:
+          $ref: '#/components/schemas/StorageStatus'
+        sampling:
+          $ref: '#/components/schemas/SamplingStatus'
+        adminWindow:
+          $ref: '#/components/schemas/AdminWindowStatus'
+        sensors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorStatus'
+        publishers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublisherStatus'
+    DeviceSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - deviceId
+        - firmwareVersion
+        - uptimeSeconds
+        - currentTime
+      properties:
+        deviceId:
+          type: string
+        firmwareVersion:
+          type: string
+        hardwareModel:
+          type: string
+        uptimeSeconds:
+          type: integer
+          minimum: 0
+        currentTime:
+          type: string
+          format: date-time
+        lastBootReason:
+          type: string
+    ConnectivityStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - activeTransport
+        - wifi
+        - cellular
+      properties:
+        activeTransport:
+          type: string
+          enum: [none, wifi, cellular]
+        wifi:
+          $ref: '#/components/schemas/WifiStatus'
+        cellular:
+          $ref: '#/components/schemas/CellularStatus'
+    WifiStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+        - connected
+      properties:
+        enabled:
+          type: boolean
+        connected:
+          type: boolean
+        ssid:
+          type: string
+        ipAddress:
+          type: string
+        rssiDbm:
+          type: integer
+    CellularStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+        - registered
+        - modemType
+      properties:
+        enabled:
+          type: boolean
+        registered:
+          type: boolean
+        modemType:
+          type: string
+          examples: [SIM7670G]
+        operatorName:
+          type: string
+        signalQuality:
+          type: integer
+          minimum: 0
+        ipv4:
+          type: string
+        ipv6:
+          type: string
+        imei:
+          type: string
+    StorageStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - sdCardPresent
+        - retentionDays
+      properties:
+        sdCardPresent:
+          type: boolean
+        freeBytes:
+          type: integer
+          minimum: 0
+        usedBytes:
+          type: integer
+          minimum: 0
+        retentionDays:
+          type: integer
+          minimum: 1
+        oldestRecordAt:
+          type: string
+          format: date-time
+        newestRecordAt:
+          type: string
+          format: date-time
+    SamplingStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - intervalSeconds
+        - nextSampleAt
+        - lastSampleAt
+        - sleepEnabled
+      properties:
+        intervalSeconds:
+          type: integer
+          minimum: 1
+        nextSampleAt:
+          type: string
+          format: date-time
+        lastSampleAt:
+          type: string
+          format: date-time
+        sleepEnabled:
+          type: boolean
+        smoothingEnabled:
+          type: boolean
+    AdminWindowStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - active
+      properties:
+        active:
+          type: boolean
+        openedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        requestedBy:
+          type: string
+          description: SMS sender number or web user identifier
+    SensorStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - kind
+        - enabled
+        - healthy
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          examples: [sen0658]
+        enabled:
+          type: boolean
+        healthy:
+          type: boolean
+        lastReadAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+    PublisherStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - enabled
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [wunderground, windy, webhook, mqtt]
+        enabled:
+          type: boolean
+        lastPublishAt:
+          type: string
+          format: date-time
+        lastResult:
+          type: string
+          enum: [unknown, success, failed]
+        message:
+          type: string
+    DeviceConfigView:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - station
+        - sampling
+        - smoothing
+        - storage
+        - network
+        - smsAdmin
+        - webUi
+        - sensors
+        - publishers
+      properties:
+        schemaVersion:
+          type: integer
+          minimum: 1
+        station:
+          $ref: '#/components/schemas/StationConfig'
+        sampling:
+          $ref: '#/components/schemas/SamplingConfig'
+        smoothing:
+          $ref: '#/components/schemas/SmoothingConfig'
+        storage:
+          $ref: '#/components/schemas/StorageConfig'
+        network:
+          $ref: '#/components/schemas/NetworkConfig'
+        smsAdmin:
+          $ref: '#/components/schemas/SmsAdminConfig'
+        webUi:
+          $ref: '#/components/schemas/WebUiConfig'
+        sensors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorConfig'
+        publishers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublisherConfigView'
+    DeviceConfigUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        station:
+          $ref: '#/components/schemas/StationConfig'
+        sampling:
+          $ref: '#/components/schemas/SamplingConfig'
+        smoothing:
+          $ref: '#/components/schemas/SmoothingConfig'
+        storage:
+          $ref: '#/components/schemas/StorageConfig'
+        network:
+          $ref: '#/components/schemas/NetworkConfig'
+        smsAdmin:
+          $ref: '#/components/schemas/SmsAdminConfig'
+        webUi:
+          $ref: '#/components/schemas/WebUiConfig'
+        sensors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorConfig'
+        publishers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublisherConfigInput'
+    StationConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - stationName
+        - timezone
+        - location
+      properties:
+        stationName:
+          type: string
+        timezone:
+          type: string
+          examples: [Asia/Kolkata]
+        location:
+          $ref: '#/components/schemas/GeoLocation'
+        notes:
+          type: string
+    GeoLocation:
+      type: object
+      additionalProperties: false
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        elevationMeters:
+          type: number
+    SamplingConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - intervalSeconds
+        - adminWindowMinutes
+        - deepSleepEnabled
+      properties:
+        intervalSeconds:
+          type: integer
+          minimum: 5
+          maximum: 3600
+          default: 30
+        adminWindowMinutes:
+          type: integer
+          minimum: 1
+          maximum: 60
+          default: 10
+        deepSleepEnabled:
+          type: boolean
+          default: true
+        wakeDurationSeconds:
+          type: integer
+          minimum: 1
+        historyAggregationMinutes:
+          type: integer
+          minimum: 1
+          default: 30
+    SmoothingConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+        - fields
+      properties:
+        enabled:
+          type: boolean
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmoothingFieldConfig'
+    SmoothingFieldConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - metric
+        - method
+      properties:
+        metric:
+          type: string
+          enum:
+            - windSpeed
+            - windGust
+            - windDirection
+            - temperature
+            - humidity
+            - pressure
+            - rainfall
+            - illuminance
+            - pm2_5
+            - pm10
+            - noise
+        method:
+          type: string
+          enum: [none, moving_average, ema]
+        windowSamples:
+          type: integer
+          minimum: 1
+        alpha:
+          type: number
+          minimum: 0
+          maximum: 1
+    StorageConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - retentionDays
+        - logFormat
+      properties:
+        retentionDays:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 14
+        logFormat:
+          type: string
+          enum: [jsonl]
+        configSource:
+          type: string
+          enum: [sd_with_flash_fallback]
+    NetworkConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - preferredTransport
+        - wifi
+        - cellular
+      properties:
+        preferredTransport:
+          type: string
+          enum: [wifi, cellular, auto]
+        wifi:
+          $ref: '#/components/schemas/WifiConfig'
+        cellular:
+          $ref: '#/components/schemas/CellularConfig'
+    WifiConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+        - ssid
+      properties:
+        enabled:
+          type: boolean
+        ssid:
+          type: string
+        passwordConfigured:
+          type: boolean
+        allowedOrigins:
+          type: array
+          items:
+            type: string
+            format: uri
+    CellularConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+        - modemType
+      properties:
+        enabled:
+          type: boolean
+        modemType:
+          type: string
+          enum: [SIM7670G]
+        apn:
+          type: string
+        pinConfigured:
+          type: boolean
+        smsEnabled:
+          type: boolean
+    SmsAdminConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+        - whitelist
+        - commands
+      properties:
+        enabled:
+          type: boolean
+        whitelist:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhoneWhitelistEntry'
+        commands:
+          type: array
+          items:
+            type: string
+            enum:
+              - OPEN_SESAME
+              - STATUS
+              - HELP
+              - CONFIG_GET
+              - CONFIG_SET
+              - NET
+              - PUBLISH_NOW
+    PhoneWhitelistEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - label
+        - phoneNumber
+      properties:
+        label:
+          type: string
+        phoneNumber:
+          type: string
+          description: E.164 formatted number
+          examples: ['+919876543210']
+    WebUiConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - tokenTtlMinutes
+        - allowedOrigins
+      properties:
+        tokenTtlMinutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          default: 15
+        allowedOrigins:
+          type: array
+          items:
+            type: string
+            format: uri
+    SensorConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - enabled
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [sen0658, bme280, bmp390, lps22hb]
+        enabled:
+          type: boolean
+        transport:
+          type: string
+          enum: [rs485_modbus, i2c, spi]
+        settings:
+          type: object
+          additionalProperties: true
+    PublisherConfigView:
+      oneOf:
+        - $ref: '#/components/schemas/WundergroundPublisherView'
+        - $ref: '#/components/schemas/WindyPublisherView'
+        - $ref: '#/components/schemas/WebhookPublisherView'
+        - $ref: '#/components/schemas/MqttPublisherView'
+      discriminator:
+        propertyName: type
+    PublisherConfigInput:
+      oneOf:
+        - $ref: '#/components/schemas/WundergroundPublisherInput'
+        - $ref: '#/components/schemas/WindyPublisherInput'
+        - $ref: '#/components/schemas/WebhookPublisherInput'
+        - $ref: '#/components/schemas/MqttPublisherInput'
+      discriminator:
+        propertyName: type
+    PublisherBaseView:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - enabled
+        - publishIntervalSeconds
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        enabled:
+          type: boolean
+        publishIntervalSeconds:
+          type: integer
+          minimum: 30
+        includeHistoryWindowMinutes:
+          type: integer
+          minimum: 1
+    PublisherBaseInput:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - enabled
+        - publishIntervalSeconds
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        enabled:
+          type: boolean
+        publishIntervalSeconds:
+          type: integer
+          minimum: 30
+        includeHistoryWindowMinutes:
+          type: integer
+          minimum: 1
+    WundergroundPublisherView:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseView'
+        - type: object
+          required:
+            - type
+            - stationId
+            - apiKeyConfigured
+          properties:
+            type:
+              type: string
+              const: wunderground
+            stationId:
+              type: string
+            apiKeyConfigured:
+              type: boolean
+    WundergroundPublisherInput:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseInput'
+        - type: object
+          required:
+            - type
+            - stationId
+          properties:
+            type:
+              type: string
+              const: wunderground
+            stationId:
+              type: string
+            apiKey:
+              type: string
+    WindyPublisherView:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseView'
+        - type: object
+          required:
+            - type
+            - stationId
+            - apiKeyConfigured
+          properties:
+            type:
+              type: string
+              const: windy
+            stationId:
+              type: string
+            apiKeyConfigured:
+              type: boolean
+    WindyPublisherInput:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseInput'
+        - type: object
+          required:
+            - type
+            - stationId
+          properties:
+            type:
+              type: string
+              const: windy
+            stationId:
+              type: string
+            apiKey:
+              type: string
+    WebhookPublisherView:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseView'
+        - type: object
+          required:
+            - type
+            - endpoint
+          properties:
+            type:
+              type: string
+              const: webhook
+            endpoint:
+              type: string
+              format: uri
+            authHeaderConfigured:
+              type: boolean
+    WebhookPublisherInput:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseInput'
+        - type: object
+          required:
+            - type
+            - endpoint
+          properties:
+            type:
+              type: string
+              const: webhook
+            endpoint:
+              type: string
+              format: uri
+            authHeader:
+              type: string
+    MqttPublisherView:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseView'
+        - type: object
+          required:
+            - type
+            - brokerUrl
+            - topic
+            - username
+            - passwordConfigured
+          properties:
+            type:
+              type: string
+              const: mqtt
+            brokerUrl:
+              type: string
+              format: uri
+            topic:
+              type: string
+            username:
+              type: string
+            passwordConfigured:
+              type: boolean
+    MqttPublisherInput:
+      allOf:
+        - $ref: '#/components/schemas/PublisherBaseInput'
+        - type: object
+          required:
+            - type
+            - brokerUrl
+            - topic
+            - username
+            - password
+          properties:
+            type:
+              type: string
+              const: mqtt
+            brokerUrl:
+              type: string
+              format: uri
+            topic:
+              type: string
+            username:
+              type: string
+            password:
+              type: string
+    LatestSensorReadingsResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - latest
+        - smoothed
+      properties:
+        latest:
+          $ref: '#/components/schemas/WeatherSample'
+        smoothed:
+          $ref: '#/components/schemas/SmoothedWeatherSample'
+    WeatherLogResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - samples
+      properties:
+        samples:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherSample'
+    WeatherHistoryResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - samples
+      properties:
+        samples:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherSample'
+    WeatherSample:
+      type: object
+      additionalProperties: false
+      required:
+        - recordedAt
+      properties:
+        recordedAt:
+          type: string
+          format: date-time
+        temperatureC:
+          type: number
+        humidityPct:
+          type: number
+        pressureHpa:
+          type: number
+        windSpeedMps:
+          type: number
+        windGustMps:
+          type: number
+        windDirectionDeg:
+          type: number
+        rainfallMm:
+          type: number
+        illuminanceLux:
+          type: number
+        pm2_5UgM3:
+          type: number
+        pm10UgM3:
+          type: number
+        noiseDb:
+          type: number
+    SmoothedWeatherSample:
+      allOf:
+        - $ref: '#/components/schemas/WeatherSample'
+        - type: object
+          properties:
+            smoothingApplied:
+              type: boolean
+    ConnectivityTestRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        transport:
+          type: string
+          enum: [auto, wifi, cellular]
+        targetUrl:
+          type: string
+          format: uri
+    ConnectivityTestResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - success
+        - checkedAt
+      properties:
+        success:
+          type: boolean
+        checkedAt:
+          type: string
+          format: date-time
+        transportUsed:
+          type: string
+          enum: [wifi, cellular]
+        latencyMs:
+          type: integer
+          minimum: 0
+        message:
+          type: string
+    PublisherTestRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        publisherIds:
+          type: array
+          items:
+            type: string
+    PublisherTestResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - publisherId
+              - success
+            properties:
+              publisherId:
+                type: string
+              success:
+                type: boolean
+              message:
+                type: string
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Create an authenticated admin session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      security:
+        - bearerAuth: []
+      summary: Revoke the current admin session
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+  /api/v1/status:
+    get:
+      tags: [status]
+      operationId: getStatus
+      security:
+        - bearerAuth: []
+      summary: Get overall device health and connectivity status
+      responses:
+        '200':
+          description: Current device status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceStatusResponse'
+  /api/v1/config:
+    get:
+      tags: [config]
+      operationId: getConfig
+      security:
+        - bearerAuth: []
+      summary: Get the current device configuration
+      description: Returns the stored config JSON by streaming the file as-is from device storage, without reconstructing or fully buffering large documents in memory.
+      responses:
+        '200':
+          description: Current configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceConfigView'
+    put:
+      tags: [config]
+      operationId: updateConfig
+      security:
+        - bearerAuth: []
+      summary: Update device configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceConfigUpdate'
+      responses:
+        '200':
+          description: Updated configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceConfigView'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/sensors/latest:
+    get:
+      tags: [sensors]
+      operationId: getLatestSensorReadings
+      security:
+        - bearerAuth: []
+      summary: Get the latest raw and smoothed weather measurements
+      responses:
+        '200':
+          description: Latest sensor readings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LatestSensorReadingsResponse'
+  /api/v1/logs/recent:
+    get:
+      tags: [logs]
+      operationId: getRecentLogs
+      security:
+        - bearerAuth: []
+      summary: Get the full recent-log JSON document
+      description: Returns the stored recent-log JSON by streaming it as-is from device storage, without filtering or full in-memory loading.
+      responses:
+        '200':
+          description: Full recent-log JSON as currently stored by the device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherLogResponse'
+  /api/v1/logs/history:
+    get:
+      tags: [logs]
+      operationId: getHistory
+      security:
+        - bearerAuth: []
+      summary: Get the full retained weather history document
+      description: Returns the stored history JSON by streaming it as-is from device storage, without filtering or full in-memory loading.
+      responses:
+        '200':
+          description: Full history JSON as currently stored by the device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherHistoryResponse'
+  /api/v1/admin/connectivity/test:
+    post:
+      tags: [admin]
+      operationId: testConnectivity
+      security:
+        - bearerAuth: []
+      summary: Run a connectivity test using wifi or cellular
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectivityTestRequest'
+      responses:
+        '200':
+          description: Connectivity test completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectivityTestResponse'
+  /api/v1/admin/publishers/test:
+    post:
+      tags: [admin]
+      operationId: testPublishers
+      security:
+        - bearerAuth: []
+      summary: Trigger a test publish for one or more configured publishers
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublisherTestRequest'
+      responses:
+        '200':
+          description: Publisher test completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublisherTestResponse'

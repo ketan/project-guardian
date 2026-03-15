@@ -19,7 +19,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - Allow one composite hardware driver to implement multiple capabilities.
 - Implement `SEN0658` as an RS485/Modbus composite device providing all supported measurements.
 - Add a `Publisher` interface with concrete adapters for `wunderground`, `windy`, and `webhook`.
-- Add MQTT publishing support using Meshtastic-compatible protobuf payloads.
+- Add MQTT publishing support as a Meshtastic-compatible protobuf publisher.
 - Give each publisher its own config block, enable flag, credentials, and publish interval.
 - Use a normalized internal weather sample model that publishers transform into service-specific payloads.
 - Add a `CellularModem` abstraction with an initial `SIM7670G` implementation supporting power control, SMS read/delete, IP query, and data session lifecycle.
@@ -31,12 +31,15 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - Store runtime config primarily as JSON on microSD, with flash-backed fallback defaults for recovery if SD is missing or invalid.
 - Retain the last 14 days of logged weather data on microSD for local viewing through the web UI, with automatic pruning of older records.
 - Treat SD as the primary place for config, logs, and data; frontend assets can be added there later if direct on-device hosting becomes necessary.
+- For JSON config and data responses, stream the files from storage as-is instead of loading large documents fully into memory first.
+- For OTA updates, accept a firmware binary plus checksum over the API, write the upload to a temporary file on microSD, verify the checksum, move the verified image to a canonical OTA staging location on microSD, and reboot. If checksum verification fails, delete the uploaded file and return an error.
 
 ### Web API, auth, and frontend
-- Define OpenAPI endpoints for `POST /auth/login`, `POST /auth/logout`, `GET /status`, `GET /config`, `PUT /config`, `GET /sensors/latest`, `GET /logs/recent`, `GET /logs/history`, `POST /admin/open-link`, `POST /admin/connectivity/test`, and `POST /admin/publishers/test`.
+- Define OpenAPI endpoints for `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/status`, `GET /api/v1/config`, `PUT /api/v1/config`, `GET /api/v1/sensors/latest`, `GET /api/v1/logs/recent`, `GET /api/v1/logs/history`, `POST /api/v1/admin/connectivity/test`, `POST /api/v1/admin/publishers/test`, and `POST /api/v1/admin/ota`.
 - Use login plus short-lived bearer tokens for API auth.
 - Expose CORS configuration for the production GitHub Pages origin and localhost dev origins.
 - Build the React app around login, system status, sensor/smoothing config, publisher config, connectivity/modem status, historical charts for the last 14 days, and SMS/admin diagnostics.
+- Keep config, log, and history access simple for device memory constraints: the config, recent-log, and history endpoints should stream the JSON documents currently stored by the ESP as-is, without server-side filtering, slicing, aggregation, or query parameters.
 - Keep the API contract compatible with both direct device access and a future relay/proxy without changing frontend behavior.
 
 ### SMS and remote admin flow
@@ -49,14 +52,15 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - During the admin window, suspend normal deep sleep and keep the API responsive; resume normal sampling/deep-sleep behavior after the window expires.
 
 ## Public Interfaces and Contract Additions
-- `openapi.yaml` becomes the contract source for config schema, sensor status/read models, historical log query models, auth models, publisher settings, MQTT settings, modem/network status, admin actions, and error responses.
+- `openapi.yaml` becomes the contract source for config schema, sensor status/read models, historical log document models, auth models, publisher settings, Meshtastic MQTT settings, OTA upload models, modem/network status, admin actions, and error responses.
 - SMS configuration should include whitelisted administrator phone numbers and command authorization settings.
 - Core backend types should include `WeatherSample`, `SmoothedSample`, `DeviceConfig`, `SensorConfig`, `PublisherConfig`, `ConnectivityConfig`, `SmsCommandResult`, and `AdminWindowState`.
 - Config JSON should be versioned with a top-level schema version and a migration hook for future compatibility.
 
 ## Test Plan
-- Unit tests for config parsing/validation, smoothing algorithms, publish scheduling, SMS command parsing/auth including whitelist handling, modem abstraction behavior, Meshtastic protobuf encoding, and sensor capability aggregation.
-- Integration-style tests for `SEN0658` sample acquisition with mocked Modbus responses, SD log append/readback, 14-day retention/pruning, publisher payload generation including MQTT protobuf messages, and admin window state transitions.
+- Unit tests for config parsing/validation, smoothing algorithms, publish scheduling, SMS command parsing/auth including whitelist handling, modem abstraction behavior, Meshtastic protobuf encoding, OTA checksum verification, and sensor capability aggregation.
+- Integration-style tests for `SEN0658` sample acquisition with mocked Modbus responses, SD log append/readback, 14-day retention/pruning, publisher payload generation including Meshtastic MQTT protobuf messages, OTA staging file handling on microSD, and admin window state transitions.
+- Integration-style tests should verify streamed JSON responses for config, recent logs, and history without requiring full-file buffering in memory.
 - API contract checks to validate backend responses against `openapi.yaml` and verify/generated frontend client bindings.
 - Frontend tests for login, config editing, dashboard rendering, publisher forms, and API error handling.
 - Field acceptance scenarios for normal boot, recovery boot, 30-second logging, scheduled publishing, `OPEN SESAME` SMS wake-up flow, and admin window expiry.
@@ -65,7 +69,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - Board remains `esp32-s3-devkitc-1` under `backend/`.
 - `SEN0658` is treated as an RS485/Modbus composite sensor source.
 - Runtime config is JSON-based, stored on SD first, with flash fallback.
-- Weather service v1 targets are Weather Underground, Windy, generic webhook, and MQTT with Meshtastic-compatible protobuf payloads.
+- Weather service v1 targets are Weather Underground, Windy, generic webhook, and Meshtastic-compatible MQTT.
 - Frontend production host is GitHub Pages; localhost is allowed for development.
 - API auth uses bearer tokens.
 - SMS admin uses command + help semantics, not conversational SMS sessions, and privileged access is granted only to whitelisted numbers.
