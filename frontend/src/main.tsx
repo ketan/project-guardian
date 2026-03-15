@@ -8,7 +8,7 @@ import App from "./App";
 const theme = createTheme({
   primaryColor: "teal",
   fontFamily: '"IBM Plex Sans", "Segoe UI", sans-serif',
-  defaultRadius: "md",
+  defaultRadius: "sm",
   headings: {
     fontFamily: '"IBM Plex Sans", "Segoe UI", sans-serif',
   },
