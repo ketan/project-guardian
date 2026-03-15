@@ -338,15 +338,11 @@ components:
       additionalProperties: false
       required:
         - stationName
-        - timezone
         - locationFromGPS
         - gpsPollIntervalHours
       properties:
         stationName:
           type: string
-        timezone:
-          type: string
-          examples: [Asia/Kolkata]
         locationFromGPS:
           type: boolean
           description: When true, the device should use the latest valid GPS fix for station coordinates whenever GPS hardware and a valid fix are available.

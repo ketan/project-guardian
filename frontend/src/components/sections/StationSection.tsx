@@ -29,18 +29,11 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
       }
     >
       <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
+        <Grid.Col span={12}>
           <TextInput
             label="Station name"
             value={config.station.stationName}
             onChange={(event) => updateStationField("stationName", event.currentTarget.value)}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput
-            label="Timezone"
-            value={config.station.timezone}
-            onChange={(event) => updateStationField("timezone", event.currentTarget.value)}
           />
         </Grid.Col>
         <Grid.Col span={12}>

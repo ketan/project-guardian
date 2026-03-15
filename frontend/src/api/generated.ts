@@ -451,8 +451,6 @@ export interface components {
         };
         StationConfig: {
             stationName: string;
-            /** @example Asia/Kolkata */
-            timezone: string;
             /** @description When true, the device should use the latest valid GPS fix for station coordinates whenever GPS hardware and a valid fix are available. */
             locationFromGPS: boolean;
             /**

@@ -21,7 +21,6 @@ export const initialConfig: UiConfig = {
   schemaVersion: 1,
   station: {
     stationName: "Kamshet Ridge Station",
-    timezone: "Asia/Kolkata",
     locationFromGPS: false,
     gpsPollIntervalHours: 6,
     location: {
