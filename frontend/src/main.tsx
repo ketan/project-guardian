@@ -18,6 +18,11 @@ const theme = createTheme({
         size: "xs",
       },
     },
+    PasswordInput: {
+      defaultProps: {
+        size: "xs",
+      },
+    },
     NumberInput: {
       defaultProps: {
         size: "xs",
