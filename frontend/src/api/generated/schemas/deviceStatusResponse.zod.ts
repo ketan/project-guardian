@@ -84,7 +84,6 @@ export const DeviceStatusResponse = zod.object({
   "message": zod.string().optional()
 })),
   "publishers": zod.array(zod.object({
-  "id": zod.string(),
   "type": zod.enum(['wunderground', 'windy', 'webhook', 'mqtt']),
   "enabled": zod.boolean(),
   "lastPublishAt": zod.iso.datetime({}).optional(),

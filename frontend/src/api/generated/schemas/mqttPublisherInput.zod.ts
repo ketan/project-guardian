@@ -18,7 +18,6 @@ export const mqttPublisherInputOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const MqttPublisherInput = zod.object({
-  "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
   "publishIntervalSeconds": zod.number().min(mqttPublisherInputOnePublishIntervalSecondsMin).max(mqttPublisherInputOnePublishIntervalSecondsMax),
@@ -29,8 +28,6 @@ export const MqttPublisherInput = zod.object({
   "topic": zod.string(),
   "username": zod.string(),
   "password": zod.string().optional()
-})).and(zod.object({
-  "type": zod.enum(['mqtt'])
 }))
 
 export type MqttPublisherInput = zod.input<typeof MqttPublisherInput>;

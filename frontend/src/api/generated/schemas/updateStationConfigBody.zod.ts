@@ -11,23 +11,23 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
-export const updateStationConfigBodyGpsPollIntervalHoursDefault = 6;
-export const updateStationConfigBodyGpsPollIntervalHoursMax = 24;
+export const updateStationConfigBodyGpsPollIntervalHoursDefaultOne = 6;
+export const updateStationConfigBodyGpsPollIntervalHoursMaxOne = 24;
 
-export const updateStationConfigBodyLocationLatitudeMin = -90;
-export const updateStationConfigBodyLocationLatitudeMax = 90;
+export const updateStationConfigBodyLocationLatitudeMinOne = -90;
+export const updateStationConfigBodyLocationLatitudeMaxOne = 90;
 
-export const updateStationConfigBodyLocationLongitudeMin = -180;
-export const updateStationConfigBodyLocationLongitudeMax = 180;
+export const updateStationConfigBodyLocationLongitudeMinOne = -180;
+export const updateStationConfigBodyLocationLongitudeMaxOne = 180;
 
 
 export const UpdateStationConfigBody = zod.object({
   "stationName": zod.string(),
   "locationFromGPS": zod.boolean().describe('When true, the device should use the latest valid GPS fix for station coordinates whenever GPS hardware and a valid fix are available.'),
-  "gpsPollIntervalHours": zod.number().min(1).max(updateStationConfigBodyGpsPollIntervalHoursMax).default(updateStationConfigBodyGpsPollIntervalHoursDefault).describe('How often to wake and refresh the cached GPS fix used for station coordinates.'),
+  "gpsPollIntervalHours": zod.number().min(1).max(updateStationConfigBodyGpsPollIntervalHoursMaxOne).default(updateStationConfigBodyGpsPollIntervalHoursDefaultOne).describe('How often to wake and refresh the cached GPS fix used for station coordinates.'),
   "location": zod.object({
-  "latitude": zod.number().min(updateStationConfigBodyLocationLatitudeMin).max(updateStationConfigBodyLocationLatitudeMax),
-  "longitude": zod.number().min(updateStationConfigBodyLocationLongitudeMin).max(updateStationConfigBodyLocationLongitudeMax),
+  "latitude": zod.number().min(updateStationConfigBodyLocationLatitudeMinOne).max(updateStationConfigBodyLocationLatitudeMaxOne),
+  "longitude": zod.number().min(updateStationConfigBodyLocationLongitudeMinOne).max(updateStationConfigBodyLocationLongitudeMaxOne),
   "elevationMeters": zod.number().optional()
 }).optional().describe('Manual fallback coordinates used when GPS-based location is disabled or no valid GPS fix is available.'),
   "notes": zod.string().optional()

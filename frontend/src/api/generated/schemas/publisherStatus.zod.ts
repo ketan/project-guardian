@@ -12,7 +12,6 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const PublisherStatus = zod.object({
-  "id": zod.string(),
   "type": zod.enum(['wunderground', 'windy', 'webhook', 'mqtt']),
   "enabled": zod.boolean(),
   "lastPublishAt": zod.iso.datetime({}).optional(),

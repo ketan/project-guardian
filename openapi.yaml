@@ -9,12 +9,10 @@ info:
     live sensor data, retained historical weather data, publisher management,
     and administrative actions such as opening a temporary online window.
 tags:
-  - name: auth
   - name: status
   - name: config
   - name: sensors
   - name: logs
-  - name: admin
 components:
   securitySchemes:
     bearerAuth:
@@ -37,42 +35,6 @@ components:
         details:
           type: object
           additionalProperties: true
-    LoginRequest:
-      type: object
-      additionalProperties: false
-      required:
-        - username
-        - password
-      properties:
-        username:
-          type: string
-        password:
-          type: string
-          format: password
-    LoginResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - accessToken
-        - tokenType
-        - expiresAt
-      properties:
-        accessToken:
-          type: string
-        tokenType:
-          type: string
-          enum: [Bearer]
-        expiresAt:
-          type: string
-          format: date-time
-    LogoutResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - loggedOut
-      properties:
-        loggedOut:
-          type: boolean
     DeviceStatusResponse:
       type: object
       additionalProperties: false
@@ -276,12 +238,9 @@ components:
       type: object
       additionalProperties: false
       required:
-        - id
         - type
         - enabled
       properties:
-        id:
-          type: string
         type:
           type: string
           enum: [wunderground, windy, webhook, mqtt]
@@ -332,9 +291,7 @@ components:
           items:
             $ref: '#/components/schemas/SensorConfig'
         publishers:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublisherConfigView'
+          $ref: '#/components/schemas/PublishersConfigView'
     StationConfig:
       type: object
       additionalProperties: false
@@ -596,43 +553,38 @@ components:
           type: integer
           minimum: 1
           maximum: 247
-    PublisherConfigView:
-      oneOf:
-        - $ref: '#/components/schemas/WundergroundPublisherView'
-        - $ref: '#/components/schemas/WindyPublisherView'
-        - $ref: '#/components/schemas/WebhookPublisherView'
-        - $ref: '#/components/schemas/MqttPublisherView'
-      discriminator:
-        propertyName: type
-        mapping:
-          wunderground: '#/components/schemas/WundergroundPublisherView'
-          windy: '#/components/schemas/WindyPublisherView'
-          webhook: '#/components/schemas/WebhookPublisherView'
-          mqtt: '#/components/schemas/MqttPublisherView'
-    PublisherConfigInput:
-      oneOf:
-        - $ref: '#/components/schemas/WundergroundPublisherInput'
-        - $ref: '#/components/schemas/WindyPublisherInput'
-        - $ref: '#/components/schemas/WebhookPublisherInput'
-        - $ref: '#/components/schemas/MqttPublisherInput'
-      discriminator:
-        propertyName: type
-        mapping:
-          wunderground: '#/components/schemas/WundergroundPublisherInput'
-          windy: '#/components/schemas/WindyPublisherInput'
-          webhook: '#/components/schemas/WebhookPublisherInput'
-          mqtt: '#/components/schemas/MqttPublisherInput'
+    PublishersConfigView:
+      type: object
+      additionalProperties: false
+      properties:
+        wunderground:
+          $ref: '#/components/schemas/WundergroundPublisherView'
+        windy:
+          $ref: '#/components/schemas/WindyPublisherView'
+        webhook:
+          $ref: '#/components/schemas/WebhookPublisherView'
+        mqtt:
+          $ref: '#/components/schemas/MqttPublisherView'
+    PublishersConfigInput:
+      type: object
+      additionalProperties: false
+      properties:
+        wunderground:
+          $ref: '#/components/schemas/WundergroundPublisherInput'
+        windy:
+          $ref: '#/components/schemas/WindyPublisherInput'
+        webhook:
+          $ref: '#/components/schemas/WebhookPublisherInput'
+        mqtt:
+          $ref: '#/components/schemas/MqttPublisherInput'
     PublisherBaseView:
       type: object
       additionalProperties: false
       required:
-        - id
         - type
         - enabled
         - publishIntervalSeconds
       properties:
-        id:
-          type: string
         type:
           type: string
         enabled:
@@ -649,13 +601,10 @@ components:
       type: object
       additionalProperties: false
       required:
-        - id
         - type
         - enabled
         - publishIntervalSeconds
       properties:
-        id:
-          type: string
         type:
           type: string
         enabled:
@@ -818,16 +767,6 @@ components:
           $ref: '#/components/schemas/WeatherSample'
         smoothed:
           $ref: '#/components/schemas/SmoothedWeatherSample'
-    WeatherLogResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - samples
-      properties:
-        samples:
-          type: array
-          items:
-            $ref: '#/components/schemas/WeatherSample'
     WeatherHistoryResponse:
       type: object
       additionalProperties: false
@@ -876,105 +815,7 @@ components:
           properties:
             smoothingApplied:
               type: boolean
-    ConnectivityTestRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        transport:
-          type: string
-          enum: [auto, wifi, cellular]
-        targetUrl:
-          type: string
-#          format: uri
-    ConnectivityTestResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - success
-        - checkedAt
-      properties:
-        success:
-          type: boolean
-        checkedAt:
-          type: string
-          format: date-time
-        transportUsed:
-          type: string
-          enum: [wifi, cellular]
-        latencyMs:
-          type: integer
-          minimum: 0
-          maximum: 120000
-        message:
-          type: string
-    PublisherTestRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        publisherIds:
-          type: array
-          items:
-            type: string
-    PublisherTestResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - results
-      properties:
-        results:
-          type: array
-          items:
-            type: object
-            additionalProperties: false
-            required:
-              - publisherId
-              - success
-            properties:
-              publisherId:
-                type: string
-              success:
-                type: boolean
-              message:
-                type: string
 paths:
-  /api/v1/auth/login:
-    post:
-      tags: [auth]
-      operationId: login
-      summary: Create an authenticated admin session
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '401':
-          description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/v1/auth/logout:
-    post:
-      tags: [auth]
-      operationId: logout
-      security:
-        - bearerAuth: []
-      summary: Revoke the current admin session
-      responses:
-        '200':
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogoutResponse'
   /api/v1/status:
     get:
       tags: [status]
@@ -989,22 +830,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeviceStatusResponse'
-  /api/v1/config:
+  /api/v1/config/station:
     get:
       tags: [config]
-      operationId: getConfig
+      operationId: getStationConfig
       security:
         - bearerAuth: []
-      summary: Get the current device configuration
-      description: Returns the stored config JSON by streaming the file as-is from device storage, without reconstructing or fully buffering large documents in memory.
+      summary: Get station configuration
       responses:
         '200':
-          description: Current configuration
+          description: Current station configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceConfigView'
-  /api/v1/config/station:
+                $ref: '#/components/schemas/StationConfig'
     put:
       tags: [config]
       operationId: updateStationConfig
@@ -1031,6 +870,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/v1/config/sampling:
+    get:
+      tags: [config]
+      operationId: getSamplingConfig
+      security:
+        - bearerAuth: []
+      summary: Get sampling configuration
+      responses:
+        '200':
+          description: Current sampling configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SamplingConfig'
     put:
       tags: [config]
       operationId: updateSamplingConfig
@@ -1057,6 +909,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/v1/config/smoothing:
+    get:
+      tags: [config]
+      operationId: getSmoothingConfig
+      security:
+        - bearerAuth: []
+      summary: Get smoothing configuration
+      responses:
+        '200':
+          description: Current smoothing configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmoothingConfig'
     put:
       tags: [config]
       operationId: updateSmoothingConfig
@@ -1083,6 +948,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/v1/config/storage:
+    get:
+      tags: [config]
+      operationId: getStorageConfig
+      security:
+        - bearerAuth: []
+      summary: Get storage configuration
+      responses:
+        '200':
+          description: Current storage configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageConfig'
     put:
       tags: [config]
       operationId: updateStorageConfig
@@ -1109,6 +987,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/v1/config/network:
+    get:
+      tags: [config]
+      operationId: getNetworkConfig
+      security:
+        - bearerAuth: []
+      summary: Get network configuration
+      responses:
+        '200':
+          description: Current network configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkConfig'
     put:
       tags: [config]
       operationId: updateNetworkConfig
@@ -1135,6 +1026,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/v1/config/sms-admin:
+    get:
+      tags: [config]
+      operationId: getSmsAdminConfig
+      security:
+        - bearerAuth: []
+      summary: Get SMS admin configuration
+      responses:
+        '200':
+          description: Current SMS admin configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsAdminConfig'
     put:
       tags: [config]
       operationId: updateSmsAdminConfig
@@ -1161,6 +1065,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/v1/config/web-ui:
+    get:
+      tags: [config]
+      operationId: getWebUiConfig
+      security:
+        - bearerAuth: []
+      summary: Get web UI configuration
+      responses:
+        '200':
+          description: Current web UI configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebUiConfig'
     put:
       tags: [config]
       operationId: updateWebUiConfig
@@ -1187,6 +1104,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /api/v1/config/sensors:
+    get:
+      tags: [config]
+      operationId: getSensorsConfig
+      security:
+        - bearerAuth: []
+      summary: Get sensor configuration
+      responses:
+        '200':
+          description: Current sensor configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensorConfig'
     put:
       tags: [config]
       operationId: updateSensorsConfig
@@ -1216,30 +1148,156 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /api/v1/config/publishers:
-    put:
+  /api/v1/config/publishers/wunderground:
+    get:
       tags: [config]
-      operationId: updatePublishersConfig
+      operationId: getWundergroundPublisherConfig
       security:
         - bearerAuth: []
-      summary: Update publisher configuration
+      summary: Get Weather Underground publisher configuration
+      responses:
+        '200':
+          description: Current Weather Underground publisher configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WundergroundPublisherView'
+    put:
+      tags: [config]
+      operationId: updateWundergroundPublisherConfig
+      security:
+        - bearerAuth: []
+      summary: Update Weather Underground publisher configuration
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/PublisherConfigInput'
+              $ref: '#/components/schemas/WundergroundPublisherInput'
       responses:
         '200':
-          description: Updated publisher configuration
+          description: Updated Weather Underground publisher configuration
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PublisherConfigView'
+                $ref: '#/components/schemas/WundergroundPublisherView'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/publishers/windy:
+    get:
+      tags: [config]
+      operationId: getWindyPublisherConfig
+      security:
+        - bearerAuth: []
+      summary: Get Windy publisher configuration
+      responses:
+        '200':
+          description: Current Windy publisher configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WindyPublisherView'
+    put:
+      tags: [config]
+      operationId: updateWindyPublisherConfig
+      security:
+        - bearerAuth: []
+      summary: Update Windy publisher configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WindyPublisherInput'
+      responses:
+        '200':
+          description: Updated Windy publisher configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WindyPublisherView'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/publishers/webhook:
+    get:
+      tags: [config]
+      operationId: getWebhookPublisherConfig
+      security:
+        - bearerAuth: []
+      summary: Get webhook publisher configuration
+      responses:
+        '200':
+          description: Current webhook publisher configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookPublisherView'
+    put:
+      tags: [config]
+      operationId: updateWebhookPublisherConfig
+      security:
+        - bearerAuth: []
+      summary: Update webhook publisher configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPublisherInput'
+      responses:
+        '200':
+          description: Updated webhook publisher configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookPublisherView'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/config/publishers/mqtt:
+    get:
+      tags: [config]
+      operationId: getMqttPublisherConfig
+      security:
+        - bearerAuth: []
+      summary: Get MQTT publisher configuration
+      responses:
+        '200':
+          description: Current MQTT publisher configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MqttPublisherView'
+    put:
+      tags: [config]
+      operationId: updateMqttPublisherConfig
+      security:
+        - bearerAuth: []
+      summary: Update MQTT publisher configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MqttPublisherInput'
+      responses:
+        '200':
+          description: Updated MQTT publisher configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MqttPublisherView'
         '400':
           description: Configuration validation failed
           content:
@@ -1260,21 +1318,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LatestSensorReadingsResponse'
-  /api/v1/logs/recent:
-    get:
-      tags: [logs]
-      operationId: getRecentLogs
-      security:
-        - bearerAuth: []
-      summary: Get the full recent-log JSON document
-      description: Returns the stored recent-log JSON by streaming it as-is from device storage, without filtering or full in-memory loading.
-      responses:
-        '200':
-          description: Full recent-log JSON as currently stored by the device
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WeatherLogResponse'
   /api/v1/logs/history:
     get:
       tags: [logs]
@@ -1290,43 +1333,3 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WeatherHistoryResponse'
-  /api/v1/admin/connectivity/test:
-    post:
-      tags: [admin]
-      operationId: testConnectivity
-      security:
-        - bearerAuth: []
-      summary: Run a connectivity test using wifi or cellular
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ConnectivityTestRequest'
-      responses:
-        '200':
-          description: Connectivity test completed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConnectivityTestResponse'
-  /api/v1/admin/publishers/test:
-    post:
-      tags: [admin]
-      operationId: testPublishers
-      security:
-        - bearerAuth: []
-      summary: Trigger a test publish for one or more configured publishers
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PublisherTestRequest'
-      responses:
-        '200':
-          description: Publisher test completed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PublisherTestResponse'

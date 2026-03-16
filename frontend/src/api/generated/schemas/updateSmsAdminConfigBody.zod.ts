@@ -11,7 +11,7 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
-export const updateSmsAdminConfigBodyWhitelistMax = 5;
+export const updateSmsAdminConfigBodyWhitelistMaxOne = 5;
 
 
 export const UpdateSmsAdminConfigBody = zod.object({
@@ -19,7 +19,7 @@ export const UpdateSmsAdminConfigBody = zod.object({
   "whitelist": zod.array(zod.object({
   "label": zod.string(),
   "phoneNumber": zod.string().describe('E.164 formatted number')
-})).max(updateSmsAdminConfigBodyWhitelistMax)
+})).max(updateSmsAdminConfigBodyWhitelistMaxOne)
 })
 
 export type UpdateSmsAdminConfigBody = zod.input<typeof UpdateSmsAdminConfigBody>;

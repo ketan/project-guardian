@@ -11,7 +11,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { IconCpu, IconPlus, IconTrash } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { UiConfig } from "../../types/ui";
 
@@ -71,9 +71,10 @@ export function SensorsSection({ config, setConfig }: SensorsSectionProps) {
     <SectionCard
       id="sensors"
       title="Sensors"
+      icon={<IconCpu size={18} stroke={1.75} />}
       subtitle="Configure attached sensor modules and their connection settings."
       action={
-        <Button leftSection={<FiPlus />} size="compact-sm" variant="light" onClick={addSensor}>
+        <Button leftSection={<IconPlus size={16} stroke={1.75} />} size="compact-sm" variant="light" onClick={addSensor}>
           Add sensor
         </Button>
       }
@@ -90,8 +91,8 @@ export function SensorsSection({ config, setConfig }: SensorsSectionProps) {
                   onClick={() => removeSensor(index)}
                   aria-label={`Remove sensor ${sensor.id}`}
                 >
-                  <FiTrash2 />
-                </ActionIcon>
+                    <IconTrash size={16} stroke={1.75} />
+                  </ActionIcon>
               </Group>
 
               <Switch

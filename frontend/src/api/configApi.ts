@@ -1,73 +1,108 @@
 import type { FieldNamesMarkedBoolean } from "react-hook-form";
 import { z } from "zod";
-import { ConfigSectionSchemas, type ConfigSectionKey, UiConfigSchema, type UiConfig } from "./contracts";
+import {
+  ConfigSectionSchemas,
+  PublisherSectionSchemas,
+  type ConfigSectionKey,
+  type PublisherSlotKey,
+  UiConfigSchema,
+  type UiConfig,
+} from "./contracts";
 import type { ApiConnectionSettings } from "./runtime";
 import {
   DeviceConfigView,
+  MqttPublisherView,
   NetworkConfig,
-  PublisherConfigView,
   SamplingConfig,
   SensorConfig,
   SmsAdminConfig,
   SmoothingConfig,
   StationConfig,
   StorageConfig,
+  WebhookPublisherView,
   WebUiConfig,
+  WindyPublisherView,
+  WundergroundPublisherView,
 } from "./generated/schemas/index.zod";
-import {
-  getGetConfigUrl,
-  getUpdateNetworkConfigUrl,
-  getUpdatePublishersConfigUrl,
-  getUpdateSamplingConfigUrl,
-  getUpdateSensorsConfigUrl,
-  getUpdateSmsAdminConfigUrl,
-  getUpdateSmoothingConfigUrl,
-  getUpdateStationConfigUrl,
-  getUpdateStorageConfigUrl,
-  getUpdateWebUiConfigUrl,
-} from "./generated/client";
+import { CONFIG_SECTION_PATHS, PUBLISHER_SLOT_PATHS } from "./paths";
+
+const SCHEMA_VERSION = 1;
 
 type ConfigSectionRequest = {
-  getUrl: () => string;
+  readUrl: () => string;
+  updateUrl: () => string;
   responseSchema: z.ZodTypeAny;
 };
 
 const configSectionRequests: Record<ConfigSectionKey, ConfigSectionRequest> = {
   station: {
-    getUrl: getUpdateStationConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.station.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.station.update,
     responseSchema: StationConfig,
   },
   sampling: {
-    getUrl: getUpdateSamplingConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.sampling.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.sampling.update,
     responseSchema: SamplingConfig,
   },
   smoothing: {
-    getUrl: getUpdateSmoothingConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.smoothing.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.smoothing.update,
     responseSchema: SmoothingConfig,
   },
   storage: {
-    getUrl: getUpdateStorageConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.storage.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.storage.update,
     responseSchema: StorageConfig,
   },
   network: {
-    getUrl: getUpdateNetworkConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.network.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.network.update,
     responseSchema: NetworkConfig,
   },
   smsAdmin: {
-    getUrl: getUpdateSmsAdminConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.smsAdmin.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.smsAdmin.update,
     responseSchema: SmsAdminConfig,
   },
   webUi: {
-    getUrl: getUpdateWebUiConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.webUi.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.webUi.update,
     responseSchema: WebUiConfig,
   },
   sensors: {
-    getUrl: getUpdateSensorsConfigUrl,
+    readUrl: () => CONFIG_SECTION_PATHS.sensors.read,
+    updateUrl: () => CONFIG_SECTION_PATHS.sensors.update,
     responseSchema: z.array(SensorConfig),
   },
-  publishers: {
-    getUrl: getUpdatePublishersConfigUrl,
-    responseSchema: z.array(PublisherConfigView),
+};
+
+type PublisherSectionRequest = {
+  readUrl: () => string;
+  updateUrl: () => string;
+  responseSchema: z.ZodTypeAny;
+};
+
+const publisherSectionRequests: Record<PublisherSlotKey, PublisherSectionRequest> = {
+  wunderground: {
+    readUrl: () => PUBLISHER_SLOT_PATHS.wunderground.read,
+    updateUrl: () => PUBLISHER_SLOT_PATHS.wunderground.update,
+    responseSchema: WundergroundPublisherView,
+  },
+  windy: {
+    readUrl: () => PUBLISHER_SLOT_PATHS.windy.read,
+    updateUrl: () => PUBLISHER_SLOT_PATHS.windy.update,
+    responseSchema: WindyPublisherView,
+  },
+  webhook: {
+    readUrl: () => PUBLISHER_SLOT_PATHS.webhook.read,
+    updateUrl: () => PUBLISHER_SLOT_PATHS.webhook.update,
+    responseSchema: WebhookPublisherView,
+  },
+  mqtt: {
+    readUrl: () => PUBLISHER_SLOT_PATHS.mqtt.read,
+    updateUrl: () => PUBLISHER_SLOT_PATHS.mqtt.update,
+    responseSchema: MqttPublisherView,
   },
 };
 
@@ -150,9 +185,71 @@ export function getDirtySections(
   );
 }
 
+function getDirtyPublisherSlots(
+  dirtyFields: FieldNamesMarkedBoolean<UiConfig>,
+): PublisherSlotKey[] {
+  const publishers = dirtyFields.publishers as Partial<Record<PublisherSlotKey, unknown>> | undefined;
+
+  if (!publishers) {
+    return [];
+  }
+
+  return (Object.keys(publisherSectionRequests) as PublisherSlotKey[]).filter((slot) =>
+    hasDirtyValue(publishers[slot]),
+  );
+}
+
+async function readConfigSection(
+  section: ConfigSectionKey,
+  settings: ApiConnectionSettings,
+): Promise<unknown> {
+  const request = configSectionRequests[section];
+
+  return requestJson(request.readUrl(), settings, { method: "GET" }, request.responseSchema);
+}
+
+async function readPublisherSlot(
+  slot: PublisherSlotKey,
+  settings: ApiConnectionSettings,
+): Promise<unknown> {
+  const request = publisherSectionRequests[slot];
+
+  return requestJson(request.readUrl(), settings, { method: "GET" }, request.responseSchema);
+}
+
 export async function fetchConfig(settings: ApiConnectionSettings): Promise<UiConfig> {
-  const config = await requestJson(getGetConfigUrl(), settings, { method: "GET" }, DeviceConfigView);
-  return UiConfigSchema.parse(config);
+  const station = (await readConfigSection("station", settings)) as z.infer<typeof StationConfig>;
+  const sampling = (await readConfigSection("sampling", settings)) as z.infer<typeof SamplingConfig>;
+  const smoothing = (await readConfigSection("smoothing", settings)) as z.infer<typeof SmoothingConfig>;
+  const storage = (await readConfigSection("storage", settings)) as z.infer<typeof StorageConfig>;
+  const network = (await readConfigSection("network", settings)) as z.infer<typeof NetworkConfig>;
+  const smsAdmin = (await readConfigSection("smsAdmin", settings)) as z.infer<typeof SmsAdminConfig>;
+  const webUi = (await readConfigSection("webUi", settings)) as z.infer<typeof WebUiConfig>;
+  const sensors = (await readConfigSection("sensors", settings)) as z.infer<typeof SensorConfig>[];
+  const wunderground = (await readPublisherSlot("wunderground", settings)) as z.infer<
+    typeof WundergroundPublisherView
+  >;
+  const windy = (await readPublisherSlot("windy", settings)) as z.infer<typeof WindyPublisherView>;
+  const webhook = (await readPublisherSlot("webhook", settings)) as z.infer<typeof WebhookPublisherView>;
+  const mqtt = (await readPublisherSlot("mqtt", settings)) as z.infer<typeof MqttPublisherView>;
+
+  return UiConfigSchema.parse({
+    schemaVersion: SCHEMA_VERSION,
+    station,
+    sampling,
+    smoothing,
+    storage,
+    network,
+    smsAdmin,
+    webUi,
+    sensors,
+    publishers: {
+      wunderground,
+      windy,
+      webhook,
+      mqtt,
+    },
+  } satisfies z.input<typeof DeviceConfigView>);
 }
 
 export async function saveConfigSection(
@@ -164,7 +261,32 @@ export async function saveConfigSection(
   const request = configSectionRequests[section];
 
   return requestJson(
-    request.getUrl(),
+    request.updateUrl(),
+    settings,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    request.responseSchema,
+  );
+}
+
+async function savePublisherSlot(
+  slot: PublisherSlotKey,
+  config: UiConfig,
+  settings: ApiConnectionSettings,
+): Promise<unknown> {
+  const publisher = config.publishers[slot];
+
+  if (!publisher) {
+    return null;
+  }
+
+  const payload = PublisherSectionSchemas[slot].parse(publisher);
+  const request = publisherSectionRequests[slot];
+
+  return requestJson(
+    request.updateUrl(),
     settings,
     {
       method: "PUT",
@@ -178,10 +300,16 @@ export async function saveConfigSectionsSequentially(
   sections: ConfigSectionKey[],
   config: UiConfig,
   settings: ApiConnectionSettings,
-  onSectionStart?: (section: ConfigSectionKey) => void,
+  dirtyFields: FieldNamesMarkedBoolean<UiConfig>,
+  onSectionStart?: (section: ConfigSectionKey | `publishers.${PublisherSlotKey}`) => void,
 ): Promise<void> {
   for (const section of sections) {
     onSectionStart?.(section);
     await saveConfigSection(section, config, settings);
+  }
+
+  for (const slot of getDirtyPublisherSlots(dirtyFields)) {
+    onSectionStart?.(`publishers.${slot}`);
+    await savePublisherSlot(slot, config, settings);
   }
 }

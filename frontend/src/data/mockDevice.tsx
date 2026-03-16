@@ -1,25 +1,25 @@
 import {
-  FiActivity,
-  FiMapPin,
-  FiMessageSquare,
-  FiServer,
-  FiSettings,
-  FiSend,
-  FiSliders,
-  FiWifi,
-} from "react-icons/fi";
+  IconChartHistogram,
+  IconCpu,
+  IconFilter,
+  IconMapPin,
+  IconMessageCircle,
+  IconSend,
+  IconServer,
+  IconWifi,
+} from "@tabler/icons-react";
 import type { DeviceStatus, NavItem, UiConfig } from "../types/ui";
 
 export const navItems: NavItem[] = [
-  { id: "overview", label: "Overview", icon: <FiActivity /> },
-  { id: "backend-connection", label: "Backend connection", icon: <FiServer /> },
-  { id: "station", label: "Station identity", icon: <FiMapPin /> },
-  { id: "sampling", label: "Sampling and retention", icon: <FiSliders /> },
-  { id: "smoothing", label: "Smoothing", icon: <FiSliders /> },
-  { id: "sensors", label: "Sensors", icon: <FiSettings /> },
-  { id: "network", label: "Connectivity", icon: <FiWifi /> },
-  { id: "publishers", label: "Publishers", icon: <FiSend /> },
-  { id: "sms", label: "SMS administration", icon: <FiMessageSquare /> },
+  { id: "overview", label: "Overview", icon: <IconChartHistogram size={18} stroke={1.75} /> },
+  { id: "backend-connection", label: "Backend connection", icon: <IconServer size={18} stroke={1.75} /> },
+  { id: "station", label: "Station identity", icon: <IconMapPin size={18} stroke={1.75} /> },
+  { id: "sampling", label: "Sampling and retention", icon: <IconChartHistogram size={18} stroke={1.75} /> },
+  { id: "smoothing", label: "Smoothing", icon: <IconFilter size={18} stroke={1.75} /> },
+  { id: "sensors", label: "Sensors", icon: <IconCpu size={18} stroke={1.75} /> },
+  { id: "network", label: "Connectivity", icon: <IconWifi size={18} stroke={1.75} /> },
+  { id: "publishers", label: "Publishers", icon: <IconSend size={18} stroke={1.75} /> },
+  { id: "sms", label: "SMS administration", icon: <IconMessageCircle size={18} stroke={1.75} /> },
 ];
 
 export const initialConfig: UiConfig = {
@@ -94,33 +94,29 @@ export const initialConfig: UiConfig = {
       pollIntervalSeconds: 30,
     },
   ],
-  publishers: [
-    {
-      id: "windy-main",
+  publishers: {
+    windy: {
       type: "windy",
       enabled: true,
       publishIntervalSeconds: 300,
       stationId: "windy-kamshet",
       apiKeyConfigured: true,
     },
-    {
-      id: "wunderground-main",
+    wunderground: {
       type: "wunderground",
       enabled: false,
       publishIntervalSeconds: 300,
       stationId: "IKAMSHET1",
       apiKeyConfigured: false,
     },
-    {
-      id: "webhook-backup",
+    webhook: {
       type: "webhook",
       enabled: false,
       publishIntervalSeconds: 300,
       endpoint: "https://weather.example.net/ingest",
       authHeaderConfigured: false,
     },
-    {
-      id: "meshtastic-mqtt",
+    mqtt: {
       type: "mqtt",
       enabled: true,
       publishIntervalSeconds: 60,
@@ -129,7 +125,7 @@ export const initialConfig: UiConfig = {
       username: "guardian",
       passwordConfigured: true,
     },
-  ],
+  },
 };
 
 export const initialStatus: DeviceStatus = {
@@ -190,7 +186,6 @@ export const initialStatus: DeviceStatus = {
   ],
   publishers: [
     {
-      id: "windy-main",
       type: "windy",
       enabled: true,
       lastPublishAt: "2026-03-15T16:15:00Z",
@@ -198,7 +193,6 @@ export const initialStatus: DeviceStatus = {
       message: "Published 5 minutes ago",
     },
     {
-      id: "meshtastic-mqtt",
       type: "mqtt",
       enabled: true,
       lastPublishAt: "2026-03-15T16:19:30Z",

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FieldNamesMarkedBoolean } from "react-hook-form";
-import type { ConfigSectionKey, UiConfig } from "../api/contracts";
+import type { ConfigSectionKey, PublisherSlotKey, UiConfig } from "../api/contracts";
 import { hasApiConnectionSettings, type ApiConnectionSettings } from "../api/runtime";
 import { fetchConfig, getDirtySections, saveConfigSectionsSequentially } from "../api/configApi";
 
@@ -41,7 +41,9 @@ export function useDeviceConfig(connection: ApiConnectionSettings) {
 export function useSequentialConfigSave(connection: ApiConnectionSettings) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [savingSection, setSavingSection] = useState<ConfigSectionKey | null>(null);
+  const [savingSection, setSavingSection] = useState<
+    ConfigSectionKey | `publishers.${PublisherSlotKey}` | null
+  >(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const canConnect = hasApiConnectionSettings(connection);
 
@@ -62,7 +64,13 @@ export function useSequentialConfigSave(connection: ApiConnectionSettings) {
       setSaveError(null);
 
       try {
-        await saveConfigSectionsSequentially(dirtySections, config, connection, setSavingSection);
+        await saveConfigSectionsSequentially(
+          dirtySections,
+          config,
+          connection,
+          dirtyFields,
+          setSavingSection,
+        );
         setLastSavedAt(new Date());
         return { savedSections: dirtySections };
       } catch (error) {

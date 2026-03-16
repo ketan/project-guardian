@@ -10,7 +10,7 @@ import {
   Switch,
   Text,
 } from "@mantine/core";
-import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { IconFilter, IconPlus, IconTrash } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { UiConfig } from "../../types/ui";
 
@@ -85,9 +85,10 @@ export function SmoothingSection({ config, setConfig }: SmoothingSectionProps) {
     <SectionCard
       id="smoothing"
       title="Smoothing"
+      icon={<IconFilter size={18} stroke={1.75} />}
       subtitle="Tune which measurements get averaged before charting and publishing."
       action={
-        <Button leftSection={<FiPlus />} size="compact-sm" variant="light" onClick={addField}>
+        <Button leftSection={<IconPlus size={16} stroke={1.75} />} size="compact-sm" variant="light" onClick={addField}>
           Add rule
         </Button>
       }
@@ -115,7 +116,7 @@ export function SmoothingSection({ config, setConfig }: SmoothingSectionProps) {
                   onClick={() => removeField(index)}
                   aria-label={`Remove smoothing rule ${index + 1}`}
                 >
-                  <FiTrash2 />
+                  <IconTrash size={16} stroke={1.75} />
                 </ActionIcon>
               </Group>
 

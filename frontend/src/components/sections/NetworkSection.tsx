@@ -11,7 +11,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { FiShield, FiSmartphone, FiWifi } from "react-icons/fi";
+import { IconShieldLock, IconDeviceMobile, IconWifi } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { UiConfig } from "../../types/ui";
 
@@ -32,6 +32,7 @@ export function NetworkSection({
     <SectionCard
       id="network"
       title="Connectivity"
+      icon={<IconWifi size={18} stroke={1.75} />}
       subtitle="Prefer the best transport automatically, but keep Wi-Fi and LTE settings easy to reach from a phone."
     >
       <Grid>
@@ -209,13 +210,13 @@ export function NetworkSection({
       </Stack>
 
       <Group gap="sm" mt="sm">
-        <Badge leftSection={<FiWifi />} variant="light" radius="sm">
+        <Badge leftSection={<IconWifi size={14} stroke={1.75} />} variant="light" radius="sm">
           Wi-Fi {wifiConnected ? "connected" : "offline"}
         </Badge>
-        <Badge leftSection={<FiSmartphone />} variant="light" radius="sm" color="orange">
+        <Badge leftSection={<IconDeviceMobile size={14} stroke={1.75} />} variant="light" radius="sm" color="orange">
           LTE SQI {signalQuality ?? 0}
         </Badge>
-        <Badge leftSection={<FiShield />} variant="light" radius="sm" color="grape">
+        <Badge leftSection={<IconShieldLock size={14} stroke={1.75} />} variant="light" radius="sm" color="grape">
           Token TTL {config.webUi.tokenTtlMinutes} min
         </Badge>
       </Group>

@@ -6,19 +6,14 @@ export default defineConfig({
       target: "../openapi.yaml",
     },
     output: {
-      mode: "single",
-      client: "fetch",
-      target: "src/api/generated/client.ts",
+      client: "zod",
+      target: "src/api/generated/orval.zod.ts",
       schemas: {
         path: "src/api/generated/schemas",
         type: "zod",
       },
       override: {
         aliasCombinedTypes: true,
-        fetch: {
-          includeHttpResponseReturnType: false,
-          runtimeValidation: true,
-        },
       },
     },
   },

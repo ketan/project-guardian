@@ -9,7 +9,7 @@ import {
   Switch,
   TextInput,
 } from "@mantine/core";
-import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { IconMessageCircle, IconPlus, IconTrash } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { UiConfig } from "../../types/ui";
 
@@ -67,10 +67,11 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
     <SectionCard
       id="sms"
       title="SMS administration"
+      icon={<IconMessageCircle size={18} stroke={1.75} />}
       subtitle="Trusted numbers can wake the station and manage connectivity without a password."
       action={
         <Button
-          leftSection={<FiPlus />}
+          leftSection={<IconPlus size={16} stroke={1.75} />}
           size="compact-sm"
           variant="light"
           onClick={addWhitelistEntry}
@@ -109,7 +110,7 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
                     onClick={() => removeWhitelistEntry(index)}
                     aria-label={`Remove ${entry.label}`}
                   >
-                    <FiTrash2 />
+                    <IconTrash size={16} stroke={1.75} />
                   </ActionIcon>
                 </Group>
 

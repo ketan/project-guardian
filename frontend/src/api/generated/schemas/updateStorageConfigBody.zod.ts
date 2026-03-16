@@ -11,12 +11,12 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
-export const updateStorageConfigBodyRetentionDaysDefault = 14;
-export const updateStorageConfigBodyRetentionDaysMax = 30;
+export const updateStorageConfigBodyRetentionDaysDefaultOne = 14;
+export const updateStorageConfigBodyRetentionDaysMaxOne = 30;
 
 
 export const UpdateStorageConfigBody = zod.object({
-  "retentionDays": zod.number().min(1).max(updateStorageConfigBodyRetentionDaysMax).default(updateStorageConfigBodyRetentionDaysDefault),
+  "retentionDays": zod.number().min(1).max(updateStorageConfigBodyRetentionDaysMaxOne).default(updateStorageConfigBodyRetentionDaysDefaultOne),
   "logFormat": zod.enum(['jsonl']),
   "configSource": zod.enum(['sd_with_flash_fallback']).optional()
 })

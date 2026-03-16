@@ -53,25 +53,25 @@ export const deviceConfigViewSensorsItemPollIntervalSecondsMax = 3600;
 
 export const deviceConfigViewSensorsItemAddressMax = 247;
 
-export const deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMin = 30;
-export const deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMax = 300;
+export const deviceConfigViewPublishersWundergroundOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersWundergroundOnePublishIntervalSecondsMax = 300;
 
-export const deviceConfigViewPublishersItemOneOneIncludeHistoryWindowMinutesMax = 1440;
+export const deviceConfigViewPublishersWundergroundOneIncludeHistoryWindowMinutesMax = 1440;
 
-export const deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMin = 30;
-export const deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMax = 300;
+export const deviceConfigViewPublishersWindyOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersWindyOnePublishIntervalSecondsMax = 300;
 
-export const deviceConfigViewPublishersItemTwoOneIncludeHistoryWindowMinutesMax = 1440;
+export const deviceConfigViewPublishersWindyOneIncludeHistoryWindowMinutesMax = 1440;
 
-export const deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMin = 30;
-export const deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMax = 300;
+export const deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMax = 300;
 
-export const deviceConfigViewPublishersItemThreeOneIncludeHistoryWindowMinutesMax = 1440;
+export const deviceConfigViewPublishersWebhookOneIncludeHistoryWindowMinutesMax = 1440;
 
-export const deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMin = 30;
-export const deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMax = 300;
+export const deviceConfigViewPublishersMqttOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersMqttOnePublishIntervalSecondsMax = 300;
 
-export const deviceConfigViewPublishersItemFourOneIncludeHistoryWindowMinutesMax = 1440;
+export const deviceConfigViewPublishersMqttOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const DeviceConfigView = zod.object({
@@ -145,57 +145,50 @@ export const DeviceConfigView = zod.object({
   "pollIntervalSeconds": zod.number().min(deviceConfigViewSensorsItemPollIntervalSecondsMin).max(deviceConfigViewSensorsItemPollIntervalSecondsMax).optional(),
   "address": zod.number().min(1).max(deviceConfigViewSensorsItemAddressMax).optional()
 })),
-  "publishers": zod.array(zod.union([zod.object({
-  "id": zod.string(),
+  "publishers": zod.object({
+  "wunderground": zod.object({
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemOneOneIncludeHistoryWindowMinutesMax).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersWundergroundOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersWundergroundOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersWundergroundOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
-})).and(zod.object({
-  "type": zod.enum(['wunderground'])
-})),zod.object({
-  "id": zod.string(),
+})).optional(),
+  "windy": zod.object({
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemTwoOneIncludeHistoryWindowMinutesMax).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersWindyOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersWindyOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersWindyOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
-})).and(zod.object({
-  "type": zod.enum(['windy'])
-})),zod.object({
-  "id": zod.string(),
+})).optional(),
+  "webhook": zod.object({
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemThreeOneIncludeHistoryWindowMinutesMax).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersWebhookOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
   "endpoint": zod.string(),
   "authHeaderConfigured": zod.boolean().optional()
-})).and(zod.object({
-  "type": zod.enum(['webhook'])
-})),zod.object({
-  "id": zod.string(),
+})).optional(),
+  "mqtt": zod.object({
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemFourOneIncludeHistoryWindowMinutesMax).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersMqttOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersMqttOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersMqttOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
   "brokerUrl": zod.string(),
   "topic": zod.string(),
   "username": zod.string(),
   "passwordConfigured": zod.boolean()
-})).and(zod.object({
-  "type": zod.enum(['mqtt'])
-}))]))
+})).optional()
+})
 })
 
 export type DeviceConfigView = zod.input<typeof DeviceConfigView>;

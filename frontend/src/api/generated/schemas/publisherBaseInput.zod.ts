@@ -18,7 +18,6 @@ export const publisherBaseInputIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const PublisherBaseInput = zod.object({
-  "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
   "publishIntervalSeconds": zod.number().min(publisherBaseInputPublishIntervalSecondsMin).max(publisherBaseInputPublishIntervalSecondsMax),

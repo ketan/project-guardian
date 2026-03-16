@@ -1,4 +1,5 @@
 import { Grid, NumberInput, Select, Stack, Switch, Text } from "@mantine/core";
+import { IconClockHour4 } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { DeviceConfig, UiConfig } from "../../types/ui";
 
@@ -20,6 +21,7 @@ export function SamplingSection({
     <SectionCard
       id="sampling"
       title="Sampling and retention"
+      icon={<IconClockHour4 size={18} stroke={1.75} />}
       subtitle="Compact controls for timing, sleep, and on-device history."
     >
       <Grid>

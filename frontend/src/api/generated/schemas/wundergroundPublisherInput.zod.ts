@@ -18,7 +18,6 @@ export const wundergroundPublisherInputOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const WundergroundPublisherInput = zod.object({
-  "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
   "publishIntervalSeconds": zod.number().min(wundergroundPublisherInputOnePublishIntervalSecondsMin).max(wundergroundPublisherInputOnePublishIntervalSecondsMax),
@@ -27,8 +26,6 @@ export const WundergroundPublisherInput = zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
   "apiKey": zod.string().optional()
-})).and(zod.object({
-  "type": zod.enum(['wunderground'])
 }))
 
 export type WundergroundPublisherInput = zod.input<typeof WundergroundPublisherInput>;

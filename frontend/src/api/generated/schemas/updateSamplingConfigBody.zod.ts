@@ -11,27 +11,27 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
-export const updateSamplingConfigBodyIntervalSecondsDefault = 2;
-export const updateSamplingConfigBodyIntervalSecondsMin = 2;
-export const updateSamplingConfigBodyIntervalSecondsMax = 20;
+export const updateSamplingConfigBodyIntervalSecondsDefaultOne = 2;
+export const updateSamplingConfigBodyIntervalSecondsMinOne = 2;
+export const updateSamplingConfigBodyIntervalSecondsMaxOne = 20;
 
-export const updateSamplingConfigBodyAdminWindowMinutesDefault = 10;
-export const updateSamplingConfigBodyAdminWindowMinutesMax = 60;
+export const updateSamplingConfigBodyAdminWindowMinutesDefaultOne = 10;
+export const updateSamplingConfigBodyAdminWindowMinutesMaxOne = 60;
 
-export const updateSamplingConfigBodyDeepSleepEnabledDefault = true;
-export const updateSamplingConfigBodyWakeDurationSecondsMax = 300;
+export const updateSamplingConfigBodyDeepSleepEnabledDefaultOne = true;
+export const updateSamplingConfigBodyWakeDurationSecondsMaxOne = 300;
 
-export const updateSamplingConfigBodyHistoryAggregationMinutesDefault = 30;
-export const updateSamplingConfigBodyHistoryAggregationMinutesMin = 5;
-export const updateSamplingConfigBodyHistoryAggregationMinutesMax = 1440;
+export const updateSamplingConfigBodyHistoryAggregationMinutesDefaultOne = 30;
+export const updateSamplingConfigBodyHistoryAggregationMinutesMinOne = 5;
+export const updateSamplingConfigBodyHistoryAggregationMinutesMaxOne = 1440;
 
 
 export const UpdateSamplingConfigBody = zod.object({
-  "intervalSeconds": zod.number().min(updateSamplingConfigBodyIntervalSecondsMin).max(updateSamplingConfigBodyIntervalSecondsMax).default(updateSamplingConfigBodyIntervalSecondsDefault),
-  "adminWindowMinutes": zod.number().min(1).max(updateSamplingConfigBodyAdminWindowMinutesMax).default(updateSamplingConfigBodyAdminWindowMinutesDefault),
-  "deepSleepEnabled": zod.boolean().default(updateSamplingConfigBodyDeepSleepEnabledDefault),
-  "wakeDurationSeconds": zod.number().min(1).max(updateSamplingConfigBodyWakeDurationSecondsMax).optional(),
-  "historyAggregationMinutes": zod.number().min(updateSamplingConfigBodyHistoryAggregationMinutesMin).max(updateSamplingConfigBodyHistoryAggregationMinutesMax).default(updateSamplingConfigBodyHistoryAggregationMinutesDefault)
+  "intervalSeconds": zod.number().min(updateSamplingConfigBodyIntervalSecondsMinOne).max(updateSamplingConfigBodyIntervalSecondsMaxOne).default(updateSamplingConfigBodyIntervalSecondsDefaultOne),
+  "adminWindowMinutes": zod.number().min(1).max(updateSamplingConfigBodyAdminWindowMinutesMaxOne).default(updateSamplingConfigBodyAdminWindowMinutesDefaultOne),
+  "deepSleepEnabled": zod.boolean().default(updateSamplingConfigBodyDeepSleepEnabledDefaultOne),
+  "wakeDurationSeconds": zod.number().min(1).max(updateSamplingConfigBodyWakeDurationSecondsMaxOne).optional(),
+  "historyAggregationMinutes": zod.number().min(updateSamplingConfigBodyHistoryAggregationMinutesMinOne).max(updateSamplingConfigBodyHistoryAggregationMinutesMaxOne).default(updateSamplingConfigBodyHistoryAggregationMinutesDefaultOne)
 })
 
 export type UpdateSamplingConfigBody = zod.input<typeof UpdateSamplingConfigBody>;

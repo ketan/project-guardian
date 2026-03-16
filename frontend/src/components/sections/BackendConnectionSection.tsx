@@ -1,4 +1,5 @@
 import { Badge, Grid, PasswordInput, Stack, Text, TextInput } from "@mantine/core";
+import { IconServer } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { ApiConnectionSettings } from "../../api/runtime";
 
@@ -19,6 +20,7 @@ export function BackendConnectionSection({
     <SectionCard
       id="backend-connection"
       title="Backend connection"
+      icon={<IconServer size={18} stroke={1.75} />}
       subtitle="Point the admin UI at a device hostname or IP and provide the bearer token used for authenticated API requests."
       action={
         normalizedBaseUrl ? (

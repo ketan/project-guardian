@@ -1,4 +1,5 @@
 import { Badge, Grid, NumberInput, SegmentedControl, Stack, Text, TextInput, Textarea } from "@mantine/core";
+import { IconMapPin } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { DeviceConfig, UiConfig } from "../../types/ui";
 
@@ -23,6 +24,7 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
     <SectionCard
       id="station"
       title="Station identity"
+      icon={<IconMapPin size={18} stroke={1.75} />}
       subtitle="Core site metadata for public weather services and forecast comparison."
       action={
         <Badge color="teal" variant="light" radius="sm">{`Schema v${config.schemaVersion}`}</Badge>

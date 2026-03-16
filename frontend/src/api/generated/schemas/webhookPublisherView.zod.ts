@@ -18,7 +18,6 @@ export const webhookPublisherViewOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const WebhookPublisherView = zod.object({
-  "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
   "publishIntervalSeconds": zod.number().min(webhookPublisherViewOnePublishIntervalSecondsMin).max(webhookPublisherViewOnePublishIntervalSecondsMax),
@@ -27,8 +26,6 @@ export const WebhookPublisherView = zod.object({
   "type": zod.literal("webhook"),
   "endpoint": zod.string(),
   "authHeaderConfigured": zod.boolean().optional()
-})).and(zod.object({
-  "type": zod.enum(['webhook'])
 }))
 
 export type WebhookPublisherView = zod.input<typeof WebhookPublisherView>;

@@ -16,8 +16,13 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "react-hook-form";
-import { FiAlertCircle, FiCloud, FiRefreshCw, FiSave } from "react-icons/fi";
-import { UiConfigSchema, type UiConfig, type UiPublisher } from "./api/contracts";
+import {
+  IconAlertCircle,
+  IconCloud,
+  IconDeviceFloppy,
+  IconRefresh,
+} from "@tabler/icons-react";
+import { UiConfigSchema, type PublisherSlotKey, type UiConfig } from "./api/contracts";
 import type { DeviceConfig } from "./types/ui";
 import { NavigationPanel } from "./components/NavigationPanel";
 import { SummaryCards } from "./components/SummaryCards";
@@ -101,12 +106,17 @@ function App() {
     });
   };
 
-  const updatePublisher = (publisherId: string, updates: Partial<UiPublisher>) => {
-    const nextPublishers = getValues("publishers").map((publisher: UiPublisher) =>
-      publisher.id === publisherId ? { ...publisher, ...updates } : publisher,
-    ) as UiPublisher[];
+  const updatePublisher = (slot: PublisherSlotKey, updates: Record<string, unknown>) => {
+    const current = getValues(`publishers.${slot}` as never) as Record<string, unknown> | undefined;
 
-    setValue("publishers", nextPublishers, { shouldDirty: true, shouldValidate: true });
+    if (!current) {
+      return;
+    }
+
+    setValue(`publishers.${slot}` as never, { ...current, ...updates } as never, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   const onSubmit = handleSubmit(async (values: UiConfig) => {
@@ -147,7 +157,7 @@ function App() {
 
           <Group gap="sm">
             <Badge
-              leftSection={<FiCloud size={12} />}
+              leftSection={<IconCloud size={14} stroke={1.75} />}
               color="green"
               variant="light"
               radius="sm"
@@ -156,7 +166,9 @@ function App() {
               {status.connectivity.activeTransport === "wifi" ? "Wi-Fi online" : "Cellular online"}
             </Badge>
             <Button
-              leftSection={isSaving ? <Loader color="currentColor" size={14} /> : <FiSave />}
+              leftSection={
+                isSaving ? <Loader color="currentColor" size={14} /> : <IconDeviceFloppy size={16} stroke={1.75} />
+              }
               color="teal"
               disabled={isLoading || !canConnect}
               loading={isSaving}
@@ -194,13 +206,13 @@ function App() {
             {loadError ? (
               <Alert
                 color="red"
-                icon={<FiAlertCircle />}
+                icon={<IconAlertCircle size={18} stroke={1.75} />}
                 title="Could not load configuration"
                 variant="light"
               >
                 <Group justify="space-between" wrap="nowrap">
                   <Text size="sm">{loadError}</Text>
-                  <Button leftSection={<FiRefreshCw />} size="compact-sm" variant="light" onClick={() => void reload()}>
+                  <Button leftSection={<IconRefresh size={16} stroke={1.75} />} size="compact-sm" variant="light" onClick={() => void reload()}>
                     Retry
                   </Button>
                 </Group>
@@ -208,13 +220,13 @@ function App() {
             ) : null}
 
             {saveError ? (
-              <Alert color="red" icon={<FiAlertCircle />} title="Save failed" variant="light">
+              <Alert color="red" icon={<IconAlertCircle size={18} stroke={1.75} />} title="Save failed" variant="light">
                 <Text size="sm">{saveError}</Text>
               </Alert>
             ) : null}
 
             {validationError ? (
-              <Alert color="yellow" icon={<FiAlertCircle />} title="Validation needed" variant="light">
+              <Alert color="yellow" icon={<IconAlertCircle size={18} stroke={1.75} />} title="Validation needed" variant="light">
                 <Text size="sm">{validationError}</Text>
               </Alert>
             ) : null}

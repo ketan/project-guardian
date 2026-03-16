@@ -11,12 +11,12 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
-export const updateWebUiConfigBodyTokenTtlMinutesDefault = 15;
-export const updateWebUiConfigBodyTokenTtlMinutesMax = 1440;
+export const updateWebUiConfigBodyTokenTtlMinutesDefaultOne = 15;
+export const updateWebUiConfigBodyTokenTtlMinutesMaxOne = 1440;
 
 
 export const UpdateWebUiConfigBody = zod.object({
-  "tokenTtlMinutes": zod.number().min(1).max(updateWebUiConfigBodyTokenTtlMinutesMax).default(updateWebUiConfigBodyTokenTtlMinutesDefault),
+  "tokenTtlMinutes": zod.number().min(1).max(updateWebUiConfigBodyTokenTtlMinutesMaxOne).default(updateWebUiConfigBodyTokenTtlMinutesDefaultOne),
   "allowedOrigins": zod.array(zod.string())
 })
 

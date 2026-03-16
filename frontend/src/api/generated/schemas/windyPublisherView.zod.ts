@@ -18,7 +18,6 @@ export const windyPublisherViewOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const WindyPublisherView = zod.object({
-  "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
   "publishIntervalSeconds": zod.number().min(windyPublisherViewOnePublishIntervalSecondsMin).max(windyPublisherViewOnePublishIntervalSecondsMax),
@@ -27,8 +26,6 @@ export const WindyPublisherView = zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
-})).and(zod.object({
-  "type": zod.enum(['windy'])
 }))
 
 export type WindyPublisherView = zod.input<typeof WindyPublisherView>;

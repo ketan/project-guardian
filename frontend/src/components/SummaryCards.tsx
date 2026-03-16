@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 import { Group, Paper, SimpleGrid, Stack, Text, ThemeIcon } from "@mantine/core";
-import { FiActivity, FiHardDrive, FiRadio, FiSend } from "react-icons/fi";
+import {
+  IconActivity,
+  IconDeviceSdCard,
+  IconRadio,
+  IconSend,
+} from "@tabler/icons-react";
 import type { DeviceStatus } from "../types/ui";
 
 type SummaryCard = {
@@ -22,25 +27,25 @@ export function SummaryCards({ status }: SummaryCardsProps) {
       detail: status.connectivity.wifi.connected
         ? status.connectivity.wifi.ssid
         : status.connectivity.cellular.operatorName,
-      icon: <FiRadio />,
+      icon: <IconRadio size={20} stroke={1.75} />,
     },
     {
       label: "Sampling",
       value: `${status.sampling.intervalSeconds}s`,
       detail: status.sampling.sleepEnabled ? "Deep sleep enabled" : "Always awake",
-      icon: <FiActivity />,
+      icon: <IconActivity size={20} stroke={1.75} />,
     },
     {
       label: "Retention",
       value: `${status.storage.retentionDays} days`,
       detail: status.storage.sdCardPresent ? "microSD healthy" : "No SD detected",
-      icon: <FiHardDrive />,
+      icon: <IconDeviceSdCard size={20} stroke={1.75} />,
     },
     {
       label: "Publishers",
       value: `${status.publishers.filter((item: DeviceStatus["publishers"][number]) => item.enabled).length} active`,
       detail: "Windy + Meshtastic MQTT",
-      icon: <FiSend />,
+      icon: <IconSend size={20} stroke={1.75} />,
     },
   ];
 
