@@ -12,24 +12,32 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const publisherConfigInputOneOnePublishIntervalSecondsMin = 30;
+export const publisherConfigInputOneOnePublishIntervalSecondsMax = 300;
 
+export const publisherConfigInputOneOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const publisherConfigInputTwoOnePublishIntervalSecondsMin = 30;
+export const publisherConfigInputTwoOnePublishIntervalSecondsMax = 300;
 
+export const publisherConfigInputTwoOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const publisherConfigInputThreeOnePublishIntervalSecondsMin = 30;
+export const publisherConfigInputThreeOnePublishIntervalSecondsMax = 300;
 
+export const publisherConfigInputThreeOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const publisherConfigInputFourOnePublishIntervalSecondsMin = 30;
+export const publisherConfigInputFourOnePublishIntervalSecondsMax = 300;
 
+export const publisherConfigInputFourOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const PublisherConfigInput = zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(publisherConfigInputOneOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(publisherConfigInputOneOnePublishIntervalSecondsMin).max(publisherConfigInputOneOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(publisherConfigInputOneOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
@@ -40,8 +48,8 @@ export const PublisherConfigInput = zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(publisherConfigInputTwoOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(publisherConfigInputTwoOnePublishIntervalSecondsMin).max(publisherConfigInputTwoOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(publisherConfigInputTwoOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
@@ -52,8 +60,8 @@ export const PublisherConfigInput = zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(publisherConfigInputThreeOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(publisherConfigInputThreeOnePublishIntervalSecondsMin).max(publisherConfigInputThreeOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(publisherConfigInputThreeOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
   "endpoint": zod.string(),
@@ -64,8 +72,8 @@ export const PublisherConfigInput = zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(publisherConfigInputFourOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(publisherConfigInputFourOnePublishIntervalSecondsMin).max(publisherConfigInputFourOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(publisherConfigInputFourOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
   "brokerUrl": zod.string(),

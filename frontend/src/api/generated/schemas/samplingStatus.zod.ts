@@ -11,10 +11,13 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
+export const samplingStatusIntervalSecondsDefault = 2;
+export const samplingStatusIntervalSecondsMin = 2;
+export const samplingStatusIntervalSecondsMax = 20;
 
 
 export const SamplingStatus = zod.object({
-  "intervalSeconds": zod.number().min(1),
+  "intervalSeconds": zod.number().min(samplingStatusIntervalSecondsMin).max(samplingStatusIntervalSecondsMax).default(samplingStatusIntervalSecondsDefault),
   "nextSampleAt": zod.iso.datetime({}),
   "lastSampleAt": zod.iso.datetime({}),
   "sleepEnabled": zod.boolean(),

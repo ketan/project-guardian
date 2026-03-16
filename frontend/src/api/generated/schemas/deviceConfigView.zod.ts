@@ -21,16 +21,21 @@ export const deviceConfigViewStationLocationLatitudeMax = 90;
 export const deviceConfigViewStationLocationLongitudeMin = -180;
 export const deviceConfigViewStationLocationLongitudeMax = 180;
 
-export const deviceConfigViewSamplingIntervalSecondsDefault = 30;
-export const deviceConfigViewSamplingIntervalSecondsMin = 5;
-export const deviceConfigViewSamplingIntervalSecondsMax = 3600;
+export const deviceConfigViewSamplingIntervalSecondsDefault = 2;
+export const deviceConfigViewSamplingIntervalSecondsMin = 2;
+export const deviceConfigViewSamplingIntervalSecondsMax = 20;
 
 export const deviceConfigViewSamplingAdminWindowMinutesDefault = 10;
 export const deviceConfigViewSamplingAdminWindowMinutesMax = 60;
 
 export const deviceConfigViewSamplingDeepSleepEnabledDefault = true;
-export const deviceConfigViewSamplingHistoryAggregationMinutesDefault = 30;
+export const deviceConfigViewSamplingWakeDurationSecondsMax = 300;
 
+export const deviceConfigViewSamplingHistoryAggregationMinutesDefault = 30;
+export const deviceConfigViewSamplingHistoryAggregationMinutesMin = 5;
+export const deviceConfigViewSamplingHistoryAggregationMinutesMax = 1440;
+
+export const deviceConfigViewSmoothingFieldsItemWindowSamplesMax = 120;
 
 export const deviceConfigViewSmoothingFieldsItemAlphaMin = 0;
 export const deviceConfigViewSmoothingFieldsItemAlphaMax = 1;
@@ -43,20 +48,30 @@ export const deviceConfigViewSmsAdminWhitelistMax = 5;
 export const deviceConfigViewWebUiTokenTtlMinutesDefault = 15;
 export const deviceConfigViewWebUiTokenTtlMinutesMax = 1440;
 
+export const deviceConfigViewSensorsItemPollIntervalSecondsMin = 5;
+export const deviceConfigViewSensorsItemPollIntervalSecondsMax = 3600;
 
 export const deviceConfigViewSensorsItemAddressMax = 247;
 
 export const deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMax = 300;
 
+export const deviceConfigViewPublishersItemOneOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMax = 300;
 
+export const deviceConfigViewPublishersItemTwoOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMax = 300;
 
+export const deviceConfigViewPublishersItemThreeOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMin = 30;
+export const deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMax = 300;
 
+export const deviceConfigViewPublishersItemFourOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const DeviceConfigView = zod.object({
@@ -76,15 +91,15 @@ export const DeviceConfigView = zod.object({
   "intervalSeconds": zod.number().min(deviceConfigViewSamplingIntervalSecondsMin).max(deviceConfigViewSamplingIntervalSecondsMax).default(deviceConfigViewSamplingIntervalSecondsDefault),
   "adminWindowMinutes": zod.number().min(1).max(deviceConfigViewSamplingAdminWindowMinutesMax).default(deviceConfigViewSamplingAdminWindowMinutesDefault),
   "deepSleepEnabled": zod.boolean().default(deviceConfigViewSamplingDeepSleepEnabledDefault),
-  "wakeDurationSeconds": zod.number().min(1).optional(),
-  "historyAggregationMinutes": zod.number().min(1).default(deviceConfigViewSamplingHistoryAggregationMinutesDefault)
+  "wakeDurationSeconds": zod.number().min(1).max(deviceConfigViewSamplingWakeDurationSecondsMax).optional(),
+  "historyAggregationMinutes": zod.number().min(deviceConfigViewSamplingHistoryAggregationMinutesMin).max(deviceConfigViewSamplingHistoryAggregationMinutesMax).default(deviceConfigViewSamplingHistoryAggregationMinutesDefault)
 }),
   "smoothing": zod.object({
   "enabled": zod.boolean(),
   "fields": zod.array(zod.object({
   "metric": zod.enum(['windSpeed', 'windGust', 'windDirection', 'temperature', 'humidity', 'pressure', 'rainfall', 'illuminance', 'pm2_5', 'pm10', 'noise']),
   "method": zod.enum(['none', 'moving_average', 'ema']),
-  "windowSamples": zod.number().min(1).optional(),
+  "windowSamples": zod.number().min(1).max(deviceConfigViewSmoothingFieldsItemWindowSamplesMax).optional(),
   "alpha": zod.number().min(deviceConfigViewSmoothingFieldsItemAlphaMin).max(deviceConfigViewSmoothingFieldsItemAlphaMax).optional()
 }))
 }),
@@ -127,15 +142,15 @@ export const DeviceConfigView = zod.object({
   "type": zod.enum(['sen0658', 'bme280', 'bmp390', 'lps22hb']),
   "enabled": zod.boolean(),
   "transport": zod.enum(['rs485_modbus', 'i2c', 'spi']).optional(),
-  "pollIntervalSeconds": zod.number().min(1).optional(),
+  "pollIntervalSeconds": zod.number().min(deviceConfigViewSensorsItemPollIntervalSecondsMin).max(deviceConfigViewSensorsItemPollIntervalSecondsMax).optional(),
   "address": zod.number().min(1).max(deviceConfigViewSensorsItemAddressMax).optional()
 })),
   "publishers": zod.array(zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemOneOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemOneOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
@@ -146,8 +161,8 @@ export const DeviceConfigView = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemTwoOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemTwoOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
@@ -158,8 +173,8 @@ export const DeviceConfigView = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemThreeOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemThreeOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
   "endpoint": zod.string(),
@@ -170,8 +185,8 @@ export const DeviceConfigView = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersItemFourOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersItemFourOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
   "brokerUrl": zod.string(),

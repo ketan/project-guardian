@@ -11,6 +11,8 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
+export const sensorConfigPollIntervalSecondsMin = 5;
+export const sensorConfigPollIntervalSecondsMax = 3600;
 
 export const sensorConfigAddressMax = 247;
 
@@ -20,7 +22,7 @@ export const SensorConfig = zod.object({
   "type": zod.enum(['sen0658', 'bme280', 'bmp390', 'lps22hb']),
   "enabled": zod.boolean(),
   "transport": zod.enum(['rs485_modbus', 'i2c', 'spi']).optional(),
-  "pollIntervalSeconds": zod.number().min(1).optional(),
+  "pollIntervalSeconds": zod.number().min(sensorConfigPollIntervalSecondsMin).max(sensorConfigPollIntervalSecondsMax).optional(),
   "address": zod.number().min(1).max(sensorConfigAddressMax).optional()
 })
 

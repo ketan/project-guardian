@@ -12,15 +12,17 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const publisherBaseViewPublishIntervalSecondsMin = 30;
+export const publisherBaseViewPublishIntervalSecondsMax = 300;
 
+export const publisherBaseViewIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const PublisherBaseView = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(publisherBaseViewPublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(publisherBaseViewPublishIntervalSecondsMin).max(publisherBaseViewPublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(publisherBaseViewIncludeHistoryWindowMinutesMax).optional()
 })
 
 export type PublisherBaseView = zod.input<typeof PublisherBaseView>;

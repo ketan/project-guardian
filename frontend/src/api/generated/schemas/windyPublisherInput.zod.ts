@@ -12,15 +12,17 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const windyPublisherInputOnePublishIntervalSecondsMin = 30;
+export const windyPublisherInputOnePublishIntervalSecondsMax = 300;
 
+export const windyPublisherInputOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const WindyPublisherInput = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(windyPublisherInputOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(windyPublisherInputOnePublishIntervalSecondsMin).max(windyPublisherInputOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(windyPublisherInputOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),

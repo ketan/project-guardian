@@ -11,23 +11,27 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
-export const samplingConfigIntervalSecondsDefault = 30;
-export const samplingConfigIntervalSecondsMin = 5;
-export const samplingConfigIntervalSecondsMax = 3600;
+export const samplingConfigIntervalSecondsDefault = 2;
+export const samplingConfigIntervalSecondsMin = 2;
+export const samplingConfigIntervalSecondsMax = 20;
 
 export const samplingConfigAdminWindowMinutesDefault = 10;
 export const samplingConfigAdminWindowMinutesMax = 60;
 
 export const samplingConfigDeepSleepEnabledDefault = true;
+export const samplingConfigWakeDurationSecondsMax = 300;
+
 export const samplingConfigHistoryAggregationMinutesDefault = 30;
+export const samplingConfigHistoryAggregationMinutesMin = 5;
+export const samplingConfigHistoryAggregationMinutesMax = 1440;
 
 
 export const SamplingConfig = zod.object({
   "intervalSeconds": zod.number().min(samplingConfigIntervalSecondsMin).max(samplingConfigIntervalSecondsMax).default(samplingConfigIntervalSecondsDefault),
   "adminWindowMinutes": zod.number().min(1).max(samplingConfigAdminWindowMinutesMax).default(samplingConfigAdminWindowMinutesDefault),
   "deepSleepEnabled": zod.boolean().default(samplingConfigDeepSleepEnabledDefault),
-  "wakeDurationSeconds": zod.number().min(1).optional(),
-  "historyAggregationMinutes": zod.number().min(1).default(samplingConfigHistoryAggregationMinutesDefault)
+  "wakeDurationSeconds": zod.number().min(1).max(samplingConfigWakeDurationSecondsMax).optional(),
+  "historyAggregationMinutes": zod.number().min(samplingConfigHistoryAggregationMinutesMin).max(samplingConfigHistoryAggregationMinutesMax).default(samplingConfigHistoryAggregationMinutesDefault)
 })
 
 export type SamplingConfig = zod.input<typeof SamplingConfig>;

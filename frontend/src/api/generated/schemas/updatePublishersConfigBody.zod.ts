@@ -12,24 +12,32 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const updatePublishersConfigBodyItemOneOnePublishIntervalSecondsMin = 30;
+export const updatePublishersConfigBodyItemOneOnePublishIntervalSecondsMax = 300;
 
+export const updatePublishersConfigBodyItemOneOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const updatePublishersConfigBodyItemTwoOnePublishIntervalSecondsMin = 30;
+export const updatePublishersConfigBodyItemTwoOnePublishIntervalSecondsMax = 300;
 
+export const updatePublishersConfigBodyItemTwoOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const updatePublishersConfigBodyItemThreeOnePublishIntervalSecondsMin = 30;
+export const updatePublishersConfigBodyItemThreeOnePublishIntervalSecondsMax = 300;
 
+export const updatePublishersConfigBodyItemThreeOneIncludeHistoryWindowMinutesMax = 1440;
 
 export const updatePublishersConfigBodyItemFourOnePublishIntervalSecondsMin = 30;
+export const updatePublishersConfigBodyItemFourOnePublishIntervalSecondsMax = 300;
 
+export const updatePublishersConfigBodyItemFourOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const UpdatePublishersConfigBody = zod.array(zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemOneOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemOneOnePublishIntervalSecondsMin).max(updatePublishersConfigBodyItemOneOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(updatePublishersConfigBodyItemOneOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
@@ -40,8 +48,8 @@ export const UpdatePublishersConfigBody = zod.array(zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemTwoOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemTwoOnePublishIntervalSecondsMin).max(updatePublishersConfigBodyItemTwoOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(updatePublishersConfigBodyItemTwoOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
@@ -52,8 +60,8 @@ export const UpdatePublishersConfigBody = zod.array(zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemThreeOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemThreeOnePublishIntervalSecondsMin).max(updatePublishersConfigBodyItemThreeOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(updatePublishersConfigBodyItemThreeOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
   "endpoint": zod.string(),
@@ -64,8 +72,8 @@ export const UpdatePublishersConfigBody = zod.array(zod.union([zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemFourOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(updatePublishersConfigBodyItemFourOnePublishIntervalSecondsMin).max(updatePublishersConfigBodyItemFourOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(updatePublishersConfigBodyItemFourOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
   "brokerUrl": zod.string(),

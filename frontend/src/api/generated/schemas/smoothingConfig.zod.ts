@@ -11,6 +11,7 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
+export const smoothingConfigFieldsItemWindowSamplesMax = 120;
 
 export const smoothingConfigFieldsItemAlphaMin = 0;
 export const smoothingConfigFieldsItemAlphaMax = 1;
@@ -21,7 +22,7 @@ export const SmoothingConfig = zod.object({
   "fields": zod.array(zod.object({
   "metric": zod.enum(['windSpeed', 'windGust', 'windDirection', 'temperature', 'humidity', 'pressure', 'rainfall', 'illuminance', 'pm2_5', 'pm10', 'noise']),
   "method": zod.enum(['none', 'moving_average', 'ema']),
-  "windowSamples": zod.number().min(1).optional(),
+  "windowSamples": zod.number().min(1).max(smoothingConfigFieldsItemWindowSamplesMax).optional(),
   "alpha": zod.number().min(smoothingConfigFieldsItemAlphaMin).max(smoothingConfigFieldsItemAlphaMax).optional()
 }))
 })

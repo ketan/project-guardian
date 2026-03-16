@@ -12,15 +12,17 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const webhookPublisherViewOnePublishIntervalSecondsMin = 30;
+export const webhookPublisherViewOnePublishIntervalSecondsMax = 300;
 
+export const webhookPublisherViewOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const WebhookPublisherView = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(webhookPublisherViewOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(webhookPublisherViewOnePublishIntervalSecondsMin).max(webhookPublisherViewOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(webhookPublisherViewOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("webhook"),
   "endpoint": zod.string(),

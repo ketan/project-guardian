@@ -12,13 +12,14 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const connectivityTestResponseLatencyMsMin = 0;
+export const connectivityTestResponseLatencyMsMax = 120000;
 
 
 export const ConnectivityTestResponse = zod.object({
   "success": zod.boolean(),
   "checkedAt": zod.iso.datetime({}),
   "transportUsed": zod.enum(['wifi', 'cellular']).optional(),
-  "latencyMs": zod.number().min(connectivityTestResponseLatencyMsMin).optional(),
+  "latencyMs": zod.number().min(connectivityTestResponseLatencyMsMin).max(connectivityTestResponseLatencyMsMax).optional(),
   "message": zod.string().optional()
 })
 

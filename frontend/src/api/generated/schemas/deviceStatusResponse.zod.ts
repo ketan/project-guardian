@@ -20,6 +20,9 @@ export const deviceStatusResponseStorageFreeBytesMin = 0;
 export const deviceStatusResponseStorageUsedBytesMin = 0;
 
 
+export const deviceStatusResponseSamplingIntervalSecondsDefault = 2;
+export const deviceStatusResponseSamplingIntervalSecondsMin = 2;
+export const deviceStatusResponseSamplingIntervalSecondsMax = 20;
 
 
 export const DeviceStatusResponse = zod.object({
@@ -60,7 +63,7 @@ export const DeviceStatusResponse = zod.object({
   "newestRecordAt": zod.iso.datetime({}).optional()
 }),
   "sampling": zod.object({
-  "intervalSeconds": zod.number().min(1),
+  "intervalSeconds": zod.number().min(deviceStatusResponseSamplingIntervalSecondsMin).max(deviceStatusResponseSamplingIntervalSecondsMax).default(deviceStatusResponseSamplingIntervalSecondsDefault),
   "nextSampleAt": zod.iso.datetime({}),
   "lastSampleAt": zod.iso.datetime({}),
   "sleepEnabled": zod.boolean(),

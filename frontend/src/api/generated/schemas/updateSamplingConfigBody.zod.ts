@@ -11,23 +11,27 @@ and administrative actions such as opening a temporary online window.
  */
 import { z as zod } from 'zod';
 
-export const updateSamplingConfigBodyIntervalSecondsDefault = 30;
-export const updateSamplingConfigBodyIntervalSecondsMin = 5;
-export const updateSamplingConfigBodyIntervalSecondsMax = 3600;
+export const updateSamplingConfigBodyIntervalSecondsDefault = 2;
+export const updateSamplingConfigBodyIntervalSecondsMin = 2;
+export const updateSamplingConfigBodyIntervalSecondsMax = 20;
 
 export const updateSamplingConfigBodyAdminWindowMinutesDefault = 10;
 export const updateSamplingConfigBodyAdminWindowMinutesMax = 60;
 
 export const updateSamplingConfigBodyDeepSleepEnabledDefault = true;
+export const updateSamplingConfigBodyWakeDurationSecondsMax = 300;
+
 export const updateSamplingConfigBodyHistoryAggregationMinutesDefault = 30;
+export const updateSamplingConfigBodyHistoryAggregationMinutesMin = 5;
+export const updateSamplingConfigBodyHistoryAggregationMinutesMax = 1440;
 
 
 export const UpdateSamplingConfigBody = zod.object({
   "intervalSeconds": zod.number().min(updateSamplingConfigBodyIntervalSecondsMin).max(updateSamplingConfigBodyIntervalSecondsMax).default(updateSamplingConfigBodyIntervalSecondsDefault),
   "adminWindowMinutes": zod.number().min(1).max(updateSamplingConfigBodyAdminWindowMinutesMax).default(updateSamplingConfigBodyAdminWindowMinutesDefault),
   "deepSleepEnabled": zod.boolean().default(updateSamplingConfigBodyDeepSleepEnabledDefault),
-  "wakeDurationSeconds": zod.number().min(1).optional(),
-  "historyAggregationMinutes": zod.number().min(1).default(updateSamplingConfigBodyHistoryAggregationMinutesDefault)
+  "wakeDurationSeconds": zod.number().min(1).max(updateSamplingConfigBodyWakeDurationSecondsMax).optional(),
+  "historyAggregationMinutes": zod.number().min(updateSamplingConfigBodyHistoryAggregationMinutesMin).max(updateSamplingConfigBodyHistoryAggregationMinutesMax).default(updateSamplingConfigBodyHistoryAggregationMinutesDefault)
 })
 
 export type UpdateSamplingConfigBody = zod.input<typeof UpdateSamplingConfigBody>;

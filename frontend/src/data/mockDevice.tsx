@@ -2,6 +2,7 @@ import {
   FiActivity,
   FiMapPin,
   FiMessageSquare,
+  FiServer,
   FiSettings,
   FiSend,
   FiSliders,
@@ -11,13 +12,14 @@ import type { DeviceStatus, NavItem, UiConfig } from "../types/ui";
 
 export const navItems: NavItem[] = [
   { id: "overview", label: "Overview", icon: <FiActivity /> },
-  { id: "station", label: "Station", icon: <FiMapPin /> },
-  { id: "sampling", label: "Sampling", icon: <FiSliders /> },
+  { id: "backend-connection", label: "Backend connection", icon: <FiServer /> },
+  { id: "station", label: "Station identity", icon: <FiMapPin /> },
+  { id: "sampling", label: "Sampling and retention", icon: <FiSliders /> },
   { id: "smoothing", label: "Smoothing", icon: <FiSliders /> },
   { id: "sensors", label: "Sensors", icon: <FiSettings /> },
-  { id: "network", label: "Network", icon: <FiWifi /> },
+  { id: "network", label: "Connectivity", icon: <FiWifi /> },
   { id: "publishers", label: "Publishers", icon: <FiSend /> },
-  { id: "sms", label: "SMS Admin", icon: <FiMessageSquare /> },
+  { id: "sms", label: "SMS administration", icon: <FiMessageSquare /> },
 ];
 
 export const initialConfig: UiConfig = {

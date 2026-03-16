@@ -12,15 +12,17 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const mqttPublisherViewOnePublishIntervalSecondsMin = 30;
+export const mqttPublisherViewOnePublishIntervalSecondsMax = 300;
 
+export const mqttPublisherViewOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const MqttPublisherView = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(mqttPublisherViewOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(mqttPublisherViewOnePublishIntervalSecondsMin).max(mqttPublisherViewOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(mqttPublisherViewOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("mqtt"),
   "brokerUrl": zod.string(),

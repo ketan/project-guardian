@@ -12,15 +12,17 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const wundergroundPublisherInputOnePublishIntervalSecondsMin = 30;
+export const wundergroundPublisherInputOnePublishIntervalSecondsMax = 300;
 
+export const wundergroundPublisherInputOneIncludeHistoryWindowMinutesMax = 1440;
 
 
 export const WundergroundPublisherInput = zod.object({
   "id": zod.string(),
   "type": zod.string(),
   "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(wundergroundPublisherInputOnePublishIntervalSecondsMin),
-  "includeHistoryWindowMinutes": zod.number().min(1).optional()
+  "publishIntervalSeconds": zod.number().min(wundergroundPublisherInputOnePublishIntervalSecondsMin).max(wundergroundPublisherInputOnePublishIntervalSecondsMax),
+  "includeHistoryWindowMinutes": zod.number().min(1).max(wundergroundPublisherInputOneIncludeHistoryWindowMinutesMax).optional()
 }).and(zod.object({
   "type": zod.literal("wunderground"),
   "stationId": zod.string(),
