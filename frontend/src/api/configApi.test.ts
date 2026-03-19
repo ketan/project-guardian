@@ -130,4 +130,38 @@ describe("configApi", () => {
     mqttPut.resolve(jsonResponse(testConfig.publishers.mqtt));
     await promise;
   });
+
+  it("saves only the dirty publisher slot", async () => {
+    const calls: string[] = [];
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url = typeof input === "string" ? input : input.toString();
+      const path = new URL(url, "http://device.local").pathname;
+      const method = (init?.method ?? "GET").toUpperCase();
+      calls.push(`${method} ${path}`);
+
+      if (method !== "PUT") {
+        throw new Error(`Unexpected non-PUT request ${method} ${path}`);
+      }
+
+      if (path === "/api/v1/config/publishers/mqtt") {
+        return Promise.resolve(jsonResponse(testConfig.publishers.mqtt));
+      }
+
+      throw new Error(`Unexpected PUT ${path}`);
+    });
+
+    const dirtyFields = {
+      publishers: { mqtt: { topic: true } },
+    } as FieldNamesMarkedBoolean<UiConfig>;
+
+    await saveConfigSectionsSequentially(
+      [],
+      testConfig,
+      { baseUrl: "http://device.local", apiKey: "secret" },
+      dirtyFields,
+    );
+
+    expect(calls).toEqual(["PUT /api/v1/config/publishers/mqtt"]);
+  });
 });

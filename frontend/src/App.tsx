@@ -174,7 +174,15 @@ function App() {
 
   const onSubmit = handleSubmit(async (values: UiConfig) => {
     setValidationError(null);
-    const { savedSections, refreshedSections } = await save(values, dirtyFields);
+    let saveResult;
+
+    try {
+      saveResult = await save(values, dirtyFields);
+    } catch {
+      return;
+    }
+
+    const { savedSections, refreshedSections } = saveResult;
 
     if (savedSections.length === 0) {
       return;
