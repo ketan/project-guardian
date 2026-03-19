@@ -1,90 +1,161 @@
 #pragma once
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <vector>
 
-struct GeoLocation {
+class JsonConfig {
+public:
+    virtual ~JsonConfig() = default;
+
+    virtual void toJSON(JsonObject json) const = 0;
+
+    virtual bool fromJSON(JsonObject json) = 0;
+};
+
+class GeoLocation : public JsonConfig {
+public:
     double latitude = 0.0;
     double longitude = 0.0;
     double elevationMeters = 0.0;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct StationConfig {
+class StationConfig : public JsonConfig {
+public:
     String stationName;
     bool locationFromGPS = false;
     int gpsPollIntervalHours = 6;
     bool hasLocation = false;
     GeoLocation location;
     String notes;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct SamplingConfig {
+class SamplingConfig : public JsonConfig {
+public:
     int intervalSeconds = 10;
     int adminWindowMinutes = 10;
     bool deepSleepEnabled = true;
     int wakeDurationSeconds = 5;
     int historyAggregationMinutes = 30;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct SmoothingFieldConfig {
+class SmoothingFieldConfig : public JsonConfig {
+public:
     String metric;
     String method;
     bool hasWindowSamples = false;
     int windowSamples = 0;
     bool hasAlpha = false;
     double alpha = 0.0;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct SmoothingConfig {
+class SmoothingConfig : public JsonConfig {
+public:
     bool enabled = true;
     std::vector<SmoothingFieldConfig> fields;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct StorageConfig {
+class StorageConfig : public JsonConfig {
+public:
     int retentionDays = 14;
     String logFormat = "jsonl";
     String configSource = "sd_with_flash_fallback";
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct WifiConfig {
+class WifiConfig : public JsonConfig {
+public:
     bool enabled = true;
     String ssid = "guardian-station";
     String password;
     bool passwordConfigured = true;
     std::vector<String> allowedOrigins;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct CellularConfig {
+class CellularConfig : public JsonConfig {
+public:
     bool enabled = false;
     String modemType = "SIM7670G";
     String apn;
     String pin;
     bool pinConfigured = false;
     bool smsEnabled = false;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct NetworkConfig {
+class NetworkConfig : public JsonConfig {
+public:
     String preferredTransport = "auto";
     WifiConfig wifi;
     CellularConfig cellular;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct PhoneWhitelistEntry {
+class PhoneWhitelistEntry : public JsonConfig {
+public:
     String label;
     String phoneNumber;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct SmsAdminConfig {
+class SmsAdminConfig : public JsonConfig {
+public:
     bool enabled = false;
     std::vector<PhoneWhitelistEntry> whitelist;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct WebUiConfig {
+class WebUiConfig : public JsonConfig {
+public:
     int tokenTtlMinutes = 15;
     std::vector<String> allowedOrigins;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct SensorConfig {
+class SensorConfig : public JsonConfig {
+public:
     String id;
     String type;
     bool enabled = false;
@@ -93,9 +164,18 @@ struct SensorConfig {
     int pollIntervalSeconds = 0;
     bool hasAddress = false;
     int address = 0;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
+
+    static void writeArray(JsonArray array, const std::vector<SensorConfig> &sensors);
+
+    static bool parseArray(JsonArray array, std::vector<SensorConfig> &sensors);
 };
 
-struct WundergroundPublisherConfig {
+class WundergroundPublisherConfig : public JsonConfig {
+public:
     String type = "wunderground";
     bool enabled = false;
     int publishIntervalSeconds = 60;
@@ -104,9 +184,14 @@ struct WundergroundPublisherConfig {
     String stationId;
     String apiKey;
     bool apiKeyConfigured = false;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct WindyPublisherConfig {
+class WindyPublisherConfig : public JsonConfig {
+public:
     String type = "windy";
     bool enabled = false;
     int publishIntervalSeconds = 60;
@@ -115,9 +200,14 @@ struct WindyPublisherConfig {
     String stationId;
     String apiKey;
     bool apiKeyConfigured = false;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct MqttPublisherConfig {
+class MqttPublisherConfig : public JsonConfig {
+public:
     String type = "mqtt";
     bool enabled = false;
     int publishIntervalSeconds = 60;
@@ -128,15 +218,25 @@ struct MqttPublisherConfig {
     String username = "guardian";
     String password;
     bool passwordConfigured = false;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct PublishersConfig {
+class PublishersConfig : public JsonConfig {
+public:
     WundergroundPublisherConfig wunderground;
     WindyPublisherConfig windy;
     MqttPublisherConfig mqtt;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
-struct DeviceConfig {
+class DeviceConfig : public JsonConfig {
+public:
     int schemaVersion = 1;
     StationConfig station;
     SamplingConfig sampling;
@@ -147,6 +247,10 @@ struct DeviceConfig {
     WebUiConfig webUi;
     std::vector<SensorConfig> sensors;
     PublishersConfig publishers;
+
+    void toJSON(JsonObject json) const override;
+
+    bool fromJSON(JsonObject json) override;
 };
 
 struct DeviceSummary {
@@ -261,3 +365,13 @@ struct OtaUploadResult {
     String stagedPath;
     String message;
 };
+
+namespace ModelJson {
+    void writeDeviceStatus(JsonObject root, const DeviceStatus &status);
+
+    void writeLatestSensorReadings(JsonObject root, const LatestSensorReadings &readings);
+
+    void writeHistory(JsonObject root, const std::vector<WeatherSample> &history);
+
+    void writeOtaUploadResult(JsonObject root, const OtaUploadResult &result);
+}
