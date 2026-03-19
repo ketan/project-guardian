@@ -1,4 +1,4 @@
-#include "models.h"
+#include "ConfigModels.h"
 
 namespace {
     void writeStringArray(JsonArray array, const std::vector<String> &values) {
@@ -11,22 +11,6 @@ namespace {
         values.clear();
         for (JsonVariant value: array) {
             values.push_back(value.as<String>());
-        }
-    }
-
-    void writeWeatherSample(JsonObject root, const WeatherSample &sample, bool includeSmoothingApplied = false) {
-        root["recordedAt"] = sample.recordedAt;
-        root["temperatureC"] = sample.temperatureC;
-        root["humidityPct"] = sample.humidityPct;
-        root["pressureHpa"] = sample.pressureHpa;
-        root["windSpeedMps"] = sample.windSpeedMps;
-        root["windGustMps"] = sample.windGustMps;
-        root["windDirectionDeg"] = sample.windDirectionDeg;
-        root["rainfallMm"] = sample.rainfallMm;
-        root["illuminanceLux"] = sample.illuminanceLux;
-
-        if (includeSmoothingApplied) {
-            root["smoothingApplied"] = true;
         }
     }
 }
@@ -170,9 +154,7 @@ bool StorageConfig::fromJSON(JsonObject json) {
 void WifiConfig::toJSON(JsonObject json) const {
     json["enabled"] = enabled;
     json["ssid"] = ssid;
-    if (!password.isEmpty()) {
-        json["password"] = password;
-    }
+    json["password"] = password;
     json["passwordConfigured"] = passwordConfigured;
     writeStringArray(json["allowedOrigins"].to<JsonArray>(), allowedOrigins);
 }
@@ -188,15 +170,33 @@ bool WifiConfig::fromJSON(JsonObject json) {
     return true;
 }
 
+void WifiConfig::toHttpResponseJSON(JsonObject json) const {
+    json["enabled"] = enabled;
+    json["ssid"] = ssid;
+    json["passwordConfigured"] = passwordConfigured;
+    writeStringArray(json["allowedOrigins"].to<JsonArray>(), allowedOrigins);
+}
+
+bool WifiConfig::fromHttpRequestJSON(JsonObject json) {
+    enabled = json["enabled"] | enabled;
+    ssid = json["ssid"] | ssid;
+
+    if (json["password"].is<String>()) {
+        password = json["password"].as<String>();
+        passwordConfigured = !password.isEmpty();
+    }
+
+    if (json["allowedOrigins"].is<JsonArray>()) {
+        parseStringArray(json["allowedOrigins"].as<JsonArray>(), allowedOrigins);
+    }
+    return true;
+}
+
 void CellularConfig::toJSON(JsonObject json) const {
     json["enabled"] = enabled;
     json["modemType"] = modemType;
-    if (!apn.isEmpty()) {
-        json["apn"] = apn;
-    }
-    if (!pin.isEmpty()) {
-        json["pin"] = pin;
-    }
+    json["apn"] = apn;
+    json["pin"] = pin;
     json["pinConfigured"] = pinConfigured;
     json["smsEnabled"] = smsEnabled;
 }
@@ -207,6 +207,28 @@ bool CellularConfig::fromJSON(JsonObject json) {
     apn = json["apn"] | apn;
     pin = json["pin"] | pin;
     pinConfigured = json["pinConfigured"] | pinConfigured;
+    smsEnabled = json["smsEnabled"] | smsEnabled;
+    return true;
+}
+
+void CellularConfig::toHttpResponseJSON(JsonObject json) const {
+    json["enabled"] = enabled;
+    json["modemType"] = modemType;
+    json["apn"] = apn;
+    json["pinConfigured"] = pinConfigured;
+    json["smsEnabled"] = smsEnabled;
+}
+
+bool CellularConfig::fromHttpRequestJSON(JsonObject json) {
+    enabled = json["enabled"] | enabled;
+    modemType = json["modemType"] | modemType;
+    apn = json["apn"] | apn;
+
+    if (json["pin"].is<String>()) {
+        pin = json["pin"].as<String>();
+        pinConfigured = !pin.isEmpty();
+    }
+
     smsEnabled = json["smsEnabled"] | smsEnabled;
     return true;
 }
@@ -225,6 +247,22 @@ bool NetworkConfig::fromJSON(JsonObject json) {
     preferredTransport = json["preferredTransport"].as<String>();
     return wifi.fromJSON(json["wifi"].as<JsonObject>()) &&
            cellular.fromJSON(json["cellular"].as<JsonObject>());
+}
+
+void NetworkConfig::toHttpResponseJSON(JsonObject json) const {
+    json["preferredTransport"] = preferredTransport;
+    wifi.toHttpResponseJSON(json["wifi"].to<JsonObject>());
+    cellular.toHttpResponseJSON(json["cellular"].to<JsonObject>());
+}
+
+bool NetworkConfig::fromHttpRequestJSON(JsonObject json) {
+    if (!json["preferredTransport"].is<String>() || !json["wifi"].is<JsonObject>() ||
+        !json["cellular"].is<JsonObject>()) {
+        return false;
+    }
+    preferredTransport = json["preferredTransport"].as<String>();
+    return wifi.fromHttpRequestJSON(json["wifi"].as<JsonObject>()) &&
+           cellular.fromHttpRequestJSON(json["cellular"].as<JsonObject>());
 }
 
 void PhoneWhitelistEntry::toJSON(JsonObject json) const {
@@ -331,6 +369,14 @@ bool SensorConfig::parseArray(JsonArray array, std::vector<SensorConfig> &sensor
     return true;
 }
 
+void SensorConfig::writeHttpResponseArray(JsonArray array, const std::vector<SensorConfig> &sensors) {
+    writeArray(array, sensors);
+}
+
+bool SensorConfig::parseHttpRequestArray(JsonArray array, std::vector<SensorConfig> &sensors) {
+    return parseArray(array, sensors);
+}
+
 void WundergroundPublisherConfig::toJSON(JsonObject json) const {
     json["type"] = type;
     json["enabled"] = enabled;
@@ -339,6 +385,7 @@ void WundergroundPublisherConfig::toJSON(JsonObject json) const {
         json["includeHistoryWindowMinutes"] = includeHistoryWindowMinutes;
     }
     json["stationId"] = stationId;
+    json["apiKey"] = apiKey;
     json["apiKeyConfigured"] = apiKeyConfigured;
 }
 
@@ -360,6 +407,37 @@ bool WundergroundPublisherConfig::fromJSON(JsonObject json) {
     return true;
 }
 
+void WundergroundPublisherConfig::toHttpResponseJSON(JsonObject json) const {
+    json["type"] = type;
+    json["enabled"] = enabled;
+    json["publishIntervalSeconds"] = publishIntervalSeconds;
+    if (hasIncludeHistoryWindowMinutes) {
+        json["includeHistoryWindowMinutes"] = includeHistoryWindowMinutes;
+    }
+    json["stationId"] = stationId;
+    json["apiKeyConfigured"] = apiKeyConfigured;
+}
+
+bool WundergroundPublisherConfig::fromHttpRequestJSON(JsonObject json) {
+    if (!json["type"].is<String>() || !json["enabled"].is<bool>() ||
+        !json["publishIntervalSeconds"].is<int>() || !json["stationId"].is<String>()) {
+        return false;
+    }
+    type = json["type"].as<String>();
+    enabled = json["enabled"].as<bool>();
+    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    stationId = json["stationId"].as<String>();
+    if (json["apiKey"].is<String>()) {
+        apiKey = json["apiKey"].as<String>();
+        apiKeyConfigured = !apiKey.isEmpty();
+    }
+    hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
+    if (hasIncludeHistoryWindowMinutes) {
+        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+    }
+    return true;
+}
+
 void WindyPublisherConfig::toJSON(JsonObject json) const {
     json["type"] = type;
     json["enabled"] = enabled;
@@ -368,6 +446,7 @@ void WindyPublisherConfig::toJSON(JsonObject json) const {
         json["includeHistoryWindowMinutes"] = includeHistoryWindowMinutes;
     }
     json["stationId"] = stationId;
+    json["apiKey"] = apiKey;
     json["apiKeyConfigured"] = apiKeyConfigured;
 }
 
@@ -389,6 +468,37 @@ bool WindyPublisherConfig::fromJSON(JsonObject json) {
     return true;
 }
 
+void WindyPublisherConfig::toHttpResponseJSON(JsonObject json) const {
+    json["type"] = type;
+    json["enabled"] = enabled;
+    json["publishIntervalSeconds"] = publishIntervalSeconds;
+    if (hasIncludeHistoryWindowMinutes) {
+        json["includeHistoryWindowMinutes"] = includeHistoryWindowMinutes;
+    }
+    json["stationId"] = stationId;
+    json["apiKeyConfigured"] = apiKeyConfigured;
+}
+
+bool WindyPublisherConfig::fromHttpRequestJSON(JsonObject json) {
+    if (!json["type"].is<String>() || !json["enabled"].is<bool>() ||
+        !json["publishIntervalSeconds"].is<int>() || !json["stationId"].is<String>()) {
+        return false;
+    }
+    type = json["type"].as<String>();
+    enabled = json["enabled"].as<bool>();
+    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    stationId = json["stationId"].as<String>();
+    if (json["apiKey"].is<String>()) {
+        apiKey = json["apiKey"].as<String>();
+        apiKeyConfigured = !apiKey.isEmpty();
+    }
+    hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
+    if (hasIncludeHistoryWindowMinutes) {
+        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+    }
+    return true;
+}
+
 void MqttPublisherConfig::toJSON(JsonObject json) const {
     json["type"] = type;
     json["enabled"] = enabled;
@@ -399,6 +509,7 @@ void MqttPublisherConfig::toJSON(JsonObject json) const {
     json["brokerUrl"] = brokerUrl;
     json["topic"] = topic;
     json["username"] = username;
+    json["password"] = password;
     json["passwordConfigured"] = passwordConfigured;
 }
 
@@ -423,6 +534,42 @@ bool MqttPublisherConfig::fromJSON(JsonObject json) {
     return true;
 }
 
+void MqttPublisherConfig::toHttpResponseJSON(JsonObject json) const {
+    json["type"] = type;
+    json["enabled"] = enabled;
+    json["publishIntervalSeconds"] = publishIntervalSeconds;
+    if (hasIncludeHistoryWindowMinutes) {
+        json["includeHistoryWindowMinutes"] = includeHistoryWindowMinutes;
+    }
+    json["brokerUrl"] = brokerUrl;
+    json["topic"] = topic;
+    json["username"] = username;
+    json["passwordConfigured"] = passwordConfigured;
+}
+
+bool MqttPublisherConfig::fromHttpRequestJSON(JsonObject json) {
+    if (!json["type"].is<String>() || !json["enabled"].is<bool>() ||
+        !json["publishIntervalSeconds"].is<int>() || !json["brokerUrl"].is<String>() ||
+        !json["topic"].is<String>() || !json["username"].is<String>()) {
+        return false;
+    }
+    type = json["type"].as<String>();
+    enabled = json["enabled"].as<bool>();
+    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    brokerUrl = json["brokerUrl"].as<String>();
+    topic = json["topic"].as<String>();
+    username = json["username"].as<String>();
+    if (json["password"].is<String>()) {
+        password = json["password"].as<String>();
+        passwordConfigured = !password.isEmpty();
+    }
+    hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
+    if (hasIncludeHistoryWindowMinutes) {
+        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+    }
+    return true;
+}
+
 void PublishersConfig::toJSON(JsonObject json) const {
     wunderground.toJSON(json["wunderground"].to<JsonObject>());
     windy.toJSON(json["windy"].to<JsonObject>());
@@ -436,6 +583,21 @@ bool PublishersConfig::fromJSON(JsonObject json) {
     return wunderground.fromJSON(json["wunderground"].as<JsonObject>()) &&
            windy.fromJSON(json["windy"].as<JsonObject>()) &&
            mqtt.fromJSON(json["mqtt"].as<JsonObject>());
+}
+
+void PublishersConfig::toHttpResponseJSON(JsonObject json) const {
+    wunderground.toHttpResponseJSON(json["wunderground"].to<JsonObject>());
+    windy.toHttpResponseJSON(json["windy"].to<JsonObject>());
+    mqtt.toHttpResponseJSON(json["mqtt"].to<JsonObject>());
+}
+
+bool PublishersConfig::fromHttpRequestJSON(JsonObject json) {
+    if (!json["wunderground"].is<JsonObject>() || !json["windy"].is<JsonObject>() || !json["mqtt"].is<JsonObject>()) {
+        return false;
+    }
+    return wunderground.fromHttpRequestJSON(json["wunderground"].as<JsonObject>()) &&
+           windy.fromHttpRequestJSON(json["windy"].as<JsonObject>()) &&
+           mqtt.fromHttpRequestJSON(json["mqtt"].as<JsonObject>());
 }
 
 void DeviceConfig::toJSON(JsonObject json) const {
@@ -452,7 +614,8 @@ void DeviceConfig::toJSON(JsonObject json) const {
 }
 
 bool DeviceConfig::fromJSON(JsonObject json) {
-    if (!json["station"].is<JsonObject>() || !json["sampling"].is<JsonObject>() || !json["smoothing"].is<JsonObject>() ||
+    if (!json["station"].is<JsonObject>() || !json["sampling"].is<JsonObject>() || !json["smoothing"].is<JsonObject>()
+        ||
         !json["storage"].is<JsonObject>() || !json["network"].is<JsonObject>() || !json["smsAdmin"].is<JsonObject>() ||
         !json["webUi"].is<JsonObject>() || !json["sensors"].is<JsonArray>() || !json["publishers"].is<JsonObject>()) {
         return false;
@@ -471,106 +634,36 @@ bool DeviceConfig::fromJSON(JsonObject json) {
            publishers.fromJSON(json["publishers"].as<JsonObject>());
 }
 
-namespace ModelJson {
-    void writeDeviceStatus(JsonObject root, const DeviceStatus &status) {
-        JsonObject device = root["device"].to<JsonObject>();
-        device["deviceId"] = status.device.deviceId;
-        device["firmwareVersion"] = status.device.firmwareVersion;
-        device["hardwareModel"] = status.device.hardwareModel;
-        device["uptimeSeconds"] = status.device.uptimeSeconds;
-        device["currentTime"] = status.device.currentTime;
-        device["lastBootReason"] = status.device.lastBootReason;
+void DeviceConfig::toHttpResponseJSON(JsonObject json) const {
+    json["schemaVersion"] = schemaVersion;
+    station.toHttpResponseJSON(json["station"].to<JsonObject>());
+    sampling.toHttpResponseJSON(json["sampling"].to<JsonObject>());
+    smoothing.toHttpResponseJSON(json["smoothing"].to<JsonObject>());
+    storage.toHttpResponseJSON(json["storage"].to<JsonObject>());
+    network.toHttpResponseJSON(json["network"].to<JsonObject>());
+    smsAdmin.toHttpResponseJSON(json["smsAdmin"].to<JsonObject>());
+    webUi.toHttpResponseJSON(json["webUi"].to<JsonObject>());
+    SensorConfig::writeHttpResponseArray(json["sensors"].to<JsonArray>(), sensors);
+    publishers.toHttpResponseJSON(json["publishers"].to<JsonObject>());
+}
 
-        JsonObject connectivity = root["connectivity"].to<JsonObject>();
-        JsonObject wifi = connectivity["wifi"].to<JsonObject>();
-        wifi["enabled"] = status.connectivity.wifi.enabled;
-        wifi["active"] = status.connectivity.wifi.active;
-        wifi["connected"] = status.connectivity.wifi.connected;
-        wifi["ssid"] = status.connectivity.wifi.ssid;
-        wifi["ipAddress"] = status.connectivity.wifi.ipAddress;
-        wifi["rssiDbm"] = status.connectivity.wifi.rssiDbm;
-
-        JsonObject cellular = connectivity["cellular"].to<JsonObject>();
-        cellular["enabled"] = status.connectivity.cellular.enabled;
-        cellular["active"] = status.connectivity.cellular.active;
-        cellular["registered"] = status.connectivity.cellular.registered;
-        cellular["modemType"] = status.connectivity.cellular.modemType;
-        cellular["operatorName"] = status.connectivity.cellular.operatorName;
-        cellular["signalQuality"] = status.connectivity.cellular.signalQuality;
-        cellular["ipv4"] = status.connectivity.cellular.ipv4;
-        cellular["ipv6"] = status.connectivity.cellular.ipv6;
-
-        JsonObject storage = root["storage"].to<JsonObject>();
-        storage["sdCardPresent"] = status.storage.sdCardPresent;
-        storage["freeBytes"] = status.storage.freeBytes;
-        storage["usedBytes"] = status.storage.usedBytes;
-        storage["retentionDays"] = status.storage.retentionDays;
-        storage["oldestRecordAt"] = status.storage.oldestRecordAt;
-        storage["newestRecordAt"] = status.storage.newestRecordAt;
-
-        JsonObject sampling = root["sampling"].to<JsonObject>();
-        sampling["intervalSeconds"] = status.sampling.intervalSeconds;
-        sampling["nextSampleAt"] = status.sampling.nextSampleAt;
-        sampling["lastSampleAt"] = status.sampling.lastSampleAt;
-        sampling["sleepEnabled"] = status.sampling.sleepEnabled;
-        sampling["smoothingEnabled"] = status.sampling.smoothingEnabled;
-
-        JsonObject adminWindow = root["adminWindow"].to<JsonObject>();
-        adminWindow["active"] = status.adminWindow.active;
-        if (!status.adminWindow.openedAt.isEmpty()) {
-            adminWindow["openedAt"] = status.adminWindow.openedAt;
-        }
-        if (!status.adminWindow.expiresAt.isEmpty()) {
-            adminWindow["expiresAt"] = status.adminWindow.expiresAt;
-        }
-        if (!status.adminWindow.requestedBy.isEmpty()) {
-            adminWindow["requestedBy"] = status.adminWindow.requestedBy;
-        }
-
-        JsonArray sensors = root["sensors"].to<JsonArray>();
-        for (const SensorStatus &sensorStatus: status.sensors) {
-            JsonObject sensor = sensors.add<JsonObject>();
-            sensor["id"] = sensorStatus.id;
-            sensor["kind"] = sensorStatus.kind;
-            sensor["enabled"] = sensorStatus.enabled;
-            sensor["healthy"] = sensorStatus.healthy;
-            sensor["lastReadAt"] = sensorStatus.lastReadAt;
-            sensor["message"] = sensorStatus.message;
-        }
-
-        JsonArray publishers = root["publishers"].to<JsonArray>();
-        for (const PublisherStatus &publisherStatus: status.publishers) {
-            JsonObject publisher = publishers.add<JsonObject>();
-            publisher["type"] = publisherStatus.type;
-            publisher["enabled"] = publisherStatus.enabled;
-            if (!publisherStatus.lastPublishAt.isEmpty()) {
-                publisher["lastPublishAt"] = publisherStatus.lastPublishAt;
-            }
-            publisher["lastResult"] = publisherStatus.lastResult;
-            publisher["message"] = publisherStatus.message;
-        }
+bool DeviceConfig::fromHttpRequestJSON(JsonObject json) {
+    if (!json["station"].is<JsonObject>() || !json["sampling"].is<JsonObject>() || !json["smoothing"].is<JsonObject>()
+        ||
+        !json["storage"].is<JsonObject>() || !json["network"].is<JsonObject>() || !json["smsAdmin"].is<JsonObject>() ||
+        !json["webUi"].is<JsonObject>() || !json["sensors"].is<JsonArray>() || !json["publishers"].is<JsonObject>()) {
+        return false;
     }
 
-    void writeLatestSensorReadings(JsonObject root, const LatestSensorReadings &readings) {
-        writeWeatherSample(root["latest"].to<JsonObject>(), readings.latest);
-        writeWeatherSample(root["smoothed"].to<JsonObject>(), readings.smoothed, readings.smoothingApplied);
-    }
+    schemaVersion = json["schemaVersion"] | schemaVersion;
 
-    void writeHistory(JsonObject root, const std::vector<WeatherSample> &history) {
-        JsonArray samples = root["samples"].to<JsonArray>();
-        for (const WeatherSample &sample: history) {
-            writeWeatherSample(samples.add<JsonObject>(), sample);
-        }
-    }
-
-    void writeOtaUploadResult(JsonObject root, const OtaUploadResult &result) {
-        root["checksumVerified"] = result.checksumVerified;
-        root["staged"] = result.staged;
-        root["rebootScheduled"] = result.rebootScheduled;
-        root["firmwareSizeBytes"] = result.firmwareSizeBytes;
-        if (!result.stagedPath.isEmpty()) {
-            root["stagedPath"] = result.stagedPath;
-        }
-        root["message"] = result.message;
-    }
+    return station.fromHttpRequestJSON(json["station"].as<JsonObject>()) &&
+           sampling.fromHttpRequestJSON(json["sampling"].as<JsonObject>()) &&
+           smoothing.fromHttpRequestJSON(json["smoothing"].as<JsonObject>()) &&
+           storage.fromHttpRequestJSON(json["storage"].as<JsonObject>()) &&
+           network.fromHttpRequestJSON(json["network"].as<JsonObject>()) &&
+           smsAdmin.fromHttpRequestJSON(json["smsAdmin"].as<JsonObject>()) &&
+           webUi.fromHttpRequestJSON(json["webUi"].as<JsonObject>()) &&
+           SensorConfig::parseHttpRequestArray(json["sensors"].as<JsonArray>(), sensors) &&
+           publishers.fromHttpRequestJSON(json["publishers"].as<JsonObject>());
 }

@@ -4,6 +4,8 @@
 #include <WiFi.h>
 #include <mbedtls/sha256.h>
 
+#include "ConfigModels.h"
+
 namespace {
     constexpr const char *bearerToken = "secret";
 
@@ -72,10 +74,10 @@ namespace {
 
     void sendDocument(WebServer &server, int statusCode, JsonDocument &doc) {
         addCommonHeaders(server);
-        server.setContentLength(measureJsonPretty(doc));
+        server.setContentLength(measureJson(doc));
         server.send(statusCode, "application/json", "");
         WiFiClient client = server.client();
-        serializeJsonPretty(doc, client);
+        serializeJson(doc, client);
     }
 
     void sendError(WebServer &server, int statusCode, const char *error, const String &message) {
@@ -177,14 +179,14 @@ void ApiServer::registerRoutes() {
         }
         appState.status.device.uptimeSeconds = millis() / 1000;
         appState.status.connectivity.wifi.ipAddress = WiFi.softAPIP().toString();
-        sendJson(webServer, [&](JsonObject root) { ModelJson::writeDeviceStatus(root, appState.status); });
+        sendJson(webServer, [&](JsonObject root) { appState.status.toJSON(root); });
     });
 
     webServer.on("/api/v1/config/station", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.station.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.station.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/station", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -192,12 +194,12 @@ void ApiServer::registerRoutes() {
         }
         handlePutSection(
             webServer,
-            [](JsonObject json, StationConfig &model) { return model.fromJSON(json); },
-            [](JsonObject root, const StationConfig &model) { model.toJSON(root); },
+            [](JsonObject json, StationConfig &model) { return model.fromHttpRequestJSON(json); },
+            [](JsonObject root, const StationConfig &model) { model.toHttpResponseJSON(root); },
             appState.config.station,
             "station",
             [&]() {
-            sendJson(webServer, [&](JsonObject root) { appState.config.station.toJSON(root); });
+            sendJson(webServer, [&](JsonObject root) { appState.config.station.toHttpResponseJSON(root); });
         });
     });
 
@@ -205,7 +207,7 @@ void ApiServer::registerRoutes() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.sampling.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.sampling.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/sampling", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -216,20 +218,20 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.sampling.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.sampling.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid sampling configuration.");
             return;
         }
         appState.status.sampling.intervalSeconds = appState.config.sampling.intervalSeconds;
         Serial.println("Updated sampling config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.sampling.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.sampling.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/smoothing", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.smoothing.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.smoothing.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/smoothing", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -240,20 +242,20 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.smoothing.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.smoothing.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid smoothing configuration.");
             return;
         }
         appState.status.sampling.smoothingEnabled = appState.config.smoothing.enabled;
         Serial.println("Updated smoothing config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.smoothing.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.smoothing.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/storage", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.storage.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.storage.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/storage", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -264,20 +266,20 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.storage.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.storage.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid storage configuration.");
             return;
         }
         appState.status.storage.retentionDays = appState.config.storage.retentionDays;
         Serial.println("Updated storage config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.storage.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.storage.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/network", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.network.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.network.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/network", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -288,7 +290,7 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.network.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.network.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid network configuration.");
             return;
         }
@@ -296,14 +298,14 @@ void ApiServer::registerRoutes() {
         appState.status.connectivity.wifi.ssid = appState.config.network.wifi.ssid;
         appState.status.connectivity.cellular.enabled = appState.config.network.cellular.enabled;
         Serial.println("Updated network config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.network.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.network.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/sms-admin", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.smsAdmin.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.smsAdmin.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/sms-admin", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -314,19 +316,19 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.smsAdmin.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.smsAdmin.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid SMS admin configuration.");
             return;
         }
         Serial.println("Updated SMS admin config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.smsAdmin.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.smsAdmin.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/web-ui", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.webUi.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.webUi.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/web-ui", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -337,19 +339,19 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.webUi.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.webUi.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid web UI configuration.");
             return;
         }
         Serial.println("Updated web UI config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.webUi.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.webUi.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/sensors", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJsonArray(webServer, [&](JsonArray root) { SensorConfig::writeArray(root, appState.config.sensors); });
+        sendJsonArray(webServer, [&](JsonArray root) { SensorConfig::writeHttpResponseArray(root, appState.config.sensors); });
     });
     webServer.on("/api/v1/config/sensors", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -360,19 +362,19 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!doc.is<JsonArray>() || !SensorConfig::parseArray(doc.as<JsonArray>(), appState.config.sensors)) {
+        if (!doc.is<JsonArray>() || !SensorConfig::parseHttpRequestArray(doc.as<JsonArray>(), appState.config.sensors)) {
             sendError(webServer, 400, "validation_error", "Invalid sensor configuration.");
             return;
         }
         Serial.println("Updated sensors config.");
-        sendJsonArray(webServer, [&](JsonArray root) { SensorConfig::writeArray(root, appState.config.sensors); });
+        sendJsonArray(webServer, [&](JsonArray root) { SensorConfig::writeHttpResponseArray(root, appState.config.sensors); });
     });
 
     webServer.on("/api/v1/config/publishers/wunderground", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.wunderground.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.wunderground.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/publishers/wunderground", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -383,19 +385,19 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.publishers.wunderground.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.publishers.wunderground.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid Weather Underground publisher configuration.");
             return;
         }
         Serial.println("Updated Weather Underground publisher config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.wunderground.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.wunderground.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/publishers/windy", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.windy.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.windy.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/publishers/windy", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -406,19 +408,19 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.publishers.windy.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.publishers.windy.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid Windy publisher configuration.");
             return;
         }
         Serial.println("Updated Windy publisher config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.windy.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.windy.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/config/publishers/mqtt", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.mqtt.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.mqtt.toHttpResponseJSON(root); });
     });
     webServer.on("/api/v1/config/publishers/mqtt", HTTP_PUT, [this, requireAuth]() {
         if (!requireAuth()) {
@@ -429,26 +431,28 @@ void ApiServer::registerRoutes() {
             sendError(webServer, 400, "validation_error", "Invalid JSON.");
             return;
         }
-        if (!appState.config.publishers.mqtt.fromJSON(doc.as<JsonObject>())) {
+        if (!appState.config.publishers.mqtt.fromHttpRequestJSON(doc.as<JsonObject>())) {
             sendError(webServer, 400, "validation_error", "Invalid MQTT publisher configuration.");
             return;
         }
         Serial.println("Updated MQTT publisher config.");
-        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.mqtt.toJSON(root); });
+        sendJson(webServer, [&](JsonObject root) { appState.config.publishers.mqtt.toHttpResponseJSON(root); });
     });
 
     webServer.on("/api/v1/sensors/latest", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { ModelJson::writeLatestSensorReadings(root, appState.latestReadings); });
+        sendJson(webServer, [&](JsonObject root) { appState.latestReadings.toJSON(root); });
     });
 
     webServer.on("/api/v1/logs/history", HTTP_GET, [this, requireAuth]() {
         if (!requireAuth()) {
             return;
         }
-        sendJson(webServer, [&](JsonObject root) { ModelJson::writeHistory(root, appState.history); });
+        sendJson(webServer, [&](JsonObject root) {
+            WeatherSample::writeArray(root["samples"].to<JsonArray>(), appState.history);
+        });
     });
 
     webServer.on(
@@ -478,7 +482,7 @@ void ApiServer::registerRoutes() {
             Serial.println("OTA upload finished.");
             Serial.printf("Provided SHA-256: %s\n", otaUpload.providedSha256.c_str());
             Serial.printf("Calculated SHA-256: %s\n", otaUpload.calculatedSha256.c_str());
-            sendJson(webServer, [&](JsonObject root) { ModelJson::writeOtaUploadResult(root, appState.lastOtaUpload); });
+            sendJson(webServer, [&](JsonObject root) { appState.lastOtaUpload.toJSON(root); });
         },
         [this]() {
             HTTPUpload &upload = webServer.upload();

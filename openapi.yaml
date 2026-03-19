@@ -19,7 +19,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      # bearerFormat: JWT
   schemas:
     ErrorResponse:
       type: object
@@ -1299,7 +1299,7 @@ paths:
                 $ref: '#/components/schemas/WeatherHistoryResponse'
   /api/v1/admin/ota:
     post:
-      tags: [admin]
+      tags: [admin, wip]
       operationId: uploadOtaFirmware
       security:
         - bearerAuth: []

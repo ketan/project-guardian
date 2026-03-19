@@ -1,6 +1,8 @@
 #pragma once
 
-#include "models.h"
+#include "ConfigModels.h"
+#include "DeviceStatus.h"
+#include "OtaUploadResult.h"
 
 struct AppState {
     DeviceConfig config;
