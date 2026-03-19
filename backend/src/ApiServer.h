@@ -1,6 +1,6 @@
 #pragma once
 
-#include <WebServer.h>
+#include <ESPAsyncWebServer.h>
 #include "AppState.h"
 
 class ApiServer {
@@ -9,11 +9,10 @@ public:
 
     void begin();
 
-    void handleClient();
 
 private:
     void registerRoutes();
 
-    WebServer webServer;
+    AsyncWebServer webServer;
     AppState &appState;
 };

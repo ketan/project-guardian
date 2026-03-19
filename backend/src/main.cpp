@@ -7,7 +7,7 @@
 #include "ApiServer.h"
 #include "AppState.h"
 
-constexpr uint16_t httpPort = 8080;
+constexpr uint16_t httpPort = 80;
 constexpr const char *accessPointSsid = "guardian-admin";
 constexpr const char *accessPointPassword = "guardian123";
 constexpr const char *mdnsHostname = "project-guardian";
@@ -201,6 +201,5 @@ void setup() {
 
 void loop() {
     Debug.handle();
-    apiServer.handleClient();
     delay(2);
 }
