@@ -28,7 +28,7 @@ describe("StationSection", () => {
 
     expect((screen.getByLabelText(/latitude/i) as HTMLInputElement).disabled).toBe(true);
     expect((screen.getByLabelText(/longitude/i) as HTMLInputElement).disabled).toBe(true);
-    expect((screen.getByLabelText(/elevation/i) as HTMLInputElement).disabled).toBe(true);
+    expect((screen.getByLabelText(/altitude/i) as HTMLInputElement).disabled).toBe(true);
   });
 
   it("enables manual location fields when GPS mode is disabled", () => {
@@ -36,6 +36,6 @@ describe("StationSection", () => {
 
     expect((screen.getByLabelText(/latitude/i) as HTMLInputElement).disabled).toBe(false);
     expect((screen.getByLabelText(/longitude/i) as HTMLInputElement).disabled).toBe(false);
-    expect((screen.getByLabelText(/elevation/i) as HTMLInputElement).disabled).toBe(false);
+    expect((screen.getByLabelText(/altitude/i) as HTMLInputElement).disabled).toBe(false);
   });
 });

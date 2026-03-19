@@ -25,7 +25,7 @@ class GeoLocation : public JsonConfig {
 public:
     double latitude = 0.0;
     double longitude = 0.0;
-    double elevationMeters = 0.0;
+    double altitudeAboveMslMeters = 0.0;
 
     void toJSON(JsonObject json) const override;
 

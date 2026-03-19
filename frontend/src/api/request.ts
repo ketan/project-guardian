@@ -25,6 +25,18 @@ function buildHeaders(settings: ApiConnectionSettings, hasBody: boolean) {
   return headers;
 }
 
+function safeParseJson(body: string | null): { ok: true; value: unknown } | { ok: false } {
+  if (!body) {
+    return { ok: true, value: {} };
+  }
+
+  try {
+    return { ok: true, value: JSON.parse(body) as unknown };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export async function requestFormData<T>(
   path: string,
   settings: ApiConnectionSettings,
@@ -38,21 +50,29 @@ export async function requestFormData<T>(
   });
 
   const body = [204, 205, 304].includes(response.status) ? null : await response.text();
-  const parsedBody = body ? (JSON.parse(body) as unknown) : {};
+  const parsedBody = safeParseJson(body);
 
   if (!response.ok) {
+    if (!parsedBody.ok) {
+      throw new Error("Request failed. Server returned an invalid error response.");
+    }
+
     const message =
-      typeof parsedBody === "object" &&
-      parsedBody !== null &&
-      "message" in parsedBody &&
-      typeof parsedBody.message === "string"
-        ? parsedBody.message
+      typeof parsedBody.value === "object" &&
+      parsedBody.value !== null &&
+      "message" in parsedBody.value &&
+      typeof parsedBody.value.message === "string"
+        ? parsedBody.value.message
         : `${response.status} ${response.statusText}`.trim();
 
     throw new Error(message);
   }
 
-  return schema.parse(parsedBody);
+  if (!parsedBody.ok) {
+    throw new Error("Server returned an invalid JSON response.");
+  }
+
+  return schema.parse(parsedBody.value);
 }
 
 export async function requestJson<T>(
@@ -67,19 +87,27 @@ export async function requestJson<T>(
   });
 
   const body = [204, 205, 304].includes(response.status) ? null : await response.text();
-  const parsedBody = body ? (JSON.parse(body) as unknown) : {};
+  const parsedBody = safeParseJson(body);
 
   if (!response.ok) {
+    if (!parsedBody.ok) {
+      throw new Error("Request failed. Server returned an invalid error response.");
+    }
+
     const message =
-      typeof parsedBody === "object" &&
-      parsedBody !== null &&
-      "message" in parsedBody &&
-      typeof parsedBody.message === "string"
-        ? parsedBody.message
+      typeof parsedBody.value === "object" &&
+      parsedBody.value !== null &&
+      "message" in parsedBody.value &&
+      typeof parsedBody.value.message === "string"
+        ? parsedBody.value.message
         : `${response.status} ${response.statusText}`.trim();
 
     throw new Error(message);
   }
 
-  return schema.parse(parsedBody);
+  if (!parsedBody.ok) {
+    throw new Error("Server returned an invalid JSON response.");
+  }
+
+  return schema.parse(parsedBody.value);
 }

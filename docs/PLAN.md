@@ -58,7 +58,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 ### Sampling, smoothing, sleep, and storage
 - Use a 30-second sampling cadence as the base loop.
 - On each wake: load config, read sensors, apply smoothing, append a timestamped JSON record to SD, evaluate publisher schedules, publish if due, and return to sleep unless in an admin-online window.
-- If GPS-based location is enabled and GPS hardware is available, use the most recent GPS fix for station latitude/longitude/elevation instead of manual coordinates.
+- If GPS-based location is enabled and GPS hardware is available, use the most recent GPS fix for station latitude/longitude/altitude (MSL) instead of manual coordinates.
 - Poll GPS infrequently to save power, using a configurable refresh interval of every few hours and caching the last valid fix between GPS polls.
 - Implement configurable smoothing with rolling average and/or EMA, with per-measurement enable/disable controls.
 - Store runtime config primarily as JSON on microSD, with flash-backed fallback defaults for recovery if SD is missing or invalid.

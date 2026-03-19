@@ -20,6 +20,9 @@ export const updateStationConfigBodyLocationLatitudeMaxOne = 90;
 export const updateStationConfigBodyLocationLongitudeMinOne = -180;
 export const updateStationConfigBodyLocationLongitudeMaxOne = 180;
 
+export const updateStationConfigBodyLocationAltitudeAboveMslMetersMinOne = 0;
+export const updateStationConfigBodyLocationAltitudeAboveMslMetersMaxOne = 5000;
+
 
 export const UpdateStationConfigBody = zod.object({
   "stationName": zod.string(),
@@ -28,7 +31,7 @@ export const UpdateStationConfigBody = zod.object({
   "location": zod.object({
   "latitude": zod.number().min(updateStationConfigBodyLocationLatitudeMinOne).max(updateStationConfigBodyLocationLatitudeMaxOne),
   "longitude": zod.number().min(updateStationConfigBodyLocationLongitudeMinOne).max(updateStationConfigBodyLocationLongitudeMaxOne),
-  "elevationMeters": zod.number().optional()
+  "altitudeAboveMslMeters": zod.number().min(updateStationConfigBodyLocationAltitudeAboveMslMetersMinOne).max(updateStationConfigBodyLocationAltitudeAboveMslMetersMaxOne).optional().describe('Altitude above mean sea level (meters).')
 }).optional().describe('Manual fallback coordinates used when GPS-based location is disabled or no valid GPS fix is available.'),
   "notes": zod.string().optional()
 })

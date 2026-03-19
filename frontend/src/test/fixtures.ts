@@ -84,7 +84,7 @@ export const testConfig: UiConfig = {
     location: {
       latitude: 18.758,
       longitude: 73.397,
-      elevationMeters: 620,
+      altitudeAboveMslMeters: 620,
     },
     notes: "",
   },

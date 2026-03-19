@@ -35,7 +35,7 @@ namespace {
 void GeoLocation::toJSON(JsonObject json) const {
     json["latitude"] = latitude;
     json["longitude"] = longitude;
-    json["elevationMeters"] = elevationMeters;
+    json["altitudeAboveMslMeters"] = altitudeAboveMslMeters;
 }
 
 bool GeoLocation::fromJSON(JsonObject json) {
@@ -51,7 +51,22 @@ bool GeoLocation::fromJSON(JsonObject json) {
 
     latitude = parsedLatitude;
     longitude = parsedLongitude;
-    elevationMeters = json["elevationMeters"] | 0.0;
+    double parsedAltitudeAboveMslMeters = 0.0;
+    if (json["altitudeAboveMslMeters"].is<double>()) {
+        parsedAltitudeAboveMslMeters = json["altitudeAboveMslMeters"].as<double>();
+    } else if (json["altitudeMslMeters"].is<double>()) {
+        // Backward compatibility for earlier key names.
+        parsedAltitudeAboveMslMeters = json["altitudeMslMeters"].as<double>();
+    } else {
+        // Backward compatibility for older payloads.
+        parsedAltitudeAboveMslMeters = json["elevationMeters"] | 0.0;
+    }
+
+    if (!isDoubleInRange(parsedAltitudeAboveMslMeters, 0.0, 5000.0)) {
+        return false;
+    }
+
+    altitudeAboveMslMeters = parsedAltitudeAboveMslMeters;
     return true;
 }
 

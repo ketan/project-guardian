@@ -18,7 +18,7 @@ export function StationSection({ config, loading = false, updateStationField, se
   const manualLocation = config.station.location ?? {
     latitude: 0,
     longitude: 0,
-    elevationMeters: 0,
+    altitudeAboveMslMeters: 0,
   };
 
   return (
@@ -56,7 +56,7 @@ export function StationSection({ config, loading = false, updateStationField, se
             />
             <Text c="dimmed" size="sm">
               When enabled, the device uses the latest cached GPS fix for latitude, longitude, and
-              elevation, and the manual fields stay disabled.
+              altitude above MSL, and the manual fields stay disabled.
             </Text>
           </Stack>
         </Grid.Col>
@@ -126,8 +126,10 @@ export function StationSection({ config, loading = false, updateStationField, se
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 4 }}>
           <NumberInput
-            label="Elevation (m)"
-            value={manualLocation.elevationMeters ?? 0}
+            label="Altitude above MSL (m)"
+            value={manualLocation.altitudeAboveMslMeters ?? 0}
+            min={0}
+            max={5000}
             disabled={autoGps}
             onChange={(value) =>
               typeof value === "number"
@@ -137,7 +139,7 @@ export function StationSection({ config, loading = false, updateStationField, se
                       ...current.station,
                       location: {
                         ...(current.station.location ?? manualLocation),
-                        elevationMeters: value,
+                        altitudeAboveMslMeters: value,
                       },
                     },
                   }))

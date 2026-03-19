@@ -335,8 +335,11 @@ components:
           type: number
           minimum: -180
           maximum: 180
-        elevationMeters:
+        altitudeAboveMslMeters:
           type: number
+          description: Altitude above mean sea level (meters).
+          minimum: 0
+          maximum: 5000
     SamplingConfig:
       type: object
       additionalProperties: false

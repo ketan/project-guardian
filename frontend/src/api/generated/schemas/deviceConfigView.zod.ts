@@ -21,6 +21,9 @@ export const deviceConfigViewStationLocationLatitudeMax = 90;
 export const deviceConfigViewStationLocationLongitudeMin = -180;
 export const deviceConfigViewStationLocationLongitudeMax = 180;
 
+export const deviceConfigViewStationLocationAltitudeAboveMslMetersMin = 0;
+export const deviceConfigViewStationLocationAltitudeAboveMslMetersMax = 5000;
+
 export const deviceConfigViewSamplingIntervalSecondsDefault = 2;
 export const deviceConfigViewSamplingIntervalSecondsMin = 2;
 export const deviceConfigViewSamplingIntervalSecondsMax = 20;
@@ -78,7 +81,7 @@ export const DeviceConfigView = zod.object({
   "location": zod.object({
   "latitude": zod.number().min(deviceConfigViewStationLocationLatitudeMin).max(deviceConfigViewStationLocationLatitudeMax),
   "longitude": zod.number().min(deviceConfigViewStationLocationLongitudeMin).max(deviceConfigViewStationLocationLongitudeMax),
-  "elevationMeters": zod.number().optional()
+  "altitudeAboveMslMeters": zod.number().min(deviceConfigViewStationLocationAltitudeAboveMslMetersMin).max(deviceConfigViewStationLocationAltitudeAboveMslMetersMax).optional().describe('Altitude above mean sea level (meters).')
 }).optional().describe('Manual fallback coordinates used when GPS-based location is disabled or no valid GPS fix is available.'),
   "notes": zod.string().optional()
 }),

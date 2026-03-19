@@ -7,7 +7,7 @@ AppState::AppState() {
     config.station.hasLocation = true;
     config.station.location.latitude = 18.758;
     config.station.location.longitude = 73.397;
-    config.station.location.elevationMeters = 620.0;
+    config.station.location.altitudeAboveMslMeters = 620.0;
 
     config.network.wifi.enabled = true;
     config.network.wifi.ssid = "guardian-station";

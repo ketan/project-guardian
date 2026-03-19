@@ -17,11 +17,14 @@ export const geoLocationLatitudeMax = 90;
 export const geoLocationLongitudeMin = -180;
 export const geoLocationLongitudeMax = 180;
 
+export const geoLocationAltitudeAboveMslMetersMin = 0;
+export const geoLocationAltitudeAboveMslMetersMax = 5000;
+
 
 export const GeoLocation = zod.object({
   "latitude": zod.number().min(geoLocationLatitudeMin).max(geoLocationLatitudeMax),
   "longitude": zod.number().min(geoLocationLongitudeMin).max(geoLocationLongitudeMax),
-  "elevationMeters": zod.number().optional()
+  "altitudeAboveMslMeters": zod.number().min(geoLocationAltitudeAboveMslMetersMin).max(geoLocationAltitudeAboveMslMetersMax).optional().describe('Altitude above mean sea level (meters).')
 })
 
 export type GeoLocation = zod.input<typeof GeoLocation>;
