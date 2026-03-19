@@ -1,41 +1,17 @@
 import {useCallback, useEffect, useState} from "react";
 import type {FieldNamesMarkedBoolean} from "react-hook-form";
-import type {ConfigSectionKey, PublisherSlotKey, UiConfig} from "../api/contracts";
+import type {UiConfig} from "../api/contracts";
 import {hasApiConnectionSettings, type ApiConnectionSettings} from "../api/runtime";
+import {mergeSectionValue, type LoadableSectionKey, type RefreshedConfigMap} from "../api/configSections";
 import {
   fetchConfig,
   getDirtySections,
   saveConfigSectionsSequentially,
-  type RefreshedConfigMap,
-  type LoadableSectionKey,
 } from "../api/configApi";
-
+import type {ConfigSectionKey, PublisherSlotKey} from "../api/sectionKeys";
 type PartialUiConfig = Partial<Omit<UiConfig, "publishers">> & {
   publishers?: Partial<UiConfig["publishers"]>;
 };
-
-function mergeLoadedSection(
-  current: PartialUiConfig,
-  section: LoadableSectionKey,
-  value: unknown,
-): PartialUiConfig {
-  if (section.startsWith("publishers.")) {
-    const slot = section.replace("publishers.", "") as PublisherSlotKey;
-
-    return {
-      ...current,
-      publishers: {
-        ...current.publishers,
-        [slot]: value,
-      },
-    };
-  }
-
-  return {
-    ...current,
-    [section]: value,
-  };
-}
 
 export function useDeviceConfig(connection: ApiConnectionSettings) {
   const [config, setConfig] = useState<PartialUiConfig | null>(null);
@@ -65,7 +41,7 @@ export function useDeviceConfig(connection: ApiConnectionSettings) {
     try {
       const nextConfig = await fetchConfig(connection, setLoadingSection, (section, value) => {
         setLoadedSections((current) => new Set(current).add(section));
-        setConfig((current) => mergeLoadedSection(current ?? {}, section, value));
+        setConfig((current) => mergeSectionValue(current ?? {}, section, value));
       });
       setConfig(nextConfig);
     } catch (error) {

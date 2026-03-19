@@ -15,12 +15,12 @@ import { IconAntennaBars5, IconCloudRain, IconSend, IconWind } from "@tabler/ico
 import type { ReactNode } from "react";
 import { SectionCard } from "../SectionCard";
 import type {
-  PublisherSlotKey,
   UiMqttPublisher,
   UiPublishers,
   UiWindyPublisher,
   UiWundergroundPublisher,
 } from "../../api/contracts";
+import type { PublisherSlotKey } from "../../api/sectionKeys";
 
 type PublishersSectionProps = {
   loading?: boolean;

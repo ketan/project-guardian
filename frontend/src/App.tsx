@@ -29,7 +29,7 @@ import {
   IconWifi,
   IconClockHour4,
 } from "@tabler/icons-react";
-import { UiConfigSchema, type PublisherSlotKey, type UiConfig } from "./api/contracts";
+import { UiConfigSchema, type UiConfig } from "./api/contracts";
 import type { DeviceConfig } from "./types/ui";
 import { NavigationPanel } from "./components/NavigationPanel";
 import { SectionCard } from "./components/SectionCard";
@@ -47,7 +47,8 @@ import { navItems } from "./data/mockDevice";
 import { useApiConnectionSettings } from "./hooks/useApiConnectionSettings";
 import { useDeviceConfig, useSequentialConfigSave } from "./hooks/useDeviceConfig";
 import { useDeviceStatus } from "./hooks/useDeviceStatus";
-import type { RefreshedConfigMap } from "./api/configApi";
+import { mergeSectionValue, type LoadableSectionKey } from "./api/configSections";
+import { PUBLISHER_SLOT_KEYS, type PublisherSlotKey } from "./api/sectionKeys";
 
 function deepEqual(left: unknown, right: unknown) {
   return JSON.stringify(left) === JSON.stringify(right);
@@ -70,40 +71,6 @@ function getActiveTransportLabel(status: NonNullable<ReturnType<typeof useDevice
 
   return active.join(" + ");
 }
-
-function mergeRefreshedSections(config: UiConfig, refreshedSections: RefreshedConfigMap): UiConfig {
-  let nextConfig: UiConfig = { ...config };
-
-  for (const [section, value] of Object.entries(refreshedSections)) {
-    if (section.startsWith("publishers.")) {
-      const slot = section.replace("publishers.", "") as PublisherSlotKey;
-      nextConfig = {
-        ...nextConfig,
-        publishers: {
-          ...nextConfig.publishers,
-          [slot]: value,
-        },
-      };
-      continue;
-    }
-
-    nextConfig = {
-      ...nextConfig,
-      [section]: value,
-    };
-  }
-
-  return nextConfig;
-}
-
-type ConfigBlockKey =
-  | "station"
-  | "sampling"
-  | "smoothing"
-  | "sensors"
-  | "network"
-  | "publishers"
-  | "smsAdmin";
 
 function LoadingSection({
   id,
@@ -128,7 +95,7 @@ function App() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const { settings: apiSettings, normalizedBaseUrl, updateApiKey, updateBaseUrl } =
     useApiConnectionSettings();
-  const { config: loadedConfig, isLoading, loadedSections, loadError, reload, canConnect } =
+  const { config: loadedConfig, isLoading, loadError, reload, canConnect } =
     useDeviceConfig(apiSettings);
   const {
     status,
@@ -213,63 +180,23 @@ function App() {
       return;
     }
 
-    const mergedConfig = mergeRefreshedSections(values, refreshedSections);
+    const mergedConfig = Object.entries(refreshedSections).reduce(
+      (current, [section, value]) =>
+        mergeSectionValue(current, section as LoadableSectionKey, value),
+      values,
+    );
     reset(mergedConfig);
   }, () => {
     setValidationError("Please fix the highlighted configuration values before saving.");
   });
 
-  const isBlockLoading = (block: ConfigBlockKey) => {
-    if (!canConnect || loadError) {
-      return false;
-    }
-
-    switch (block) {
-      case "station":
-        return !loadedSections.has("station");
-      case "sampling":
-        return !loadedSections.has("sampling") || !loadedSections.has("storage");
-      case "smoothing":
-        return !loadedSections.has("smoothing");
-      case "sensors":
-        return !loadedSections.has("sensors");
-      case "network":
-        return !loadedSections.has("network") || !loadedSections.has("webUi");
-      case "publishers":
-        return (
-          !loadedSections.has("publishers.wunderground") ||
-          !loadedSections.has("publishers.windy") ||
-          !loadedSections.has("publishers.mqtt")
-        );
-      case "smsAdmin":
-        return !loadedSections.has("smsAdmin");
-    }
-  };
-
-  const isBlockLoaded = (block: ConfigBlockKey) => !isBlockLoading(block);
-
-  const hasBlockData = (block: ConfigBlockKey) => {
-    switch (block) {
-      case "station":
-        return Boolean(config.station);
-      case "sampling":
-        return Boolean(config.sampling && config.storage);
-      case "smoothing":
-        return Boolean(config.smoothing);
-      case "sensors":
-        return Array.isArray(config.sensors);
-      case "network":
-        return Boolean(config.network && config.webUi);
-      case "publishers":
-        return Boolean(
-          config.publishers?.wunderground &&
-            config.publishers?.windy &&
-            config.publishers?.mqtt,
-        );
-      case "smsAdmin":
-        return Boolean(config.smsAdmin);
-    }
-  };
+  const stationReady = Boolean(config.station);
+  const samplingReady = Boolean(config.sampling && config.storage);
+  const smoothingReady = Boolean(config.smoothing);
+  const sensorsReady = Array.isArray(config.sensors);
+  const networkReady = Boolean(config.network && config.webUi);
+  const publishersReady = PUBLISHER_SLOT_KEYS.every((slot) => Boolean(config.publishers?.[slot]));
+  const smsAdminReady = Boolean(config.smsAdmin);
 
   return (
     <AppShell
@@ -410,7 +337,7 @@ function App() {
                 <>
                   {status ? <SummaryCards status={status} /> : null}
 
-                  {isBlockLoaded("station") && hasBlockData("station") ? (
+                  {stationReady ? (
                     <StationSection
                       config={config}
                       loading={false}
@@ -428,7 +355,7 @@ function App() {
 
                   <SimpleGrid cols={1} spacing="lg" verticalSpacing="lg">
                     <Stack gap="lg">
-                      {isBlockLoaded("sampling") && hasBlockData("sampling") ? (
+                      {samplingReady ? (
                         <SamplingSection
                           config={config}
                           loading={false}
@@ -444,7 +371,7 @@ function App() {
                         />
                       ) : null}
 
-                      {isBlockLoaded("smoothing") && hasBlockData("smoothing") ? (
+                      {smoothingReady ? (
                         <SmoothingSection
                           config={config}
                           loading={false}
@@ -459,7 +386,7 @@ function App() {
                         />
                       ) : null}
 
-                      {isBlockLoaded("sensors") && hasBlockData("sensors") ? (
+                      {sensorsReady ? (
                         <SensorsSection
                           config={config}
                           loading={false}
@@ -474,7 +401,7 @@ function App() {
                         />
                       ) : null}
 
-                      {isBlockLoaded("network") && hasBlockData("network") ? (
+                      {networkReady ? (
                         <NetworkSection
                           config={config}
                           loading={false}
@@ -493,7 +420,7 @@ function App() {
                     </Stack>
 
                     <Stack gap="lg">
-                      {isBlockLoaded("publishers") && hasBlockData("publishers") ? (
+                      {publishersReady ? (
                         <PublishersSection
                           loading={false}
                           publishers={config.publishers}
@@ -508,7 +435,7 @@ function App() {
                         />
                       ) : null}
 
-                      {isBlockLoaded("smsAdmin") && hasBlockData("smsAdmin") ? (
+                      {smsAdminReady ? (
                         <SmsAdminSection
                           config={config}
                           loading={false}

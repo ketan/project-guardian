@@ -17,6 +17,7 @@ import {
   WindyPublisherView,
   WundergroundPublisherView,
 } from "./generated/schemas/index.zod";
+import type { ConfigSectionKey, PublisherSlotKey } from "./sectionKeys";
 
 const UiWundergroundPublisherSchema = WundergroundPublisherView.and(
   z.object({
@@ -57,18 +58,16 @@ export const ConfigSectionSchemas = {
   smsAdmin: UpdateSmsAdminConfigBody,
   webUi: UpdateWebUiConfigBody,
   sensors: UpdateSensorsConfigBody,
-} as const;
+} as const satisfies Record<ConfigSectionKey, z.ZodTypeAny>;
 
 export const PublisherSectionSchemas = {
   wunderground: UpdateWundergroundPublisherConfigBody,
   windy: UpdateWindyPublisherConfigBody,
   mqtt: UpdateMqttPublisherConfigBody,
-} as const;
+} as const satisfies Record<PublisherSlotKey, z.ZodTypeAny>;
 
 export type DeviceStatus = z.infer<typeof DeviceStatusSchema>;
 export type UiConfig = z.infer<typeof UiConfigSchema>;
-export type ConfigSectionKey = keyof typeof ConfigSectionSchemas;
-export type PublisherSlotKey = keyof typeof PublisherSectionSchemas;
 export type UiPublishers = z.infer<typeof UiPublishersSchema>;
 export type UiWundergroundPublisher = z.infer<typeof UiWundergroundPublisherSchema>;
 export type UiWindyPublisher = z.infer<typeof UiWindyPublisherSchema>;

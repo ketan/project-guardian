@@ -3,12 +3,18 @@ import { z } from "zod";
 import {
   ConfigSectionSchemas,
   PublisherSectionSchemas,
-  type ConfigSectionKey,
-  type PublisherSlotKey,
   UiConfigSchema,
   type UiConfig,
 } from "./contracts";
 import type { ApiConnectionSettings } from "./runtime";
+import type { LoadableSectionKey, RefreshedConfigMap } from "./configSections";
+import {
+  CONFIG_SECTION_KEYS,
+  PUBLISHER_SLOT_KEYS,
+  getPublisherLoadableKey,
+  type ConfigSectionKey,
+  type PublisherSlotKey,
+} from "./sectionKeys";
 import {
   DeviceConfigView,
   MqttPublisherView,
@@ -27,11 +33,6 @@ import { CONFIG_SECTION_PATHS, PUBLISHER_SLOT_PATHS } from "./paths";
 import { requestJson } from "./request";
 
 const SCHEMA_VERSION = 1;
-export type LoadableSectionKey = ConfigSectionKey | `publishers.${PublisherSlotKey}`;
-export type RefreshedConfigMap = Partial<
-  Record<ConfigSectionKey, unknown> &
-    Record<`publishers.${PublisherSlotKey}`, unknown>
->;
 
 type ConfigSectionRequest = {
   readUrl: () => string;
@@ -127,7 +128,7 @@ export function getDirtySections(
 ): ConfigSectionKey[] {
   const topLevel = dirtyFields as Partial<Record<ConfigSectionKey, unknown>>;
 
-  return (Object.keys(configSectionRequests) as ConfigSectionKey[]).filter((section) =>
+  return CONFIG_SECTION_KEYS.filter((section) =>
     hasDirtyValue(topLevel[section]),
   );
 }
@@ -141,7 +142,7 @@ function getDirtyPublisherSlots(
     return [];
   }
 
-  return (Object.keys(publisherSectionRequests) as PublisherSlotKey[]).filter((slot) =>
+  return PUBLISHER_SLOT_KEYS.filter((slot) =>
     hasDirtyValue(publishers[slot]),
   );
 }
@@ -168,72 +169,47 @@ async function yieldForRender() {
   await new Promise((resolve) => window.setTimeout(resolve, 0));
 }
 
+const orderedConfigLoaders = [
+  ...CONFIG_SECTION_KEYS.map((key) => ({ key, load: readConfigSection })),
+  ...PUBLISHER_SLOT_KEYS.map((slot) => ({
+    key: getPublisherLoadableKey(slot),
+    load: readPublisherSlot,
+    slot,
+  })),
+] as const;
+
 export async function fetchConfig(
   settings: ApiConnectionSettings,
   onSectionStart?: (section: LoadableSectionKey) => void,
   onSectionLoaded?: (section: LoadableSectionKey, value: unknown) => void,
 ): Promise<UiConfig> {
-  onSectionStart?.("station");
-  const station = (await readConfigSection("station", settings)) as z.infer<typeof StationConfig>;
-  onSectionLoaded?.("station", station);
-  await yieldForRender();
-  onSectionStart?.("sampling");
-  const sampling = (await readConfigSection("sampling", settings)) as z.infer<typeof SamplingConfig>;
-  onSectionLoaded?.("sampling", sampling);
-  await yieldForRender();
-  onSectionStart?.("smoothing");
-  const smoothing = (await readConfigSection("smoothing", settings)) as z.infer<typeof SmoothingConfig>;
-  onSectionLoaded?.("smoothing", smoothing);
-  await yieldForRender();
-  onSectionStart?.("storage");
-  const storage = (await readConfigSection("storage", settings)) as z.infer<typeof StorageConfig>;
-  onSectionLoaded?.("storage", storage);
-  await yieldForRender();
-  onSectionStart?.("network");
-  const network = (await readConfigSection("network", settings)) as z.infer<typeof NetworkConfig>;
-  onSectionLoaded?.("network", network);
-  await yieldForRender();
-  onSectionStart?.("smsAdmin");
-  const smsAdmin = (await readConfigSection("smsAdmin", settings)) as z.infer<typeof SmsAdminConfig>;
-  onSectionLoaded?.("smsAdmin", smsAdmin);
-  await yieldForRender();
-  onSectionStart?.("webUi");
-  const webUi = (await readConfigSection("webUi", settings)) as z.infer<typeof WebUiConfig>;
-  onSectionLoaded?.("webUi", webUi);
-  await yieldForRender();
-  onSectionStart?.("sensors");
-  const sensors = (await readConfigSection("sensors", settings)) as z.infer<typeof SensorConfig>[];
-  onSectionLoaded?.("sensors", sensors);
-  await yieldForRender();
-  onSectionStart?.("publishers.wunderground");
-  const wunderground = (await readPublisherSlot("wunderground", settings)) as z.infer<
-    typeof WundergroundPublisherView
-  >;
-  onSectionLoaded?.("publishers.wunderground", wunderground);
-  await yieldForRender();
-  onSectionStart?.("publishers.windy");
-  const windy = (await readPublisherSlot("windy", settings)) as z.infer<typeof WindyPublisherView>;
-  onSectionLoaded?.("publishers.windy", windy);
-  await yieldForRender();
-  onSectionStart?.("publishers.mqtt");
-  const mqtt = (await readPublisherSlot("mqtt", settings)) as z.infer<typeof MqttPublisherView>;
-  onSectionLoaded?.("publishers.mqtt", mqtt);
-  await yieldForRender();
+  const loadedSections: Partial<Record<LoadableSectionKey, unknown>> = {};
+
+  for (const loader of orderedConfigLoaders) {
+    onSectionStart?.(loader.key);
+    const value =
+      "slot" in loader
+        ? await loader.load(loader.slot, settings)
+        : await loader.load(loader.key, settings);
+    loadedSections[loader.key] = value;
+    onSectionLoaded?.(loader.key, value);
+    await yieldForRender();
+  }
 
   return UiConfigSchema.parse({
     schemaVersion: SCHEMA_VERSION,
-    station,
-    sampling,
-    smoothing,
-    storage,
-    network,
-    smsAdmin,
-    webUi,
-    sensors,
+    station: loadedSections.station as z.infer<typeof StationConfig>,
+    sampling: loadedSections.sampling as z.infer<typeof SamplingConfig>,
+    smoothing: loadedSections.smoothing as z.infer<typeof SmoothingConfig>,
+    storage: loadedSections.storage as z.infer<typeof StorageConfig>,
+    network: loadedSections.network as z.infer<typeof NetworkConfig>,
+    smsAdmin: loadedSections.smsAdmin as z.infer<typeof SmsAdminConfig>,
+    webUi: loadedSections.webUi as z.infer<typeof WebUiConfig>,
+    sensors: loadedSections.sensors as z.infer<typeof SensorConfig>[],
     publishers: {
-      wunderground,
-      windy,
-      mqtt,
+      wunderground: loadedSections["publishers.wunderground"] as z.infer<typeof WundergroundPublisherView>,
+      windy: loadedSections["publishers.windy"] as z.infer<typeof WindyPublisherView>,
+      mqtt: loadedSections["publishers.mqtt"] as z.infer<typeof MqttPublisherView>,
     },
   } satisfies z.input<typeof DeviceConfigView>);
 }
