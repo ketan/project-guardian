@@ -3,6 +3,7 @@ import {
   DeviceConfigView,
   DeviceStatusResponse,
   MqttPublisherView,
+  OtaUploadResponse,
   UpdateNetworkConfigBody,
   UpdateMqttPublisherConfigBody,
   UpdateSamplingConfigBody,
@@ -44,6 +45,7 @@ export const UiPublishersSchema = z.object({
 });
 
 export const DeviceStatusSchema = DeviceStatusResponse;
+export const OtaUploadResponseSchema = OtaUploadResponse;
 
 export const UiConfigSchema = DeviceConfigView.extend({
   publishers: UiPublishersSchema,
@@ -67,6 +69,7 @@ export const PublisherSectionSchemas = {
 } as const satisfies Record<PublisherSlotKey, z.ZodTypeAny>;
 
 export type DeviceStatus = z.infer<typeof DeviceStatusSchema>;
+export type OtaUploadResult = z.infer<typeof OtaUploadResponseSchema>;
 export type UiConfig = z.infer<typeof UiConfigSchema>;
 export type UiPublishers = z.infer<typeof UiPublishersSchema>;
 export type UiWundergroundPublisher = z.infer<typeof UiWundergroundPublisherSchema>;

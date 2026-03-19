@@ -42,6 +42,7 @@ import { SamplingSection } from "./components/sections/SamplingSection";
 import { SensorsSection } from "./components/sections/SensorsSection";
 import { SmoothingSection } from "./components/sections/SmoothingSection";
 import { SmsAdminSection } from "./components/sections/SmsAdminSection";
+import { OtaSection } from "./components/sections/OtaSection";
 import { StationSection } from "./components/sections/StationSection";
 import { navItems } from "./data/mockDevice";
 import { useApiConnectionSettings } from "./hooks/useApiConnectionSettings";
@@ -459,6 +460,8 @@ function App() {
                       ) : null}
 
                       {status ? <HealthSection status={status} /> : null}
+
+                      <OtaSection connection={apiSettings} />
                     </Stack>
                   </SimpleGrid>
                 </>

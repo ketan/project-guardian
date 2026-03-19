@@ -811,3 +811,26 @@ export const GetHistoryResponse = zod.object({
   "noiseDb": zod.number().optional()
 }))
 })
+
+
+/**
+ * Uploads a firmware binary and verifies its SHA-256 checksum before staging it for the next reboot.
+ * @summary Upload a firmware image for OTA staging
+ */
+export const UploadOtaFirmwareBody = zod.object({
+  "firmware": zod.instanceof(File),
+  "sha256sum": zod.string().describe('Hex-encoded SHA-256 checksum of the uploaded firmware image.')
+})
+
+export const uploadOtaFirmwareResponseFirmwareSizeBytesMin = 0;
+
+
+
+export const UploadOtaFirmwareResponse = zod.object({
+  "checksumVerified": zod.boolean(),
+  "staged": zod.boolean(),
+  "rebootScheduled": zod.boolean(),
+  "firmwareSizeBytes": zod.number().min(uploadOtaFirmwareResponseFirmwareSizeBytesMin).optional(),
+  "stagedPath": zod.string().optional(),
+  "message": zod.string()
+})

@@ -13,6 +13,7 @@ tags:
   - name: config
   - name: sensors
   - name: logs
+  - name: admin
 components:
   securitySchemes:
     bearerAuth:
@@ -744,6 +745,41 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WeatherSample'
+    OtaUploadRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - firmware
+        - sha256sum
+      properties:
+        firmware:
+          type: string
+          format: binary
+        sha256sum:
+          type: string
+          description: Hex-encoded SHA-256 checksum of the uploaded firmware image.
+    OtaUploadResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - checksumVerified
+        - staged
+        - rebootScheduled
+        - message
+      properties:
+        checksumVerified:
+          type: boolean
+        staged:
+          type: boolean
+        rebootScheduled:
+          type: boolean
+        firmwareSizeBytes:
+          type: integer
+          minimum: 0
+        stagedPath:
+          type: string
+        message:
+          type: string
     WeatherSample:
       type: object
       additionalProperties: false
@@ -1261,3 +1297,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WeatherHistoryResponse'
+  /api/v1/admin/ota:
+    post:
+      tags: [admin]
+      operationId: uploadOtaFirmware
+      security:
+        - bearerAuth: []
+      summary: Upload a firmware image for OTA staging
+      description: Uploads a firmware binary and verifies its SHA-256 checksum before staging it for the next reboot.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OtaUploadRequest'
+      responses:
+        '200':
+          description: Firmware upload verified and staged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtaUploadResponse'
+        '400':
+          description: Upload or checksum verification failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

@@ -23,6 +23,8 @@ export * from './latestSensorReadingsResponse.zod';
 export * from './mqttPublisherInput.zod';
 export * from './mqttPublisherView.zod';
 export * from './networkConfig.zod';
+export * from './otaUploadRequest.zod';
+export * from './otaUploadResponse.zod';
 export * from './phoneWhitelistEntry.zod';
 export * from './publisherBaseInput.zod';
 export * from './publisherBaseView.zod';

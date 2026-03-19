@@ -7,6 +7,7 @@ import {
 } from "./sectionKeys";
 
 export const STATUS_PATH = "/api/v1/status";
+export const OTA_UPLOAD_PATH = "/api/v1/admin/ota";
 
 export const CONFIG_SECTION_PATHS: Record<ConfigSectionKey, { read: string; update: string }> =
   Object.fromEntries(

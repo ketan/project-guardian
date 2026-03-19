@@ -1,5 +1,5 @@
 import { Badge, Card, Divider, Group, Stack, Text } from "@mantine/core";
-import { IconCpu } from "@tabler/icons-react";
+import { IconCpu, IconHeartbeat } from "@tabler/icons-react";
 import { SectionCard } from "../SectionCard";
 import type { DeviceStatus } from "../../types/ui";
 
@@ -12,7 +12,7 @@ export function HealthSection({ status }: HealthSectionProps) {
     <SectionCard
       id="overview-health"
       title="Sensor and storage health"
-      icon={<IconCpu size={18} stroke={1.75} />}
+      icon={<IconHeartbeat size={18} stroke={1.75} />}
       subtitle="Quick status snapshot for launch-day confidence checks."
     >
       <Stack gap="md">
