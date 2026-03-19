@@ -49,12 +49,35 @@ namespace {
         return header.substring(7) == bearerToken;
     }
 
+    const char *toMethodName(HTTPMethod method) {
+        switch (method) {
+            case HTTP_GET:
+                return "GET";
+            case HTTP_POST:
+                return "POST";
+            case HTTP_PUT:
+                return "PUT";
+            case HTTP_PATCH:
+                return "PATCH";
+            case HTTP_DELETE:
+                return "DELETE";
+            case HTTP_OPTIONS:
+                return "OPTIONS";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    void logRequest(WebServer &server, const char *status) {
+        Serial.printf("[HTTP] %s %s -> %s\n", toMethodName(server.method()), server.uri().c_str(), status);
+    }
+
     void sendDocument(WebServer &server, int statusCode, JsonDocument &doc) {
         addCommonHeaders(server);
-        server.setContentLength(measureJson(doc));
+        server.setContentLength(measureJsonPretty(doc));
         server.send(statusCode, "application/json", "");
         WiFiClient client = server.client();
-        serializeJson(doc, client);
+        serializeJsonPretty(doc, client);
     }
 
     void sendError(WebServer &server, int statusCode, const char *error, const String &message) {
@@ -125,19 +148,24 @@ void ApiServer::handleClient() {
 void ApiServer::registerRoutes() {
     webServer.onNotFound([this]() {
         if (webServer.method() == HTTP_OPTIONS) {
+            logRequest(webServer, "preflight");
             handleOptions(webServer);
             return;
         }
+        logRequest(webServer, "not_found");
         sendError(webServer, 404, "not_found", "Endpoint not found.");
     });
 
     auto requireAuth = [this]() -> bool {
+        logRequest(webServer, "incoming");
+
         if (webServer.method() == HTTP_OPTIONS) {
             handleOptions(webServer);
             return false;
         }
 
         if (!isAuthorized(webServer)) {
+            logRequest(webServer, "unauthorized");
             sendError(webServer, 401, "unauthorized", "Missing or invalid bearer token.");
             return false;
         }
