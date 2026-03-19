@@ -7,6 +7,11 @@ const PROXY_DELAY_MS = 200;
 export default defineConfig({
   lint: {options: {typeAware: true, typeCheck: true}},
   plugins: [react()],
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.ts",
+    globals: true,
+  },
   server: {
     proxy: {
       "/api": {

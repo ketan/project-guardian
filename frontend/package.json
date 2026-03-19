@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vp dev",
     "build": "tsc -b && vp build",
+    "test": "vp test run",
     "lint": "eslint .",
     "preview": "vp preview",
     "generate:api": "vp exec orval --config orval.config.ts"
@@ -14,27 +15,33 @@
     "@hookform/resolvers": "^5.2.2",
     "@mantine/core": "^8.3.17",
     "@mantine/hooks": "^8.3.17",
+    "@tabler/icons-react": "^3.34.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.71.2",
-    "@tabler/icons-react": "^3.34.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.0",
+    "@vitest/ui": "^4.1.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "jsdom": "^29.0.0",
     "orval": "^8.5.3",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.1",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vite-plus": "latest"
+    "vite-plus": "latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@^0.1.12"
   },
   "packageManager": "pnpm@10.32.1",
   "pnpm": {
