@@ -47,6 +47,7 @@ import { navItems } from "./data/mockDevice";
 import { useApiConnectionSettings } from "./hooks/useApiConnectionSettings";
 import { useDeviceConfig, useSequentialConfigSave } from "./hooks/useDeviceConfig";
 import { useDeviceStatus } from "./hooks/useDeviceStatus";
+import type { RefreshedConfigMap } from "./api/configApi";
 
 function deepEqual(left: unknown, right: unknown) {
   return JSON.stringify(left) === JSON.stringify(right);
@@ -68,6 +69,31 @@ function getActiveTransportLabel(status: NonNullable<ReturnType<typeof useDevice
   }
 
   return active.join(" + ");
+}
+
+function mergeRefreshedSections(config: UiConfig, refreshedSections: RefreshedConfigMap): UiConfig {
+  let nextConfig: UiConfig = { ...config };
+
+  for (const [section, value] of Object.entries(refreshedSections)) {
+    if (section.startsWith("publishers.")) {
+      const slot = section.replace("publishers.", "") as PublisherSlotKey;
+      nextConfig = {
+        ...nextConfig,
+        publishers: {
+          ...nextConfig.publishers,
+          [slot]: value,
+        },
+      };
+      continue;
+    }
+
+    nextConfig = {
+      ...nextConfig,
+      [section]: value,
+    };
+  }
+
+  return nextConfig;
 }
 
 type ConfigBlockKey =
@@ -181,18 +207,14 @@ function App() {
 
   const onSubmit = handleSubmit(async (values: UiConfig) => {
     setValidationError(null);
-    const { savedSections } = await save(values, dirtyFields);
+    const { savedSections, refreshedSections } = await save(values, dirtyFields);
 
     if (savedSections.length === 0) {
       return;
     }
 
-    try {
-      const refreshed = await reload();
-      void refreshed;
-    } finally {
-      reset(values);
-    }
+    const mergedConfig = mergeRefreshedSections(values, refreshedSections);
+    reset(mergedConfig);
   }, () => {
     setValidationError("Please fix the highlighted configuration values before saving.");
   });

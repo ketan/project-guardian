@@ -28,6 +28,10 @@ import { requestJson } from "./request";
 
 const SCHEMA_VERSION = 1;
 export type LoadableSectionKey = ConfigSectionKey | `publishers.${PublisherSlotKey}`;
+export type RefreshedConfigMap = Partial<
+  Record<ConfigSectionKey, unknown> &
+    Record<`publishers.${PublisherSlotKey}`, unknown>
+>;
 
 type ConfigSectionRequest = {
   readUrl: () => string;
@@ -284,14 +288,18 @@ export async function saveConfigSectionsSequentially(
   settings: ApiConnectionSettings,
   dirtyFields: FieldNamesMarkedBoolean<UiConfig>,
   onSectionStart?: (section: ConfigSectionKey | `publishers.${PublisherSlotKey}`) => void,
-): Promise<void> {
+): Promise<RefreshedConfigMap> {
+  const refreshed: RefreshedConfigMap = {};
+
   for (const section of sections) {
     onSectionStart?.(section);
-    await saveConfigSection(section, config, settings);
+    refreshed[section] = await saveConfigSection(section, config, settings);
   }
 
   for (const slot of getDirtyPublisherSlots(dirtyFields)) {
     onSectionStart?.(`publishers.${slot}`);
-    await savePublisherSlot(slot, config, settings);
+    refreshed[`publishers.${slot}`] = await savePublisherSlot(slot, config, settings);
   }
+
+  return refreshed;
 }

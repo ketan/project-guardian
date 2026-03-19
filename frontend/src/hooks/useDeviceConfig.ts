@@ -6,6 +6,7 @@ import {
   fetchConfig,
   getDirtySections,
   saveConfigSectionsSequentially,
+  type RefreshedConfigMap,
   type LoadableSectionKey,
 } from "../api/configApi";
 
@@ -95,20 +96,20 @@ export function useSequentialConfigSave(connection: ApiConnectionSettings) {
     async (config: UiConfig, dirtyFields: FieldNamesMarkedBoolean<UiConfig>) => {
       if (!canConnect) {
         setSaveError("Enter both the backend API base URL and API key before saving.");
-        return {savedSections: [] as ConfigSectionKey[]};
+        return {savedSections: [] as ConfigSectionKey[], refreshedSections: {} as RefreshedConfigMap};
       }
 
       const dirtySections = getDirtySections(dirtyFields);
 
       if (dirtySections.length === 0) {
-        return {savedSections: [] as ConfigSectionKey[]};
+        return {savedSections: [] as ConfigSectionKey[], refreshedSections: {} as RefreshedConfigMap};
       }
 
       setIsSaving(true);
       setSaveError(null);
 
       try {
-        await saveConfigSectionsSequentially(
+        const refreshedSections = await saveConfigSectionsSequentially(
           dirtySections,
           config,
           connection,
@@ -116,7 +117,7 @@ export function useSequentialConfigSave(connection: ApiConnectionSettings) {
           setSavingSection,
         );
         setLastSavedAt(new Date());
-        return {savedSections: dirtySections};
+        return {savedSections: dirtySections, refreshedSections};
       } catch (error) {
         setSaveError(error instanceof Error ? error.message : "Failed to save configuration");
         throw error;
