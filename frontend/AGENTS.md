@@ -74,3 +74,10 @@ These commands map to their corresponding tools. For example, `vp dev --port 300
 - [ ] Run `vp install` after pulling remote changes and before getting started.
 - [ ] Run `vp check` and `vp test` to validate changes.
 <!--VITE PLUS END-->
+
+## Frontend Project Rules
+
+- Validate API payloads with generated schemas before using them in the UI.
+- Prefer sequential config/status requests to the ESP32 unless parallelism is clearly safe and necessary.
+- Do not silently fall back to mock device data in runtime UI flows.
+- Keep component filenames aligned with the primary exported component when a file has a clear main component.
