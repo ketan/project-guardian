@@ -13,6 +13,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - [x] Simplify the config API to section-specific `GET` and `PUT` endpoints.
 - [x] Simplify publisher configuration to named slots for `wunderground`, `windy`, and `mqtt`.
 - [x] Build a mobile-friendly frontend with Vite+, React, Mantine, and Tabler icons.
+- [x] Add backend connection settings in the frontend for base URL plus bearer token.
 - [x] Implement frontend config loading with generated Zod validation.
 - [x] Implement sequential per-section config loads so the UI does not overwhelm the ESP32.
 - [x] Implement sequential dirty-only config saves from the UI.
@@ -29,6 +30,9 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - [ ] Implement publisher runtime behavior for Weather Underground, Windy, and Meshtastic MQTT.
 - [ ] Implement modem, SMS command handling, and admin window behavior.
 - [ ] Implement OTA staging behavior on the device side, including temp-file write, verification, staging, and reboot.
+- [ ] Add a frontend view for latest live sensor readings from `GET /api/v1/sensors/latest`.
+- [ ] Add frontend history visualization for the retained weather log from `GET /api/v1/logs/history`.
+- [ ] Add frontend OTA tests covering upload success and failure behavior.
 
 ## Key Changes
 
@@ -95,7 +99,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
     - `POST /api/v1/admin/ota`
 - Use a bearer token supplied by the admin UI for API auth.
 - Expose CORS configuration for the production GitHub Pages origin and localhost dev origins.
-- Build the React app around backend connection settings, system status, sensor/smoothing config, publisher config, connectivity/modem status, historical charts for the last 14 days, and SMS/admin diagnostics.
+- Build the React app around backend connection settings, system status, live/latest sensor readings, sensor/smoothing config, publisher config, connectivity/modem status, OTA upload, historical charts for the last 14 days, and SMS/admin diagnostics.
 - Keep log and history access simple for device memory constraints: the history endpoint should stream the JSON document currently stored by the ESP as-is, without server-side filtering, slicing, aggregation, or query parameters.
 - Split both config reads and config updates into small section-specific endpoints so the ESP only parses one subsection at a time instead of a large full-config payload.
 - Load and save config sections sequentially from the UI so the ESP32 handles one request at a time.
@@ -122,7 +126,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - Integration-style tests should verify streamed JSON responses for history without requiring full-file buffering in memory.
 - Integration-style tests should verify section-specific config updates so each endpoint can patch stored config safely without parsing a large full-config payload.
 - API contract checks to validate backend responses against `openapi.yaml` and verify/generated frontend Zod schemas.
-- Frontend tests for config editing, dashboard rendering, publisher forms, sequential load/save behavior, and API error handling.
+- Frontend tests for config editing, dashboard rendering, publisher forms, OTA upload, sequential load/save behavior, and API error handling.
 - Field acceptance scenarios for normal boot, recovery boot, 30-second logging, scheduled publishing, `OPEN SESAME` SMS wake-up flow, and admin window expiry.
 
 ## Assumptions and Defaults
