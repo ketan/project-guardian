@@ -5,7 +5,7 @@
 #include <WiFiManager.h>
 
 #include "ApiServer.h"
-#include "state.h"
+#include "AppState.h"
 
 constexpr uint16_t httpPort = 8080;
 constexpr const char *accessPointSsid = "guardian-admin";
@@ -16,7 +16,7 @@ const IPAddress accessPointIp(192, 168, 50, 1);
 const IPAddress accessPointGateway(192, 168, 50, 1);
 const IPAddress accessPointSubnet(255, 255, 255, 0);
 
-AppState state = createDefaultState();
+AppState state;
 ApiServer apiServer(httpPort, state);
 RemoteDebug Debug;
 WiFiManager wifiManager;

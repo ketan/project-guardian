@@ -1,6 +1,23 @@
 #include "ConfigModels.h"
 
 namespace {
+    bool isIntInRange(int value, int minimum, int maximum) {
+        return value >= minimum && value <= maximum;
+    }
+
+    bool isDoubleInRange(double value, double minimum, double maximum) {
+        return value >= minimum && value <= maximum;
+    }
+
+    bool isOneOf(const String &value, std::initializer_list<const char *> allowed) {
+        for (const char *candidate: allowed) {
+            if (value == candidate) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void writeStringArray(JsonArray array, const std::vector<String> &values) {
         for (const String &value: values) {
             array.add(value);
@@ -26,8 +43,14 @@ bool GeoLocation::fromJSON(JsonObject json) {
         return false;
     }
 
-    latitude = json["latitude"].as<double>();
-    longitude = json["longitude"].as<double>();
+    const double parsedLatitude = json["latitude"].as<double>();
+    const double parsedLongitude = json["longitude"].as<double>();
+    if (!isDoubleInRange(parsedLatitude, -90.0, 90.0) || !isDoubleInRange(parsedLongitude, -180.0, 180.0)) {
+        return false;
+    }
+
+    latitude = parsedLatitude;
+    longitude = parsedLongitude;
     elevationMeters = json["elevationMeters"] | 0.0;
     return true;
 }
@@ -50,7 +73,11 @@ bool StationConfig::fromJSON(JsonObject json) {
 
     stationName = json["stationName"].as<String>();
     locationFromGPS = json["locationFromGPS"].as<bool>();
-    gpsPollIntervalHours = json["gpsPollIntervalHours"].as<int>();
+    const int parsedGpsPollIntervalHours = json["gpsPollIntervalHours"].as<int>();
+    if (!isIntInRange(parsedGpsPollIntervalHours, 1, 24)) {
+        return false;
+    }
+    gpsPollIntervalHours = parsedGpsPollIntervalHours;
     notes = json["notes"] | "";
 
     if (json["location"].is<JsonObject>()) {
@@ -75,11 +102,36 @@ bool SamplingConfig::fromJSON(JsonObject json) {
         return false;
     }
 
-    intervalSeconds = json["intervalSeconds"].as<int>();
-    adminWindowMinutes = json["adminWindowMinutes"].as<int>();
+    const int parsedIntervalSeconds = json["intervalSeconds"].as<int>();
+    const int parsedAdminWindowMinutes = json["adminWindowMinutes"].as<int>();
+    if (!isIntInRange(parsedIntervalSeconds, 2, 20) || !isIntInRange(parsedAdminWindowMinutes, 1, 60)) {
+        return false;
+    }
+
+    intervalSeconds = parsedIntervalSeconds;
+    adminWindowMinutes = parsedAdminWindowMinutes;
     deepSleepEnabled = json["deepSleepEnabled"].as<bool>();
-    wakeDurationSeconds = json["wakeDurationSeconds"] | wakeDurationSeconds;
-    historyAggregationMinutes = json["historyAggregationMinutes"] | historyAggregationMinutes;
+
+    if (json["wakeDurationSeconds"].is<int>()) {
+        const int parsedWakeDurationSeconds = json["wakeDurationSeconds"].as<int>();
+        if (!isIntInRange(parsedWakeDurationSeconds, 1, 300)) {
+            return false;
+        }
+        wakeDurationSeconds = parsedWakeDurationSeconds;
+    } else if (!json["wakeDurationSeconds"].isNull()) {
+        return false;
+    }
+
+    if (json["historyAggregationMinutes"].is<int>()) {
+        const int parsedHistoryAggregationMinutes = json["historyAggregationMinutes"].as<int>();
+        if (!isIntInRange(parsedHistoryAggregationMinutes, 5, 1440)) {
+            return false;
+        }
+        historyAggregationMinutes = parsedHistoryAggregationMinutes;
+    } else if (!json["historyAggregationMinutes"].isNull()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -98,15 +150,37 @@ bool SmoothingFieldConfig::fromJSON(JsonObject json) {
     if (!json["metric"].is<String>() || !json["method"].is<String>()) {
         return false;
     }
-    metric = json["metric"].as<String>();
-    method = json["method"].as<String>();
+    const String parsedMetric = json["metric"].as<String>();
+    const String parsedMethod = json["method"].as<String>();
+    if (!isOneOf(parsedMetric, {"windSpeed", "windGust", "windDirection", "temperature", "humidity", "pressure",
+                                "rainfall", "illuminance", "pm2_5", "pm10", "noise"})) {
+        return false;
+    }
+    if (!isOneOf(parsedMethod, {"none", "moving_average", "ema"})) {
+        return false;
+    }
+
+    metric = parsedMetric;
+    method = parsedMethod;
     hasWindowSamples = json["windowSamples"].is<int>();
     if (hasWindowSamples) {
-        windowSamples = json["windowSamples"].as<int>();
+        const int parsedWindowSamples = json["windowSamples"].as<int>();
+        if (!isIntInRange(parsedWindowSamples, 1, 120)) {
+            return false;
+        }
+        windowSamples = parsedWindowSamples;
+    } else if (!json["windowSamples"].isNull()) {
+        return false;
     }
     hasAlpha = json["alpha"].is<double>();
     if (hasAlpha) {
-        alpha = json["alpha"].as<double>();
+        const double parsedAlpha = json["alpha"].as<double>();
+        if (!isDoubleInRange(parsedAlpha, 0.0, 1.0)) {
+            return false;
+        }
+        alpha = parsedAlpha;
+    } else if (!json["alpha"].isNull()) {
+        return false;
     }
     return true;
 }
@@ -145,9 +219,24 @@ bool StorageConfig::fromJSON(JsonObject json) {
     if (!json["retentionDays"].is<int>() || !json["logFormat"].is<String>()) {
         return false;
     }
-    retentionDays = json["retentionDays"].as<int>();
-    logFormat = json["logFormat"].as<String>();
-    configSource = json["configSource"] | configSource;
+    const int parsedRetentionDays = json["retentionDays"].as<int>();
+    const String parsedLogFormat = json["logFormat"].as<String>();
+    if (!isIntInRange(parsedRetentionDays, 1, 30) || !isOneOf(parsedLogFormat, {"jsonl"})) {
+        return false;
+    }
+    retentionDays = parsedRetentionDays;
+    logFormat = parsedLogFormat;
+
+    if (json["configSource"].is<String>()) {
+        const String parsedConfigSource = json["configSource"].as<String>();
+        if (!isOneOf(parsedConfigSource, {"sd_with_flash_fallback"})) {
+            return false;
+        }
+        configSource = parsedConfigSource;
+    } else if (!json["configSource"].isNull()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -178,16 +267,29 @@ void WifiConfig::toHttpResponseJSON(JsonObject json) const {
 }
 
 bool WifiConfig::fromHttpRequestJSON(JsonObject json) {
-    enabled = json["enabled"] | enabled;
-    ssid = json["ssid"] | ssid;
+    if (json["enabled"].is<bool>()) {
+        enabled = json["enabled"].as<bool>();
+    } else if (!json["enabled"].isNull()) {
+        return false;
+    }
+
+    if (json["ssid"].is<String>()) {
+        ssid = json["ssid"].as<String>();
+    } else if (!json["ssid"].isNull()) {
+        return false;
+    }
 
     if (json["password"].is<String>()) {
         password = json["password"].as<String>();
         passwordConfigured = !password.isEmpty();
+    } else if (!json["password"].isNull()) {
+        return false;
     }
 
     if (json["allowedOrigins"].is<JsonArray>()) {
         parseStringArray(json["allowedOrigins"].as<JsonArray>(), allowedOrigins);
+    } else if (!json["allowedOrigins"].isNull()) {
+        return false;
     }
     return true;
 }
@@ -220,16 +322,47 @@ void CellularConfig::toHttpResponseJSON(JsonObject json) const {
 }
 
 bool CellularConfig::fromHttpRequestJSON(JsonObject json) {
-    enabled = json["enabled"] | enabled;
-    modemType = json["modemType"] | modemType;
-    apn = json["apn"] | apn;
+    if (json["enabled"].is<bool>()) {
+        enabled = json["enabled"].as<bool>();
+    } else if (!json["enabled"].isNull()) {
+        return false;
+    }
+
+    if (json["modemType"].is<String>()) {
+        const String parsedModemType = json["modemType"].as<String>();
+        if (!isOneOf(parsedModemType, {"SIM7670G"})) {
+            return false;
+        }
+        modemType = parsedModemType;
+    } else if (!json["modemType"].isNull()) {
+        return false;
+    }
+
+    if (json["apn"].is<String>()) {
+        apn = json["apn"].as<String>();
+    } else if (!json["apn"].isNull()) {
+        return false;
+    }
 
     if (json["pin"].is<String>()) {
         pin = json["pin"].as<String>();
         pinConfigured = !pin.isEmpty();
+    } else if (!json["pin"].isNull()) {
+        return false;
     }
 
-    smsEnabled = json["smsEnabled"] | smsEnabled;
+    if (json["pinConfigured"].is<bool>()) {
+        pinConfigured = json["pinConfigured"].as<bool>();
+    } else if (!json["pinConfigured"].isNull()) {
+        return false;
+    }
+
+    if (json["smsEnabled"].is<bool>()) {
+        smsEnabled = json["smsEnabled"].as<bool>();
+    } else if (!json["smsEnabled"].isNull()) {
+        return false;
+    }
+
     return true;
 }
 
@@ -244,7 +377,11 @@ bool NetworkConfig::fromJSON(JsonObject json) {
         !json["cellular"].is<JsonObject>()) {
         return false;
     }
-    preferredTransport = json["preferredTransport"].as<String>();
+    const String parsedPreferredTransport = json["preferredTransport"].as<String>();
+    if (!isOneOf(parsedPreferredTransport, {"wifi", "cellular", "auto"})) {
+        return false;
+    }
+    preferredTransport = parsedPreferredTransport;
     return wifi.fromJSON(json["wifi"].as<JsonObject>()) &&
            cellular.fromJSON(json["cellular"].as<JsonObject>());
 }
@@ -260,7 +397,11 @@ bool NetworkConfig::fromHttpRequestJSON(JsonObject json) {
         !json["cellular"].is<JsonObject>()) {
         return false;
     }
-    preferredTransport = json["preferredTransport"].as<String>();
+    const String parsedPreferredTransport = json["preferredTransport"].as<String>();
+    if (!isOneOf(parsedPreferredTransport, {"wifi", "cellular", "auto"})) {
+        return false;
+    }
+    preferredTransport = parsedPreferredTransport;
     return wifi.fromHttpRequestJSON(json["wifi"].as<JsonObject>()) &&
            cellular.fromHttpRequestJSON(json["cellular"].as<JsonObject>());
 }
@@ -291,6 +432,11 @@ bool SmsAdminConfig::fromJSON(JsonObject json) {
     if (!json["enabled"].is<bool>() || !json["whitelist"].is<JsonArray>()) {
         return false;
     }
+
+    if (json["whitelist"].size() > 5) {
+        return false;
+    }
+
     enabled = json["enabled"].as<bool>();
     whitelist.clear();
     for (JsonObject item: json["whitelist"].as<JsonArray>()) {
@@ -312,7 +458,11 @@ bool WebUiConfig::fromJSON(JsonObject json) {
     if (!json["tokenTtlMinutes"].is<int>() || !json["allowedOrigins"].is<JsonArray>()) {
         return false;
     }
-    tokenTtlMinutes = json["tokenTtlMinutes"].as<int>();
+    const int parsedTokenTtlMinutes = json["tokenTtlMinutes"].as<int>();
+    if (!isIntInRange(parsedTokenTtlMinutes, 1, 1440)) {
+        return false;
+    }
+    tokenTtlMinutes = parsedTokenTtlMinutes;
     parseStringArray(json["allowedOrigins"].as<JsonArray>(), allowedOrigins);
     return true;
 }
@@ -337,17 +487,47 @@ bool SensorConfig::fromJSON(JsonObject json) {
         return false;
     }
     id = json["id"].as<String>();
-    type = json["type"].as<String>();
+    const String parsedType = json["type"].as<String>();
+    if (!isOneOf(parsedType, {"sen0658", "bme280", "bmp390", "lps22hb"})) {
+        return false;
+    }
+    type = parsedType;
     enabled = json["enabled"].as<bool>();
-    transport = json["transport"] | "";
+
+    if (json["transport"].is<String>()) {
+        const String parsedTransport = json["transport"].as<String>();
+        if (!isOneOf(parsedTransport, {"rs485_modbus", "i2c", "spi"})) {
+            return false;
+        }
+        transport = parsedTransport;
+    } else if (!json["transport"].isNull()) {
+        return false;
+    } else {
+        transport = "";
+    }
+
     hasPollIntervalSeconds = json["pollIntervalSeconds"].is<int>();
     if (hasPollIntervalSeconds) {
-        pollIntervalSeconds = json["pollIntervalSeconds"].as<int>();
+        const int parsedPollIntervalSeconds = json["pollIntervalSeconds"].as<int>();
+        if (!isIntInRange(parsedPollIntervalSeconds, 5, 3600)) {
+            return false;
+        }
+        pollIntervalSeconds = parsedPollIntervalSeconds;
+    } else if (!json["pollIntervalSeconds"].isNull()) {
+        return false;
     }
+
     hasAddress = json["address"].is<int>();
     if (hasAddress) {
-        address = json["address"].as<int>();
+        const int parsedAddress = json["address"].as<int>();
+        if (!isIntInRange(parsedAddress, 1, 247)) {
+            return false;
+        }
+        address = parsedAddress;
+    } else if (!json["address"].isNull()) {
+        return false;
     }
+
     return true;
 }
 
@@ -394,15 +574,29 @@ bool WundergroundPublisherConfig::fromJSON(JsonObject json) {
         !json["publishIntervalSeconds"].is<int>() || !json["stationId"].is<String>()) {
         return false;
     }
-    type = json["type"].as<String>();
+    const String parsedType = json["type"].as<String>();
+    if (!isOneOf(parsedType, {"wunderground"})) {
+        return false;
+    }
+    type = parsedType;
     enabled = json["enabled"].as<bool>();
-    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    const int parsedPublishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    if (!isIntInRange(parsedPublishIntervalSeconds, 30, 300)) {
+        return false;
+    }
+    publishIntervalSeconds = parsedPublishIntervalSeconds;
     stationId = json["stationId"].as<String>();
     apiKey = json["apiKey"] | "";
     apiKeyConfigured = !apiKey.isEmpty() || apiKeyConfigured;
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
     if (hasIncludeHistoryWindowMinutes) {
-        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        const int parsedIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        if (!isIntInRange(parsedIncludeHistoryWindowMinutes, 1, 1440)) {
+            return false;
+        }
+        includeHistoryWindowMinutes = parsedIncludeHistoryWindowMinutes;
+    } else if (!json["includeHistoryWindowMinutes"].isNull()) {
+        return false;
     }
     return true;
 }
@@ -423,17 +617,33 @@ bool WundergroundPublisherConfig::fromHttpRequestJSON(JsonObject json) {
         !json["publishIntervalSeconds"].is<int>() || !json["stationId"].is<String>()) {
         return false;
     }
-    type = json["type"].as<String>();
+    const String parsedType = json["type"].as<String>();
+    if (!isOneOf(parsedType, {"wunderground"})) {
+        return false;
+    }
+    type = parsedType;
     enabled = json["enabled"].as<bool>();
-    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    const int parsedPublishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    if (!isIntInRange(parsedPublishIntervalSeconds, 30, 300)) {
+        return false;
+    }
+    publishIntervalSeconds = parsedPublishIntervalSeconds;
     stationId = json["stationId"].as<String>();
     if (json["apiKey"].is<String>()) {
         apiKey = json["apiKey"].as<String>();
         apiKeyConfigured = !apiKey.isEmpty();
+    } else if (!json["apiKey"].isNull()) {
+        return false;
     }
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
     if (hasIncludeHistoryWindowMinutes) {
-        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        const int parsedIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        if (!isIntInRange(parsedIncludeHistoryWindowMinutes, 1, 1440)) {
+            return false;
+        }
+        includeHistoryWindowMinutes = parsedIncludeHistoryWindowMinutes;
+    } else if (!json["includeHistoryWindowMinutes"].isNull()) {
+        return false;
     }
     return true;
 }
@@ -455,15 +665,29 @@ bool WindyPublisherConfig::fromJSON(JsonObject json) {
         !json["publishIntervalSeconds"].is<int>() || !json["stationId"].is<String>()) {
         return false;
     }
-    type = json["type"].as<String>();
+    const String parsedType = json["type"].as<String>();
+    if (!isOneOf(parsedType, {"windy"})) {
+        return false;
+    }
+    type = parsedType;
     enabled = json["enabled"].as<bool>();
-    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    const int parsedPublishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    if (!isIntInRange(parsedPublishIntervalSeconds, 30, 300)) {
+        return false;
+    }
+    publishIntervalSeconds = parsedPublishIntervalSeconds;
     stationId = json["stationId"].as<String>();
     apiKey = json["apiKey"] | "";
     apiKeyConfigured = !apiKey.isEmpty() || apiKeyConfigured;
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
     if (hasIncludeHistoryWindowMinutes) {
-        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        const int parsedIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        if (!isIntInRange(parsedIncludeHistoryWindowMinutes, 1, 1440)) {
+            return false;
+        }
+        includeHistoryWindowMinutes = parsedIncludeHistoryWindowMinutes;
+    } else if (!json["includeHistoryWindowMinutes"].isNull()) {
+        return false;
     }
     return true;
 }
@@ -484,17 +708,33 @@ bool WindyPublisherConfig::fromHttpRequestJSON(JsonObject json) {
         !json["publishIntervalSeconds"].is<int>() || !json["stationId"].is<String>()) {
         return false;
     }
-    type = json["type"].as<String>();
+    const String parsedType = json["type"].as<String>();
+    if (!isOneOf(parsedType, {"windy"})) {
+        return false;
+    }
+    type = parsedType;
     enabled = json["enabled"].as<bool>();
-    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    const int parsedPublishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    if (!isIntInRange(parsedPublishIntervalSeconds, 30, 300)) {
+        return false;
+    }
+    publishIntervalSeconds = parsedPublishIntervalSeconds;
     stationId = json["stationId"].as<String>();
     if (json["apiKey"].is<String>()) {
         apiKey = json["apiKey"].as<String>();
         apiKeyConfigured = !apiKey.isEmpty();
+    } else if (!json["apiKey"].isNull()) {
+        return false;
     }
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
     if (hasIncludeHistoryWindowMinutes) {
-        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        const int parsedIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        if (!isIntInRange(parsedIncludeHistoryWindowMinutes, 1, 1440)) {
+            return false;
+        }
+        includeHistoryWindowMinutes = parsedIncludeHistoryWindowMinutes;
+    } else if (!json["includeHistoryWindowMinutes"].isNull()) {
+        return false;
     }
     return true;
 }
@@ -519,9 +759,17 @@ bool MqttPublisherConfig::fromJSON(JsonObject json) {
         !json["topic"].is<String>() || !json["username"].is<String>()) {
         return false;
     }
-    type = json["type"].as<String>();
+    const String parsedType = json["type"].as<String>();
+    if (!isOneOf(parsedType, {"mqtt"})) {
+        return false;
+    }
+    type = parsedType;
     enabled = json["enabled"].as<bool>();
-    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    const int parsedPublishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    if (!isIntInRange(parsedPublishIntervalSeconds, 30, 300)) {
+        return false;
+    }
+    publishIntervalSeconds = parsedPublishIntervalSeconds;
     brokerUrl = json["brokerUrl"].as<String>();
     topic = json["topic"].as<String>();
     username = json["username"].as<String>();
@@ -529,7 +777,13 @@ bool MqttPublisherConfig::fromJSON(JsonObject json) {
     passwordConfigured = !password.isEmpty() || passwordConfigured;
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
     if (hasIncludeHistoryWindowMinutes) {
-        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        const int parsedIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        if (!isIntInRange(parsedIncludeHistoryWindowMinutes, 1, 1440)) {
+            return false;
+        }
+        includeHistoryWindowMinutes = parsedIncludeHistoryWindowMinutes;
+    } else if (!json["includeHistoryWindowMinutes"].isNull()) {
+        return false;
     }
     return true;
 }
@@ -553,19 +807,41 @@ bool MqttPublisherConfig::fromHttpRequestJSON(JsonObject json) {
         !json["topic"].is<String>() || !json["username"].is<String>()) {
         return false;
     }
-    type = json["type"].as<String>();
+    const String parsedType = json["type"].as<String>();
+    if (!isOneOf(parsedType, {"mqtt"})) {
+        return false;
+    }
+    type = parsedType;
     enabled = json["enabled"].as<bool>();
-    publishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    const int parsedPublishIntervalSeconds = json["publishIntervalSeconds"].as<int>();
+    if (!isIntInRange(parsedPublishIntervalSeconds, 30, 300)) {
+        return false;
+    }
+    publishIntervalSeconds = parsedPublishIntervalSeconds;
     brokerUrl = json["brokerUrl"].as<String>();
     topic = json["topic"].as<String>();
     username = json["username"].as<String>();
     if (json["password"].is<String>()) {
         password = json["password"].as<String>();
         passwordConfigured = !password.isEmpty();
+    } else if (!json["password"].isNull()) {
+        return false;
+    }
+
+    if (json["passwordConfigured"].is<bool>()) {
+        passwordConfigured = json["passwordConfigured"].as<bool>();
+    } else if (!json["passwordConfigured"].isNull()) {
+        return false;
     }
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
     if (hasIncludeHistoryWindowMinutes) {
-        includeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        const int parsedIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
+        if (!isIntInRange(parsedIncludeHistoryWindowMinutes, 1, 1440)) {
+            return false;
+        }
+        includeHistoryWindowMinutes = parsedIncludeHistoryWindowMinutes;
+    } else if (!json["includeHistoryWindowMinutes"].isNull()) {
+        return false;
     }
     return true;
 }

@@ -9,7 +9,8 @@
 namespace {
     constexpr const char *bearerToken = "secret";
 
-    struct OtaUploadContext {
+    class OtaUploadContext {
+    public:
         bool active = false;
         bool checksumVerified = false;
         bool checksumMatchAttempted = false;
