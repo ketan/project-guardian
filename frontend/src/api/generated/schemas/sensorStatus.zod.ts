@@ -16,7 +16,7 @@ export const SensorStatus = zod.object({
   "kind": zod.string(),
   "enabled": zod.boolean(),
   "healthy": zod.boolean(),
-  "lastReadAt": zod.iso.datetime({}).optional(),
+  "lastReadAt": zod.iso.datetime({"offset":true}).optional(),
   "message": zod.string().optional()
 })
 

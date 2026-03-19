@@ -5,6 +5,7 @@ import type { DeviceConfig, UiConfig } from "../../types/ui";
 
 type SamplingSectionProps = {
   config: UiConfig;
+  loading?: boolean;
   updateSamplingField: <K extends keyof DeviceConfig["sampling"]>(
     key: K,
     value: DeviceConfig["sampling"][K],
@@ -14,6 +15,7 @@ type SamplingSectionProps = {
 
 export function SamplingSection({
   config,
+  loading = false,
   updateSamplingField,
   setConfig,
 }: SamplingSectionProps) {
@@ -22,6 +24,7 @@ export function SamplingSection({
       id="sampling"
       title="Sampling and retention"
       icon={<IconClockHour4 size={18} stroke={1.75} />}
+      loading={loading}
       subtitle="Compact controls for timing, sleep, and on-device history."
     >
       <Grid>
@@ -123,7 +126,7 @@ export function SamplingSection({
         </Grid.Col>
       </Grid>
 
-      <Stack gap={2}>
+      <Stack gap={4} mt="sm">
         <Switch
           checked={config.sampling.deepSleepEnabled}
           onChange={(event) => updateSamplingField("deepSleepEnabled", event.currentTarget.checked)}

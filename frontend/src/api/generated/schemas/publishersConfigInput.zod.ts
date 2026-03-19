@@ -21,11 +21,6 @@ export const publishersConfigInputWindyOnePublishIntervalSecondsMax = 300;
 
 export const publishersConfigInputWindyOneIncludeHistoryWindowMinutesMax = 1440;
 
-export const publishersConfigInputWebhookOnePublishIntervalSecondsMin = 30;
-export const publishersConfigInputWebhookOnePublishIntervalSecondsMax = 300;
-
-export const publishersConfigInputWebhookOneIncludeHistoryWindowMinutesMax = 1440;
-
 export const publishersConfigInputMqttOnePublishIntervalSecondsMin = 30;
 export const publishersConfigInputMqttOnePublishIntervalSecondsMax = 300;
 
@@ -52,16 +47,6 @@ export const PublishersConfigInput = zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
   "apiKey": zod.string().optional()
-})).optional(),
-  "webhook": zod.object({
-  "type": zod.string(),
-  "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(publishersConfigInputWebhookOnePublishIntervalSecondsMin).max(publishersConfigInputWebhookOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(publishersConfigInputWebhookOneIncludeHistoryWindowMinutesMax).optional()
-}).and(zod.object({
-  "type": zod.literal("webhook"),
-  "endpoint": zod.string(),
-  "authHeader": zod.string().optional()
 })).optional(),
   "mqtt": zod.object({
   "type": zod.string(),

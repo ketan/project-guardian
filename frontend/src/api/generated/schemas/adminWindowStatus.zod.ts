@@ -13,8 +13,8 @@ import { z as zod } from 'zod';
 
 export const AdminWindowStatus = zod.object({
   "active": zod.boolean(),
-  "openedAt": zod.iso.datetime({}).optional(),
-  "expiresAt": zod.iso.datetime({}).optional(),
+  "openedAt": zod.iso.datetime({"offset":true}).optional(),
+  "expiresAt": zod.iso.datetime({"offset":true}).optional(),
   "requestedBy": zod.string().optional().describe('SMS sender number or web user identifier')
 })
 

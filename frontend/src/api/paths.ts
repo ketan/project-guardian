@@ -1,5 +1,7 @@
 import type { ConfigSectionKey, PublisherSlotKey } from "./contracts";
 
+export const STATUS_PATH = "/api/v1/status";
+
 export const CONFIG_SECTION_PATHS: Record<
   ConfigSectionKey,
   { read: string; update: string }
@@ -49,10 +51,6 @@ export const PUBLISHER_SLOT_PATHS: Record<
   windy: {
     read: "/api/v1/config/publishers/windy",
     update: "/api/v1/config/publishers/windy",
-  },
-  webhook: {
-    read: "/api/v1/config/publishers/webhook",
-    update: "/api/v1/config/publishers/webhook",
   },
   mqtt: {
     read: "/api/v1/config/publishers/mqtt",

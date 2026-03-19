@@ -19,6 +19,7 @@ export const deviceStatusResponseStorageFreeBytesMin = 0;
 
 export const deviceStatusResponseStorageUsedBytesMin = 0;
 
+export const deviceStatusResponseStorageRetentionDaysMax = 30;
 
 export const deviceStatusResponseSamplingIntervalSecondsDefault = 2;
 export const deviceStatusResponseSamplingIntervalSecondsMin = 2;
@@ -31,13 +32,13 @@ export const DeviceStatusResponse = zod.object({
   "firmwareVersion": zod.string(),
   "hardwareModel": zod.string().optional(),
   "uptimeSeconds": zod.number().min(deviceStatusResponseDeviceUptimeSecondsMin),
-  "currentTime": zod.iso.datetime({}),
+  "currentTime": zod.iso.datetime({"offset":true}),
   "lastBootReason": zod.string().optional()
 }),
   "connectivity": zod.object({
-  "activeTransport": zod.enum(['none', 'wifi', 'cellular']),
   "wifi": zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "connected": zod.boolean(),
   "ssid": zod.string().optional(),
   "ipAddress": zod.string().optional(),
@@ -45,6 +46,7 @@ export const DeviceStatusResponse = zod.object({
 }),
   "cellular": zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "registered": zod.boolean(),
   "modemType": zod.string(),
   "operatorName": zod.string().optional(),
@@ -58,21 +60,21 @@ export const DeviceStatusResponse = zod.object({
   "sdCardPresent": zod.boolean(),
   "freeBytes": zod.number().min(deviceStatusResponseStorageFreeBytesMin).optional(),
   "usedBytes": zod.number().min(deviceStatusResponseStorageUsedBytesMin).optional(),
-  "retentionDays": zod.number().min(1),
-  "oldestRecordAt": zod.iso.datetime({}).optional(),
-  "newestRecordAt": zod.iso.datetime({}).optional()
+  "retentionDays": zod.number().min(1).max(deviceStatusResponseStorageRetentionDaysMax),
+  "oldestRecordAt": zod.iso.datetime({"offset":true}).optional(),
+  "newestRecordAt": zod.iso.datetime({"offset":true}).optional()
 }),
   "sampling": zod.object({
   "intervalSeconds": zod.number().min(deviceStatusResponseSamplingIntervalSecondsMin).max(deviceStatusResponseSamplingIntervalSecondsMax).default(deviceStatusResponseSamplingIntervalSecondsDefault),
-  "nextSampleAt": zod.iso.datetime({}),
-  "lastSampleAt": zod.iso.datetime({}),
+  "nextSampleAt": zod.iso.datetime({"offset":true}),
+  "lastSampleAt": zod.iso.datetime({"offset":true}),
   "sleepEnabled": zod.boolean(),
   "smoothingEnabled": zod.boolean().optional()
 }),
   "adminWindow": zod.object({
   "active": zod.boolean(),
-  "openedAt": zod.iso.datetime({}).optional(),
-  "expiresAt": zod.iso.datetime({}).optional(),
+  "openedAt": zod.iso.datetime({"offset":true}).optional(),
+  "expiresAt": zod.iso.datetime({"offset":true}).optional(),
   "requestedBy": zod.string().optional().describe('SMS sender number or web user identifier')
 }),
   "sensors": zod.array(zod.object({
@@ -80,13 +82,13 @@ export const DeviceStatusResponse = zod.object({
   "kind": zod.string(),
   "enabled": zod.boolean(),
   "healthy": zod.boolean(),
-  "lastReadAt": zod.iso.datetime({}).optional(),
+  "lastReadAt": zod.iso.datetime({"offset":true}).optional(),
   "message": zod.string().optional()
 })),
   "publishers": zod.array(zod.object({
-  "type": zod.enum(['wunderground', 'windy', 'webhook', 'mqtt']),
+  "type": zod.enum(['wunderground', 'windy', 'mqtt']),
   "enabled": zod.boolean(),
-  "lastPublishAt": zod.iso.datetime({}).optional(),
+  "lastPublishAt": zod.iso.datetime({"offset":true}).optional(),
   "lastResult": zod.enum(['unknown', 'success', 'failed']).optional(),
   "message": zod.string().optional()
 }))

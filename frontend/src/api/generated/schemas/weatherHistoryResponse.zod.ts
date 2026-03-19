@@ -13,7 +13,7 @@ import { z as zod } from 'zod';
 
 export const WeatherHistoryResponse = zod.object({
   "samples": zod.array(zod.object({
-  "recordedAt": zod.iso.datetime({}),
+  "recordedAt": zod.iso.datetime({"offset":true}),
   "temperatureC": zod.number().optional(),
   "humidityPct": zod.number().optional(),
   "pressureHpa": zod.number().optional(),

@@ -1,29 +1,23 @@
-import { Badge, NavLink, Paper, Stack, Text, Title } from "@mantine/core";
-import type { DeviceStatus, NavItem } from "../types/ui";
+import {Badge, NavLink, Paper, Stack, Text} from "@mantine/core";
+import type {DeviceStatus, NavItem} from "../types/ui";
 
 type NavigationPanelProps = {
   items: NavItem[];
-  status: DeviceStatus;
+  status: DeviceStatus | null;
   onNavigate?: () => void;
 };
 
-export function NavigationPanel({ items, status, onNavigate }: NavigationPanelProps) {
+export function NavigationPanel({items, status, onNavigate}: NavigationPanelProps) {
   return (
-    <Stack gap="md" p="md">
-      <Paper p="lg" bg="dark.8" c="white">
-        <Stack gap="xs">
-          <Text tt="uppercase" size="xs" fw={700} c="teal.2">
-            Project Guardian
-          </Text>
-          <Title order={4} c="white">
-            Weather Station Console
-          </Title>
-          <Text size="sm" c="gray.3">
-            Mobile-first controls for station health, publishers, and pilot-facing weather ops.
-          </Text>
-        </Stack>
-      </Paper>
-
+    <Stack
+      gap="sm"
+      p="sm"
+      h="100%"
+      style={{
+        overflowY: "auto",
+        overscrollBehavior: "contain",
+      }}
+    >
       <Stack gap={6}>
         {items.map((item) => (
           <NavLink
@@ -36,8 +30,8 @@ export function NavigationPanel({ items, status, onNavigate }: NavigationPanelPr
             variant="light"
             color="teal"
             styles={{
-              root: { borderRadius: 10 },
-              section: { fontSize: 18 },
+              root: {borderRadius: 10},
+              section: {fontSize: 18},
             }}
           />
         ))}
@@ -50,12 +44,12 @@ export function NavigationPanel({ items, status, onNavigate }: NavigationPanelPr
             SMS `OPEN SESAME` from a whitelisted number to bring the station online.
           </Text>
           <Badge
-            color={status.adminWindow.active ? "lime" : "gray"}
-            variant="light"
-            radius="sm"
+            color={status?.adminWindow.active ? "lime" : "gray"}
+            variant="filled"
+            radius="xl"
             w="fit-content"
           >
-            {status.adminWindow.active ? "Window active" : "Window closed"}
+            {status?.adminWindow.active ? "Window active" : "Window closed"}
           </Badge>
         </Stack>
       </Paper>

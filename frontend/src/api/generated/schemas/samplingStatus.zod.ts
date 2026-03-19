@@ -18,8 +18,8 @@ export const samplingStatusIntervalSecondsMax = 20;
 
 export const SamplingStatus = zod.object({
   "intervalSeconds": zod.number().min(samplingStatusIntervalSecondsMin).max(samplingStatusIntervalSecondsMax).default(samplingStatusIntervalSecondsDefault),
-  "nextSampleAt": zod.iso.datetime({}),
-  "lastSampleAt": zod.iso.datetime({}),
+  "nextSampleAt": zod.iso.datetime({"offset":true}),
+  "lastSampleAt": zod.iso.datetime({"offset":true}),
   "sleepEnabled": zod.boolean(),
   "smoothingEnabled": zod.boolean().optional()
 })

@@ -13,7 +13,7 @@ import { z as zod } from 'zod';
 
 export const LatestSensorReadingsResponse = zod.object({
   "latest": zod.object({
-  "recordedAt": zod.iso.datetime({}),
+  "recordedAt": zod.iso.datetime({"offset":true}),
   "temperatureC": zod.number().optional(),
   "humidityPct": zod.number().optional(),
   "pressureHpa": zod.number().optional(),
@@ -27,7 +27,7 @@ export const LatestSensorReadingsResponse = zod.object({
   "noiseDb": zod.number().optional()
 }),
   "smoothed": zod.object({
-  "recordedAt": zod.iso.datetime({}),
+  "recordedAt": zod.iso.datetime({"offset":true}),
   "temperatureC": zod.number().optional(),
   "humidityPct": zod.number().optional(),
   "pressureHpa": zod.number().optional(),

@@ -11,11 +11,9 @@ import {
   UpdateSmoothingConfigBody,
   UpdateStationConfigBody,
   UpdateStorageConfigBody,
-  UpdateWebhookPublisherConfigBody,
   UpdateWebUiConfigBody,
   UpdateWindyPublisherConfigBody,
   UpdateWundergroundPublisherConfigBody,
-  WebhookPublisherView,
   WindyPublisherView,
   WundergroundPublisherView,
 } from "./generated/schemas/index.zod";
@@ -32,12 +30,6 @@ const UiWindyPublisherSchema = WindyPublisherView.and(
   }),
 );
 
-const UiWebhookPublisherSchema = WebhookPublisherView.and(
-  z.object({
-    authHeader: z.string().optional(),
-  }),
-);
-
 const UiMqttPublisherSchema = MqttPublisherView.and(
   z.object({
     password: z.string().optional(),
@@ -47,7 +39,6 @@ const UiMqttPublisherSchema = MqttPublisherView.and(
 export const UiPublishersSchema = z.object({
   wunderground: UiWundergroundPublisherSchema.optional(),
   windy: UiWindyPublisherSchema.optional(),
-  webhook: UiWebhookPublisherSchema.optional(),
   mqtt: UiMqttPublisherSchema.optional(),
 });
 
@@ -71,7 +62,6 @@ export const ConfigSectionSchemas = {
 export const PublisherSectionSchemas = {
   wunderground: UpdateWundergroundPublisherConfigBody,
   windy: UpdateWindyPublisherConfigBody,
-  webhook: UpdateWebhookPublisherConfigBody,
   mqtt: UpdateMqttPublisherConfigBody,
 } as const;
 
@@ -82,5 +72,4 @@ export type PublisherSlotKey = keyof typeof PublisherSectionSchemas;
 export type UiPublishers = z.infer<typeof UiPublishersSchema>;
 export type UiWundergroundPublisher = z.infer<typeof UiWundergroundPublisherSchema>;
 export type UiWindyPublisher = z.infer<typeof UiWindyPublisherSchema>;
-export type UiWebhookPublisher = z.infer<typeof UiWebhookPublisherSchema>;
 export type UiMqttPublisher = z.infer<typeof UiMqttPublisherSchema>;

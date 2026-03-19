@@ -5,6 +5,7 @@ import type { DeviceConfig, UiConfig } from "../../types/ui";
 
 type StationSectionProps = {
   config: UiConfig;
+  loading?: boolean;
   updateStationField: <K extends keyof DeviceConfig["station"]>(
     key: K,
     value: DeviceConfig["station"][K],
@@ -12,7 +13,7 @@ type StationSectionProps = {
   setConfig: React.Dispatch<React.SetStateAction<UiConfig>>;
 };
 
-export function StationSection({ config, updateStationField, setConfig }: StationSectionProps) {
+export function StationSection({ config, loading = false, updateStationField, setConfig }: StationSectionProps) {
   const autoGps = config.station.locationFromGPS;
   const manualLocation = config.station.location ?? {
     latitude: 0,
@@ -25,6 +26,7 @@ export function StationSection({ config, updateStationField, setConfig }: Statio
       id="station"
       title="Station identity"
       icon={<IconMapPin size={18} stroke={1.75} />}
+      loading={loading}
       subtitle="Core site metadata for public weather services and forecast comparison."
       action={
         <Badge color="teal" variant="light" radius="sm">{`Schema v${config.schemaVersion}`}</Badge>

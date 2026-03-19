@@ -38,10 +38,11 @@ const methodOptions = [
 
 type SmoothingSectionProps = {
   config: UiConfig;
+  loading?: boolean;
   setConfig: React.Dispatch<React.SetStateAction<UiConfig>>;
 };
 
-export function SmoothingSection({ config, setConfig }: SmoothingSectionProps) {
+export function SmoothingSection({ config, loading = false, setConfig }: SmoothingSectionProps) {
   const updateField = (index: number, updates: Partial<SmoothingField>) => {
     setConfig((current: UiConfig) => ({
       ...current,
@@ -86,6 +87,7 @@ export function SmoothingSection({ config, setConfig }: SmoothingSectionProps) {
       id="smoothing"
       title="Smoothing"
       icon={<IconFilter size={18} stroke={1.75} />}
+      loading={loading}
       subtitle="Tune which measurements get averaged before charting and publishing."
       action={
         <Button leftSection={<IconPlus size={16} stroke={1.75} />} size="compact-sm" variant="light" onClick={addField}>

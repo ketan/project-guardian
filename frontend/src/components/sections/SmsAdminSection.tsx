@@ -15,12 +15,13 @@ import type { UiConfig } from "../../types/ui";
 
 type SmsAdminSectionProps = {
   config: UiConfig;
+  loading?: boolean;
   setConfig: React.Dispatch<React.SetStateAction<UiConfig>>;
 };
 
 const MAX_SMS_ADMINS = 5;
 
-export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
+export function SmsAdminSection({ config, loading = false, setConfig }: SmsAdminSectionProps) {
   const addWhitelistEntry = () => {
     if (config.smsAdmin.whitelist.length >= MAX_SMS_ADMINS) {
       return;
@@ -68,6 +69,7 @@ export function SmsAdminSection({ config, setConfig }: SmsAdminSectionProps) {
       id="sms"
       title="SMS administration"
       icon={<IconMessageCircle size={18} stroke={1.75} />}
+      loading={loading}
       subtitle="Trusted numbers can wake the station and manage connectivity without a password."
       action={
         <Button

@@ -20,10 +20,15 @@ type SummaryCardsProps = {
 };
 
 export function SummaryCards({ status }: SummaryCardsProps) {
+  const activeTransports = [
+    status.connectivity.wifi.active ? "Wi-Fi" : null,
+    status.connectivity.cellular.active ? "LTE" : null,
+  ].filter(Boolean) as string[];
+
   const cards: SummaryCard[] = [
     {
-      label: "Current transport",
-      value: status.connectivity.activeTransport.toUpperCase(),
+      label: "Active transports",
+      value: activeTransports.length > 0 ? activeTransports.join(" + ") : "None",
       detail: status.connectivity.wifi.connected
         ? status.connectivity.wifi.ssid
         : status.connectivity.cellular.operatorName,

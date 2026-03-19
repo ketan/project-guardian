@@ -19,14 +19,15 @@ import {
   SmoothingConfig,
   StationConfig,
   StorageConfig,
-  WebhookPublisherView,
   WebUiConfig,
   WindyPublisherView,
   WundergroundPublisherView,
 } from "./generated/schemas/index.zod";
 import { CONFIG_SECTION_PATHS, PUBLISHER_SLOT_PATHS } from "./paths";
+import { requestJson } from "./request";
 
 const SCHEMA_VERSION = 1;
+export type LoadableSectionKey = ConfigSectionKey | `publishers.${PublisherSlotKey}`;
 
 type ConfigSectionRequest = {
   readUrl: () => string;
@@ -94,11 +95,6 @@ const publisherSectionRequests: Record<PublisherSlotKey, PublisherSectionRequest
     updateUrl: () => PUBLISHER_SLOT_PATHS.windy.update,
     responseSchema: WindyPublisherView,
   },
-  webhook: {
-    readUrl: () => PUBLISHER_SLOT_PATHS.webhook.read,
-    updateUrl: () => PUBLISHER_SLOT_PATHS.webhook.update,
-    responseSchema: WebhookPublisherView,
-  },
   mqtt: {
     readUrl: () => PUBLISHER_SLOT_PATHS.mqtt.read,
     updateUrl: () => PUBLISHER_SLOT_PATHS.mqtt.update,
@@ -120,59 +116,6 @@ function hasDirtyValue(value: unknown): boolean {
   }
 
   return false;
-}
-
-function resolveApiUrl(path: string, settings: ApiConnectionSettings): string {
-  const baseUrl = settings.baseUrl.trim();
-
-  if (!baseUrl) {
-    return path;
-  }
-
-  return new URL(path, baseUrl).toString();
-}
-
-function buildHeaders(settings: ApiConnectionSettings, hasBody: boolean) {
-  const headers = new Headers();
-
-  if (hasBody) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  if (settings.apiKey.trim()) {
-    headers.set("Authorization", `Bearer ${settings.apiKey.trim()}`);
-  }
-
-  return headers;
-}
-
-async function requestJson<T>(
-  path: string,
-  settings: ApiConnectionSettings,
-  init: RequestInit,
-  schema: z.ZodType<T>,
-): Promise<T> {
-  const response = await fetch(resolveApiUrl(path, settings), {
-    ...init,
-    headers: buildHeaders(settings, init.body !== undefined),
-  });
-
-  const body = [204, 205, 304].includes(response.status) ? null : await response.text();
-  const parsedBody = body ? (JSON.parse(body) as unknown) : {};
-
-  if (!response.ok) {
-    const message =
-      typeof parsedBody === "object" &&
-      parsedBody !== null &&
-      "message" in parsedBody &&
-      typeof parsedBody.message === "string"
-        ? parsedBody.message
-        : `${response.status} ${response.statusText}`.trim();
-
-    throw new Error(message);
-  }
-
-  return schema.parse(parsedBody);
 }
 
 export function getDirtySections(
@@ -217,21 +160,61 @@ async function readPublisherSlot(
   return requestJson(request.readUrl(), settings, { method: "GET" }, request.responseSchema);
 }
 
-export async function fetchConfig(settings: ApiConnectionSettings): Promise<UiConfig> {
+async function yieldForRender() {
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
+}
+
+export async function fetchConfig(
+  settings: ApiConnectionSettings,
+  onSectionStart?: (section: LoadableSectionKey) => void,
+  onSectionLoaded?: (section: LoadableSectionKey, value: unknown) => void,
+): Promise<UiConfig> {
+  onSectionStart?.("station");
   const station = (await readConfigSection("station", settings)) as z.infer<typeof StationConfig>;
+  onSectionLoaded?.("station", station);
+  await yieldForRender();
+  onSectionStart?.("sampling");
   const sampling = (await readConfigSection("sampling", settings)) as z.infer<typeof SamplingConfig>;
+  onSectionLoaded?.("sampling", sampling);
+  await yieldForRender();
+  onSectionStart?.("smoothing");
   const smoothing = (await readConfigSection("smoothing", settings)) as z.infer<typeof SmoothingConfig>;
+  onSectionLoaded?.("smoothing", smoothing);
+  await yieldForRender();
+  onSectionStart?.("storage");
   const storage = (await readConfigSection("storage", settings)) as z.infer<typeof StorageConfig>;
+  onSectionLoaded?.("storage", storage);
+  await yieldForRender();
+  onSectionStart?.("network");
   const network = (await readConfigSection("network", settings)) as z.infer<typeof NetworkConfig>;
+  onSectionLoaded?.("network", network);
+  await yieldForRender();
+  onSectionStart?.("smsAdmin");
   const smsAdmin = (await readConfigSection("smsAdmin", settings)) as z.infer<typeof SmsAdminConfig>;
+  onSectionLoaded?.("smsAdmin", smsAdmin);
+  await yieldForRender();
+  onSectionStart?.("webUi");
   const webUi = (await readConfigSection("webUi", settings)) as z.infer<typeof WebUiConfig>;
+  onSectionLoaded?.("webUi", webUi);
+  await yieldForRender();
+  onSectionStart?.("sensors");
   const sensors = (await readConfigSection("sensors", settings)) as z.infer<typeof SensorConfig>[];
+  onSectionLoaded?.("sensors", sensors);
+  await yieldForRender();
+  onSectionStart?.("publishers.wunderground");
   const wunderground = (await readPublisherSlot("wunderground", settings)) as z.infer<
     typeof WundergroundPublisherView
   >;
+  onSectionLoaded?.("publishers.wunderground", wunderground);
+  await yieldForRender();
+  onSectionStart?.("publishers.windy");
   const windy = (await readPublisherSlot("windy", settings)) as z.infer<typeof WindyPublisherView>;
-  const webhook = (await readPublisherSlot("webhook", settings)) as z.infer<typeof WebhookPublisherView>;
+  onSectionLoaded?.("publishers.windy", windy);
+  await yieldForRender();
+  onSectionStart?.("publishers.mqtt");
   const mqtt = (await readPublisherSlot("mqtt", settings)) as z.infer<typeof MqttPublisherView>;
+  onSectionLoaded?.("publishers.mqtt", mqtt);
+  await yieldForRender();
 
   return UiConfigSchema.parse({
     schemaVersion: SCHEMA_VERSION,
@@ -246,7 +229,6 @@ export async function fetchConfig(settings: ApiConnectionSettings): Promise<UiCo
     publishers: {
       wunderground,
       windy,
-      webhook,
       mqtt,
     },
   } satisfies z.input<typeof DeviceConfigView>);

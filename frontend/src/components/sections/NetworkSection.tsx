@@ -17,6 +17,7 @@ import type { UiConfig } from "../../types/ui";
 
 type NetworkSectionProps = {
   config: UiConfig;
+  loading?: boolean;
   setConfig: React.Dispatch<React.SetStateAction<UiConfig>>;
   wifiConnected: boolean;
   signalQuality?: number;
@@ -24,6 +25,7 @@ type NetworkSectionProps = {
 
 export function NetworkSection({
   config,
+  loading = false,
   setConfig,
   wifiConnected,
   signalQuality,
@@ -33,6 +35,7 @@ export function NetworkSection({
       id="network"
       title="Connectivity"
       icon={<IconWifi size={18} stroke={1.75} />}
+      loading={loading}
       subtitle="Prefer the best transport automatically, but keep Wi-Fi and LTE settings easy to reach from a phone."
     >
       <Grid>

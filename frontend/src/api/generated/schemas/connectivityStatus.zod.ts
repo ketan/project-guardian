@@ -15,9 +15,9 @@ export const connectivityStatusCellularSignalQualityMin = 0;
 
 
 export const ConnectivityStatus = zod.object({
-  "activeTransport": zod.enum(['none', 'wifi', 'cellular']),
   "wifi": zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "connected": zod.boolean(),
   "ssid": zod.string().optional(),
   "ipAddress": zod.string().optional(),
@@ -25,6 +25,7 @@ export const ConnectivityStatus = zod.object({
 }),
   "cellular": zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "registered": zod.boolean(),
   "modemType": zod.string(),
   "operatorName": zod.string().optional(),

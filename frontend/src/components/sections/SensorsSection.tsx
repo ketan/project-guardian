@@ -32,10 +32,11 @@ const transportOptions = [
 
 type SensorsSectionProps = {
   config: UiConfig;
+  loading?: boolean;
   setConfig: React.Dispatch<React.SetStateAction<UiConfig>>;
 };
 
-export function SensorsSection({ config, setConfig }: SensorsSectionProps) {
+export function SensorsSection({ config, loading = false, setConfig }: SensorsSectionProps) {
   const updateSensor = (index: number, updates: Partial<SensorConfig>) => {
     setConfig((current: UiConfig) => ({
       ...current,
@@ -72,6 +73,7 @@ export function SensorsSection({ config, setConfig }: SensorsSectionProps) {
       id="sensors"
       title="Sensors"
       icon={<IconCpu size={18} stroke={1.75} />}
+      loading={loading}
       subtitle="Configure attached sensor modules and their connection settings."
       action={
         <Button leftSection={<IconPlus size={16} stroke={1.75} />} size="compact-sm" variant="light" onClick={addSensor}>

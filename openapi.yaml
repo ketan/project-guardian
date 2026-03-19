@@ -92,13 +92,9 @@ components:
       type: object
       additionalProperties: false
       required:
-        - activeTransport
         - wifi
         - cellular
       properties:
-        activeTransport:
-          type: string
-          enum: [none, wifi, cellular]
         wifi:
           $ref: '#/components/schemas/WifiStatus'
         cellular:
@@ -108,9 +104,12 @@ components:
       additionalProperties: false
       required:
         - enabled
+        - active
         - connected
       properties:
         enabled:
+          type: boolean
+        active:
           type: boolean
         connected:
           type: boolean
@@ -125,10 +124,13 @@ components:
       additionalProperties: false
       required:
         - enabled
+        - active
         - registered
         - modemType
       properties:
         enabled:
+          type: boolean
+        active:
           type: boolean
         registered:
           type: boolean
@@ -164,6 +166,7 @@ components:
         retentionDays:
           type: integer
           minimum: 1
+          maximum: 30
         oldestRecordAt:
           type: string
           format: date-time
@@ -243,7 +246,7 @@ components:
       properties:
         type:
           type: string
-          enum: [wunderground, windy, webhook, mqtt]
+          enum: [wunderground, windy, mqtt]
         enabled:
           type: boolean
         lastPublishAt:
@@ -561,8 +564,6 @@ components:
           $ref: '#/components/schemas/WundergroundPublisherView'
         windy:
           $ref: '#/components/schemas/WindyPublisherView'
-        webhook:
-          $ref: '#/components/schemas/WebhookPublisherView'
         mqtt:
           $ref: '#/components/schemas/MqttPublisherView'
     PublishersConfigInput:
@@ -573,8 +574,6 @@ components:
           $ref: '#/components/schemas/WundergroundPublisherInput'
         windy:
           $ref: '#/components/schemas/WindyPublisherInput'
-        webhook:
-          $ref: '#/components/schemas/WebhookPublisherInput'
         mqtt:
           $ref: '#/components/schemas/MqttPublisherInput'
     PublisherBaseView:
@@ -678,38 +677,6 @@ components:
             stationId:
               type: string
             apiKey:
-              type: string
-    WebhookPublisherView:
-      allOf:
-        - $ref: '#/components/schemas/PublisherBaseView'
-        - type: object
-          required:
-            - type
-            - endpoint
-          properties:
-            type:
-              type: string
-              const: webhook
-            endpoint:
-              type: string
-#              format: uri
-            authHeaderConfigured:
-              type: boolean
-    WebhookPublisherInput:
-      allOf:
-        - $ref: '#/components/schemas/PublisherBaseInput'
-        - type: object
-          required:
-            - type
-            - endpoint
-          properties:
-            type:
-              type: string
-              const: webhook
-            endpoint:
-              type: string
-#              format: uri
-            authHeader:
               type: string
     MqttPublisherView:
       allOf:
@@ -1220,45 +1187,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WindyPublisherView'
-        '400':
-          description: Configuration validation failed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /api/v1/config/publishers/webhook:
-    get:
-      tags: [config]
-      operationId: getWebhookPublisherConfig
-      security:
-        - bearerAuth: []
-      summary: Get webhook publisher configuration
-      responses:
-        '200':
-          description: Current webhook publisher configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WebhookPublisherView'
-    put:
-      tags: [config]
-      operationId: updateWebhookPublisherConfig
-      security:
-        - bearerAuth: []
-      summary: Update webhook publisher configuration
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WebhookPublisherInput'
-      responses:
-        '200':
-          description: Updated webhook publisher configuration
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WebhookPublisherView'
         '400':
           description: Configuration validation failed
           content:

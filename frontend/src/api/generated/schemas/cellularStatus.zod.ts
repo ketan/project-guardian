@@ -16,6 +16,7 @@ export const cellularStatusSignalQualityMin = 0;
 
 export const CellularStatus = zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "registered": zod.boolean(),
   "modemType": zod.string(),
   "operatorName": zod.string().optional(),

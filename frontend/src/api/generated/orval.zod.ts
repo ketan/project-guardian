@@ -22,6 +22,7 @@ export const getStatusResponseStorageFreeBytesMin = 0;
 
 export const getStatusResponseStorageUsedBytesMin = 0;
 
+export const getStatusResponseStorageRetentionDaysMax = 30;
 
 export const getStatusResponseSamplingIntervalSecondsDefault = 2;
 export const getStatusResponseSamplingIntervalSecondsMin = 2;
@@ -35,13 +36,13 @@ export const GetStatusResponse = zod.object({
   "firmwareVersion": zod.string(),
   "hardwareModel": zod.string().optional(),
   "uptimeSeconds": zod.number().min(getStatusResponseDeviceUptimeSecondsMin),
-  "currentTime": zod.iso.datetime({}),
+  "currentTime": zod.iso.datetime({"offset":true}),
   "lastBootReason": zod.string().optional()
 }),
   "connectivity": zod.object({
-  "activeTransport": zod.enum(['none', 'wifi', 'cellular']),
   "wifi": zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "connected": zod.boolean(),
   "ssid": zod.string().optional(),
   "ipAddress": zod.string().optional(),
@@ -49,6 +50,7 @@ export const GetStatusResponse = zod.object({
 }),
   "cellular": zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "registered": zod.boolean(),
   "modemType": zod.string(),
   "operatorName": zod.string().optional(),
@@ -62,21 +64,21 @@ export const GetStatusResponse = zod.object({
   "sdCardPresent": zod.boolean(),
   "freeBytes": zod.number().min(getStatusResponseStorageFreeBytesMin).optional(),
   "usedBytes": zod.number().min(getStatusResponseStorageUsedBytesMin).optional(),
-  "retentionDays": zod.number().min(1),
-  "oldestRecordAt": zod.iso.datetime({}).optional(),
-  "newestRecordAt": zod.iso.datetime({}).optional()
+  "retentionDays": zod.number().min(1).max(getStatusResponseStorageRetentionDaysMax),
+  "oldestRecordAt": zod.iso.datetime({"offset":true}).optional(),
+  "newestRecordAt": zod.iso.datetime({"offset":true}).optional()
 }),
   "sampling": zod.object({
   "intervalSeconds": zod.number().min(getStatusResponseSamplingIntervalSecondsMin).max(getStatusResponseSamplingIntervalSecondsMax).default(getStatusResponseSamplingIntervalSecondsDefault),
-  "nextSampleAt": zod.iso.datetime({}),
-  "lastSampleAt": zod.iso.datetime({}),
+  "nextSampleAt": zod.iso.datetime({"offset":true}),
+  "lastSampleAt": zod.iso.datetime({"offset":true}),
   "sleepEnabled": zod.boolean(),
   "smoothingEnabled": zod.boolean().optional()
 }),
   "adminWindow": zod.object({
   "active": zod.boolean(),
-  "openedAt": zod.iso.datetime({}).optional(),
-  "expiresAt": zod.iso.datetime({}).optional(),
+  "openedAt": zod.iso.datetime({"offset":true}).optional(),
+  "expiresAt": zod.iso.datetime({"offset":true}).optional(),
   "requestedBy": zod.string().optional().describe('SMS sender number or web user identifier')
 }),
   "sensors": zod.array(zod.object({
@@ -84,13 +86,13 @@ export const GetStatusResponse = zod.object({
   "kind": zod.string(),
   "enabled": zod.boolean(),
   "healthy": zod.boolean(),
-  "lastReadAt": zod.iso.datetime({}).optional(),
+  "lastReadAt": zod.iso.datetime({"offset":true}).optional(),
   "message": zod.string().optional()
 })),
   "publishers": zod.array(zod.object({
-  "type": zod.enum(['wunderground', 'windy', 'webhook', 'mqtt']),
+  "type": zod.enum(['wunderground', 'windy', 'mqtt']),
   "enabled": zod.boolean(),
-  "lastPublishAt": zod.iso.datetime({}).optional(),
+  "lastPublishAt": zod.iso.datetime({"offset":true}).optional(),
   "lastResult": zod.enum(['unknown', 'success', 'failed']).optional(),
   "message": zod.string().optional()
 }))
@@ -685,68 +687,6 @@ export const UpdateWindyPublisherConfigResponse = zod.object({
 
 
 /**
- * @summary Get webhook publisher configuration
- */
-export const getWebhookPublisherConfigResponseOnePublishIntervalSecondsMin = 30;
-export const getWebhookPublisherConfigResponseOnePublishIntervalSecondsMax = 300;
-
-export const getWebhookPublisherConfigResponseOneIncludeHistoryWindowMinutesMax = 1440;
-
-
-
-export const GetWebhookPublisherConfigResponse = zod.object({
-  "type": zod.string(),
-  "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(getWebhookPublisherConfigResponseOnePublishIntervalSecondsMin).max(getWebhookPublisherConfigResponseOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(getWebhookPublisherConfigResponseOneIncludeHistoryWindowMinutesMax).optional()
-}).and(zod.object({
-  "type": zod.literal("webhook"),
-  "endpoint": zod.string(),
-  "authHeaderConfigured": zod.boolean().optional()
-}))
-
-
-/**
- * @summary Update webhook publisher configuration
- */
-export const updateWebhookPublisherConfigBodyOnePublishIntervalSecondsMin = 30;
-export const updateWebhookPublisherConfigBodyOnePublishIntervalSecondsMax = 300;
-
-export const updateWebhookPublisherConfigBodyOneIncludeHistoryWindowMinutesMax = 1440;
-
-
-
-export const UpdateWebhookPublisherConfigBody = zod.object({
-  "type": zod.string(),
-  "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(updateWebhookPublisherConfigBodyOnePublishIntervalSecondsMin).max(updateWebhookPublisherConfigBodyOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(updateWebhookPublisherConfigBodyOneIncludeHistoryWindowMinutesMax).optional()
-}).and(zod.object({
-  "type": zod.literal("webhook"),
-  "endpoint": zod.string(),
-  "authHeader": zod.string().optional()
-}))
-
-export const updateWebhookPublisherConfigResponseOnePublishIntervalSecondsMin = 30;
-export const updateWebhookPublisherConfigResponseOnePublishIntervalSecondsMax = 300;
-
-export const updateWebhookPublisherConfigResponseOneIncludeHistoryWindowMinutesMax = 1440;
-
-
-
-export const UpdateWebhookPublisherConfigResponse = zod.object({
-  "type": zod.string(),
-  "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(updateWebhookPublisherConfigResponseOnePublishIntervalSecondsMin).max(updateWebhookPublisherConfigResponseOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(updateWebhookPublisherConfigResponseOneIncludeHistoryWindowMinutesMax).optional()
-}).and(zod.object({
-  "type": zod.literal("webhook"),
-  "endpoint": zod.string(),
-  "authHeaderConfigured": zod.boolean().optional()
-}))
-
-
-/**
  * @summary Get MQTT publisher configuration
  */
 export const getMqttPublisherConfigResponseOnePublishIntervalSecondsMin = 30;
@@ -819,7 +759,7 @@ export const UpdateMqttPublisherConfigResponse = zod.object({
  */
 export const GetLatestSensorReadingsResponse = zod.object({
   "latest": zod.object({
-  "recordedAt": zod.iso.datetime({}),
+  "recordedAt": zod.iso.datetime({"offset":true}),
   "temperatureC": zod.number().optional(),
   "humidityPct": zod.number().optional(),
   "pressureHpa": zod.number().optional(),
@@ -833,7 +773,7 @@ export const GetLatestSensorReadingsResponse = zod.object({
   "noiseDb": zod.number().optional()
 }),
   "smoothed": zod.object({
-  "recordedAt": zod.iso.datetime({}),
+  "recordedAt": zod.iso.datetime({"offset":true}),
   "temperatureC": zod.number().optional(),
   "humidityPct": zod.number().optional(),
   "pressureHpa": zod.number().optional(),
@@ -857,7 +797,7 @@ export const GetLatestSensorReadingsResponse = zod.object({
  */
 export const GetHistoryResponse = zod.object({
   "samples": zod.array(zod.object({
-  "recordedAt": zod.iso.datetime({}),
+  "recordedAt": zod.iso.datetime({"offset":true}),
   "temperatureC": zod.number().optional(),
   "humidityPct": zod.number().optional(),
   "pressureHpa": zod.number().optional(),

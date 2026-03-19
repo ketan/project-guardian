@@ -1,4 +1,4 @@
-import { defineConfig } from "orval";
+import {defineConfig} from "orval";
 
 export default defineConfig({
   guardian: {
@@ -7,6 +7,7 @@ export default defineConfig({
     },
     output: {
       client: "zod",
+      clean: true,
       target: "src/api/generated/orval.zod.ts",
       schemas: {
         path: "src/api/generated/schemas",
@@ -14,6 +15,11 @@ export default defineConfig({
       },
       override: {
         aliasCombinedTypes: true,
+        zod: {
+          dateTimeOptions: {
+            offset: true,
+          },
+        }
       },
     },
   },

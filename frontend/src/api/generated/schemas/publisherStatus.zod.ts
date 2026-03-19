@@ -12,9 +12,9 @@ and administrative actions such as opening a temporary online window.
 import { z as zod } from 'zod';
 
 export const PublisherStatus = zod.object({
-  "type": zod.enum(['wunderground', 'windy', 'webhook', 'mqtt']),
+  "type": zod.enum(['wunderground', 'windy', 'mqtt']),
   "enabled": zod.boolean(),
-  "lastPublishAt": zod.iso.datetime({}).optional(),
+  "lastPublishAt": zod.iso.datetime({"offset":true}).optional(),
   "lastResult": zod.enum(['unknown', 'success', 'failed']).optional(),
   "message": zod.string().optional()
 })

@@ -19,7 +19,7 @@ export const DeviceSummary = zod.object({
   "firmwareVersion": zod.string(),
   "hardwareModel": zod.string().optional(),
   "uptimeSeconds": zod.number().min(deviceSummaryUptimeSecondsMin),
-  "currentTime": zod.iso.datetime({}),
+  "currentTime": zod.iso.datetime({"offset":true}),
   "lastBootReason": zod.string().optional()
 })
 

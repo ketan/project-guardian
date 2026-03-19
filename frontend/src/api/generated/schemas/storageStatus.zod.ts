@@ -15,15 +15,16 @@ export const storageStatusFreeBytesMin = 0;
 
 export const storageStatusUsedBytesMin = 0;
 
+export const storageStatusRetentionDaysMax = 30;
 
 
 export const StorageStatus = zod.object({
   "sdCardPresent": zod.boolean(),
   "freeBytes": zod.number().min(storageStatusFreeBytesMin).optional(),
   "usedBytes": zod.number().min(storageStatusUsedBytesMin).optional(),
-  "retentionDays": zod.number().min(1),
-  "oldestRecordAt": zod.iso.datetime({}).optional(),
-  "newestRecordAt": zod.iso.datetime({}).optional()
+  "retentionDays": zod.number().min(1).max(storageStatusRetentionDaysMax),
+  "oldestRecordAt": zod.iso.datetime({"offset":true}).optional(),
+  "newestRecordAt": zod.iso.datetime({"offset":true}).optional()
 })
 
 export type StorageStatus = zod.input<typeof StorageStatus>;

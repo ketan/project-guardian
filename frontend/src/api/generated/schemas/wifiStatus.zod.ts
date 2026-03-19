@@ -13,6 +13,7 @@ import { z as zod } from 'zod';
 
 export const WifiStatus = zod.object({
   "enabled": zod.boolean(),
+  "active": zod.boolean(),
   "connected": zod.boolean(),
   "ssid": zod.string().optional(),
   "ipAddress": zod.string().optional(),

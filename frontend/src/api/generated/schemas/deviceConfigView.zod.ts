@@ -63,11 +63,6 @@ export const deviceConfigViewPublishersWindyOnePublishIntervalSecondsMax = 300;
 
 export const deviceConfigViewPublishersWindyOneIncludeHistoryWindowMinutesMax = 1440;
 
-export const deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMin = 30;
-export const deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMax = 300;
-
-export const deviceConfigViewPublishersWebhookOneIncludeHistoryWindowMinutesMax = 1440;
-
 export const deviceConfigViewPublishersMqttOnePublishIntervalSecondsMin = 30;
 export const deviceConfigViewPublishersMqttOnePublishIntervalSecondsMax = 300;
 
@@ -165,16 +160,6 @@ export const DeviceConfigView = zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
   "apiKeyConfigured": zod.boolean()
-})).optional(),
-  "webhook": zod.object({
-  "type": zod.string(),
-  "enabled": zod.boolean(),
-  "publishIntervalSeconds": zod.number().min(deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMin).max(deviceConfigViewPublishersWebhookOnePublishIntervalSecondsMax),
-  "includeHistoryWindowMinutes": zod.number().min(1).max(deviceConfigViewPublishersWebhookOneIncludeHistoryWindowMinutesMax).optional()
-}).and(zod.object({
-  "type": zod.literal("webhook"),
-  "endpoint": zod.string(),
-  "authHeaderConfigured": zod.boolean().optional()
 })).optional(),
   "mqtt": zod.object({
   "type": zod.string(),

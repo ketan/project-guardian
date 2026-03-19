@@ -9,19 +9,21 @@ import {
   Switch,
   Text,
   TextInput,
+  ThemeIcon,
 } from "@mantine/core";
-import { IconSend } from "@tabler/icons-react";
+import { IconAntennaBars5, IconCloudRain, IconSend, IconWind } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { SectionCard } from "../SectionCard";
 import type {
   PublisherSlotKey,
   UiMqttPublisher,
   UiPublishers,
-  UiWebhookPublisher,
   UiWindyPublisher,
   UiWundergroundPublisher,
 } from "../../api/contracts";
 
 type PublishersSectionProps = {
+  loading?: boolean;
   publishers: UiPublishers;
   updatePublisher: (slot: PublisherSlotKey, updates: Record<string, unknown>) => void;
 };
@@ -30,25 +32,30 @@ type PublisherCardProps = {
   slot: PublisherSlotKey;
   title: string;
   subtitle: string;
+  icon: ReactNode;
   publisher:
     | UiWundergroundPublisher
     | UiWindyPublisher
-    | UiWebhookPublisher
     | UiMqttPublisher;
   updatePublisher: (slot: PublisherSlotKey, updates: Record<string, unknown>) => void;
 };
 
-function PublisherCard({ slot, title, subtitle, publisher, updatePublisher }: PublisherCardProps) {
+function PublisherCard({ slot, title, subtitle, icon, publisher, updatePublisher }: PublisherCardProps) {
   return (
     <Card withBorder padding="lg">
       <Stack gap="md">
         <Group justify="space-between" align="flex-start">
-          <Stack gap={0}>
-            <Text fw={700}>{title}</Text>
-            <Text size="sm" c="dimmed">
-              {subtitle}
-            </Text>
-          </Stack>
+          <Group align="flex-start" gap="sm" wrap="nowrap">
+            <ThemeIcon color="teal" size="lg" variant="light" radius="xl">
+              {icon}
+            </ThemeIcon>
+            <Stack gap={0}>
+              <Text fw={700}>{title}</Text>
+              <Text size="sm" c="dimmed">
+                {subtitle}
+              </Text>
+            </Stack>
+          </Group>
           <Badge color={publisher.enabled ? "green" : "gray"} variant="light" radius="sm">
             {publisher.enabled ? "Enabled" : "Disabled"}
           </Badge>
@@ -112,33 +119,6 @@ function PublisherCard({ slot, title, subtitle, publisher, updatePublisher }: Pu
               </Grid.Col>
             </>
           )}
-
-          {publisher.type === "webhook" && (
-            <>
-              <Grid.Col span={12}>
-                <TextInput
-                  label="Webhook URL"
-                  value={publisher.endpoint}
-                  onChange={(event) =>
-                    updatePublisher(slot, { endpoint: event.currentTarget.value })
-                  }
-                />
-              </Grid.Col>
-              <Grid.Col span={12}>
-                <PasswordInput
-                  label="Authorization header"
-                  placeholder={
-                    publisher.authHeaderConfigured ? "Configured" : "Optional bearer token"
-                  }
-                  value={publisher.authHeader ?? ""}
-                  onChange={(event) =>
-                    updatePublisher(slot, { authHeader: event.currentTarget.value })
-                  }
-                />
-              </Grid.Col>
-            </>
-          )}
-
           {publisher.type === "mqtt" && (
             <>
               <Grid.Col span={12}>
@@ -186,12 +166,13 @@ function PublisherCard({ slot, title, subtitle, publisher, updatePublisher }: Pu
   );
 }
 
-export function PublishersSection({ publishers, updatePublisher }: PublishersSectionProps) {
+export function PublishersSection({ loading = false, publishers, updatePublisher }: PublishersSectionProps) {
   return (
     <SectionCard
       id="publishers"
       title="Publishers"
       icon={<IconSend size={18} stroke={1.75} />}
+      loading={loading}
       subtitle="Configure where the station pushes weather updates and how often each destination is used."
     >
       <Stack gap="md">
@@ -200,6 +181,7 @@ export function PublishersSection({ publishers, updatePublisher }: PublishersSec
             slot="windy"
             title="Windy"
             subtitle="Push station observations to Windy for public forecast comparison."
+            icon={<IconWind size={18} stroke={1.75} />}
             publisher={publishers.windy}
             updatePublisher={updatePublisher}
           />
@@ -209,16 +191,8 @@ export function PublishersSection({ publishers, updatePublisher }: PublishersSec
             slot="wunderground"
             title="Weather Underground"
             subtitle="Send measurements to Weather Underground for broader historical visibility."
+            icon={<IconCloudRain size={18} stroke={1.75} />}
             publisher={publishers.wunderground}
-            updatePublisher={updatePublisher}
-          />
-        ) : null}
-        {publishers.webhook ? (
-          <PublisherCard
-            slot="webhook"
-            title="Webhook"
-            subtitle="Forward weather updates to a custom HTTPS endpoint."
-            publisher={publishers.webhook}
             updatePublisher={updatePublisher}
           />
         ) : null}
@@ -227,6 +201,7 @@ export function PublishersSection({ publishers, updatePublisher }: PublishersSec
             slot="mqtt"
             title="Meshtastic MQTT"
             subtitle="Bridge weather updates through the Meshtastic-compatible MQTT feed."
+            icon={<IconAntennaBars5 size={18} stroke={1.75} />}
             publisher={publishers.mqtt}
             updatePublisher={updatePublisher}
           />
