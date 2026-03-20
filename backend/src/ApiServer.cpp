@@ -1,7 +1,6 @@
 #include "ApiServer.h"
 
 #include <ArduinoJson.h>
-#include <AsyncJson.h>
 #include <WiFi.h>
 #include <mbedtls/sha256.h>
 #include "ConfigModels.h"
@@ -42,13 +41,8 @@ namespace {
         response->addHeader("Access-Control-Allow-Methods", "GET, PUT, POST, OPTIONS");
     }
 
-    bool isAuthorized(AsyncWebServerRequest *request) {
-        String header = request->header("Authorization");
-        if (!header.startsWith("Bearer ")) {
-            return false;
-        }
-
-        return header.substring(7) == bearerToken;
+    bool isApiV1Path(const String &path) {
+        return path.startsWith("/api/v1/");
     }
 
     const char *toMethodName(WebRequestMethod method) {
@@ -144,6 +138,8 @@ namespace {
 
 ApiServer::ApiServer(uint16_t port, AppState &state)
     : webServer(port), appState(state) {
+    authMiddleware.setAuthType(AUTH_BEARER);
+    authMiddleware.setToken(bearerToken);
 }
 
 void ApiServer::begin() {
@@ -152,50 +148,65 @@ void ApiServer::begin() {
 }
 
 void ApiServer::registerRoutes() {
-    webServer.onNotFound([this](AsyncWebServerRequest *request) {
+    registerGlobalMiddleware();
+    registerNotFoundRoute();
+    registerStatusRoutes();
+    registerStationConfigRoutes();
+    registerSamplingConfigRoutes();
+    registerSmoothingConfigRoutes();
+    registerStorageConfigRoutes();
+    registerNetworkConfigRoutes();
+    registerSmsAdminConfigRoutes();
+    registerWebUiConfigRoutes();
+    registerSensorConfigRoutes();
+    registerPublisherConfigRoutes();
+    registerDataRoutes();
+    registerOtaRoutes();
+}
+
+void ApiServer::registerGlobalMiddleware() {
+    webServer.addMiddleware([this](AsyncWebServerRequest *request, ArMiddlewareNext next) {
         markRequestStart(request);
+
+        if (!isApiV1Path(request->url())) {
+            next();
+            return;
+        }
+
         if (request->method() == HTTP_OPTIONS) {
             handleOptions(request);
             return;
         }
+
+        if (!authMiddleware.allowed(request)) {
+            sendError(request, 401, "unauthorized", "Missing or invalid bearer token.");
+            return;
+        }
+
+        next();
+    });
+}
+
+void ApiServer::registerNotFoundRoute() {
+    webServer.onNotFound([](AsyncWebServerRequest *request) {
         sendError(request, 404, "not_found", "Endpoint not found.");
     });
+}
 
-    auto requireAuth = [this](AsyncWebServerRequest *request) -> bool {
-        markRequestStart(request);
-
-        if (request->method() == HTTP_OPTIONS) {
-            handleOptions(request);
-            return false;
-        }
-
-        if (!isAuthorized(request)) {
-            sendError(request, 401, "unauthorized", "Missing or invalid bearer token.");
-            return false;
-        }
-
-        return true;
-    };
-
-    webServer.on("/api/v1/status", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerStatusRoutes() {
+    webServer.on("/api/v1/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
         appState.status.device.uptimeSeconds = millis() / 1000;
         appState.status.connectivity.wifi.ipAddress = WiFi.softAPIP().toString();
         sendJson(request, [&](JsonObject root) { appState.status.toJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/config/station", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerStationConfigRoutes() {
+    webServer.on("/api/v1/config/station", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.station.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/station", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+
+    webServer.on("/api/v1/config/station", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         handlePutSection(
             request, json,
             [](JsonObject json, StationConfig &model) { return model.fromHttpRequestJSON(json); },
@@ -206,17 +217,14 @@ void ApiServer::registerRoutes() {
                 sendJson(request, [&](JsonObject root) { appState.config.station.toHttpResponseJSON(root); });
             });
     });
+}
 
-    webServer.on("/api/v1/config/sampling", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerSamplingConfigRoutes() {
+    webServer.on("/api/v1/config/sampling", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.sampling.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/sampling", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+
+    webServer.on("/api/v1/config/sampling", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         if (!json.is<JsonObject>()) {
             sendError(request, 400, "validation_error", "Expected a JSON object.");
             return;
@@ -229,17 +237,14 @@ void ApiServer::registerRoutes() {
         Serial.println("Updated sampling config.");
         sendJson(request, [&](JsonObject root) { appState.config.sampling.toHttpResponseJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/config/smoothing", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerSmoothingConfigRoutes() {
+    webServer.on("/api/v1/config/smoothing", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.smoothing.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/smoothing", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+
+    webServer.on("/api/v1/config/smoothing", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         if (!json.is<JsonObject>()) {
             sendError(request, 400, "validation_error", "Expected a JSON object.");
             return;
@@ -252,17 +257,14 @@ void ApiServer::registerRoutes() {
         Serial.println("Updated smoothing config.");
         sendJson(request, [&](JsonObject root) { appState.config.smoothing.toHttpResponseJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/config/storage", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerStorageConfigRoutes() {
+    webServer.on("/api/v1/config/storage", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.storage.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/storage", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+
+    webServer.on("/api/v1/config/storage", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         if (!json.is<JsonObject>()) {
             sendError(request, 400, "validation_error", "Expected a JSON object.");
             return;
@@ -275,17 +277,14 @@ void ApiServer::registerRoutes() {
         Serial.println("Updated storage config.");
         sendJson(request, [&](JsonObject root) { appState.config.storage.toHttpResponseJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/config/network", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerNetworkConfigRoutes() {
+    webServer.on("/api/v1/config/network", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.network.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/network", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+
+    webServer.on("/api/v1/config/network", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         if (!json.is<JsonObject>()) {
             sendError(request, 400, "validation_error", "Expected a JSON object.");
             return;
@@ -300,17 +299,14 @@ void ApiServer::registerRoutes() {
         Serial.println("Updated network config.");
         sendJson(request, [&](JsonObject root) { appState.config.network.toHttpResponseJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/config/sms-admin", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerSmsAdminConfigRoutes() {
+    webServer.on("/api/v1/config/sms-admin", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.smsAdmin.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/sms-admin", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+
+    webServer.on("/api/v1/config/sms-admin", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         if (!json.is<JsonObject>()) {
             sendError(request, 400, "validation_error", "Expected a JSON object.");
             return;
@@ -322,17 +318,13 @@ void ApiServer::registerRoutes() {
         Serial.println("Updated SMS admin config.");
         sendJson(request, [&](JsonObject root) { appState.config.smsAdmin.toHttpResponseJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/config/web-ui", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerWebUiConfigRoutes() {
+    webServer.on("/api/v1/config/web-ui", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.webUi.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/web-ui", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+    webServer.on("/api/v1/config/web-ui", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         if (!json.is<JsonObject>()) {
             sendError(request, 400, "validation_error", "Expected a JSON object.");
             return;
@@ -344,20 +336,17 @@ void ApiServer::registerRoutes() {
         Serial.println("Updated web UI config.");
         sendJson(request, [&](JsonObject root) { appState.config.webUi.toHttpResponseJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/config/sensors", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerSensorConfigRoutes() {
+    webServer.on("/api/v1/config/sensors", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJsonArray(request, [&](JsonArray root) {
             SensorConfig::writeHttpResponseArray(root, appState.config.sensors);
         });
     });
-    webServer.on("/api/v1/config/sensors", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
-        if (!json.is<JsonArray>() || !SensorConfig::parseHttpRequestArray(json.as<JsonArray>(), appState.config.sensors)) {
+    webServer.on("/api/v1/config/sensors", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
+        if (!json.is<JsonArray>() || !
+            SensorConfig::parseHttpRequestArray(json.as<JsonArray>(), appState.config.sensors)) {
             sendError(request, 400, "validation_error", "Invalid sensor configuration.");
             return;
         }
@@ -366,21 +355,17 @@ void ApiServer::registerRoutes() {
             SensorConfig::writeHttpResponseArray(root, appState.config.sensors);
         });
     });
+}
 
+void ApiServer::registerPublisherConfigRoutes() {
     webServer.on("/api/v1/config/publishers/wunderground", HTTP_GET,
-                 [this, requireAuth](AsyncWebServerRequest *request) {
-                     if (!requireAuth(request)) {
-                         return;
-                     }
+                 [this](AsyncWebServerRequest *request) {
                      sendJson(request, [&](JsonObject root) {
                          appState.config.publishers.wunderground.toHttpResponseJSON(root);
                      });
                  });
     webServer.on("/api/v1/config/publishers/wunderground", HTTP_PUT,
-                 [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-                     if (!requireAuth(request)) {
-                         return;
-                     }
+                 [this](AsyncWebServerRequest *request, JsonVariant &json) {
                      if (!json.is<JsonObject>()) {
                          sendError(request, 400, "validation_error", "Expected a JSON object.");
                          return;
@@ -396,38 +381,29 @@ void ApiServer::registerRoutes() {
                      });
                  });
 
-    webServer.on("/api/v1/config/publishers/windy", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+    webServer.on("/api/v1/config/publishers/windy", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.publishers.windy.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/publishers/windy", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
-        if (!json.is<JsonObject>()) {
-            sendError(request, 400, "validation_error", "Expected a JSON object.");
-            return;
-        }
-        if (!appState.config.publishers.windy.fromHttpRequestJSON(json.as<JsonObject>())) {
-            sendError(request, 400, "validation_error", "Invalid Windy publisher configuration.");
-            return;
-        }
-        Serial.println("Updated Windy publisher config.");
-        sendJson(request, [&](JsonObject root) { appState.config.publishers.windy.toHttpResponseJSON(root); });
-    });
+    webServer.on("/api/v1/config/publishers/windy", HTTP_PUT,
+                 [this](AsyncWebServerRequest *request, JsonVariant &json) {
+                     if (!json.is<JsonObject>()) {
+                         sendError(request, 400, "validation_error", "Expected a JSON object.");
+                         return;
+                     }
+                     if (!appState.config.publishers.windy.fromHttpRequestJSON(json.as<JsonObject>())) {
+                         sendError(request, 400, "validation_error", "Invalid Windy publisher configuration.");
+                         return;
+                     }
+                     Serial.println("Updated Windy publisher config.");
+                     sendJson(request, [&](JsonObject root) {
+                         appState.config.publishers.windy.toHttpResponseJSON(root);
+                     });
+                 });
 
-    webServer.on("/api/v1/config/publishers/mqtt", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+    webServer.on("/api/v1/config/publishers/mqtt", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.publishers.mqtt.toHttpResponseJSON(root); });
     });
-    webServer.on("/api/v1/config/publishers/mqtt", HTTP_PUT, [this, requireAuth](AsyncWebServerRequest *request, JsonVariant &json) {
-        if (!requireAuth(request)) {
-            return;
-        }
+    webServer.on("/api/v1/config/publishers/mqtt", HTTP_PUT, [this](AsyncWebServerRequest *request, JsonVariant &json) {
         if (!json.is<JsonObject>()) {
             sendError(request, 400, "validation_error", "Expected a JSON object.");
             return;
@@ -439,31 +415,25 @@ void ApiServer::registerRoutes() {
         Serial.println("Updated MQTT publisher config.");
         sendJson(request, [&](JsonObject root) { appState.config.publishers.mqtt.toHttpResponseJSON(root); });
     });
+}
 
-    webServer.on("/api/v1/sensors/latest", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+void ApiServer::registerDataRoutes() {
+    webServer.on("/api/v1/sensors/latest", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.latestReadings.toJSON(root); });
     });
 
-    webServer.on("/api/v1/logs/history", HTTP_GET, [this, requireAuth](AsyncWebServerRequest *request) {
-        if (!requireAuth(request)) {
-            return;
-        }
+    webServer.on("/api/v1/logs/history", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) {
             WeatherSample::writeArray(root["samples"].to<JsonArray>(), appState.history);
         });
     });
+}
 
+void ApiServer::registerOtaRoutes() {
     webServer.on(
         "/api/v1/admin/ota",
         HTTP_POST,
-        [this, requireAuth](AsyncWebServerRequest *request) {
-            if (!requireAuth(request)) {
-                return;
-            }
-
+        [this](AsyncWebServerRequest *request) {
             if (!otaUpload.checksumMatchAttempted) {
                 sendError(request, 400, "validation_error", "No OTA upload data was received.");
                 return;
@@ -485,8 +455,8 @@ void ApiServer::registerRoutes() {
             Serial.printf("Calculated SHA-256: %s\n", otaUpload.calculatedSha256.c_str());
             sendJson(request, [&](JsonObject root) { appState.lastOtaUpload.toJSON(root); });
         },
-        [this](AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len,
-               bool final) {
+        [](AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len,
+           bool final) {
             if (index == 0) {
                 otaUpload = {};
                 otaUpload.active = true;
