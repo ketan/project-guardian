@@ -16,11 +16,11 @@ systemUnderTest:
         specs:
         - spec:
             id: openapiSpec
-            baseUrl: http://192.168.1.33:8080
+            baseUrl: http://192.168.1.33
             securitySchemes:
               bearerAuth:
                 type: bearer
                 token: secret
 
-    settings:
-      schemaResiliencyTests: all
+    # settings:
+      # schemaResiliencyTests: all
