@@ -9,8 +9,8 @@ flowchart TD
 
     BOOST["12V Boost Converter<br/>TPS61040 / AP3012"]
 
-    ID1["Ideal Diode #1<br/>(Solar path)<br/>LM74610 / module"]
-    ID2["Ideal Diode #2<br/>(Battery path)<br/>LM74610 / module"]
+    ID1["Ideal Diode #1<br/>(Solar path)<br/>LM74610 / module/Polulu 5398"]
+    ID2["Ideal Diode #2<br/>(Battery path)<br/>LM74610 / module/Polulu 5398"]
 
     RAIL["Combined 12V Rail"]
 
