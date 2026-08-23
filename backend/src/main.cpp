@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <SEN0658.h>
 #include <ESPmDNS.h>
 #include <RemoteDebug.h>
 #include <WiFi.h>
@@ -20,6 +21,7 @@ AppState state;
 ApiServer apiServer(httpPort, state);
 RemoteDebug Debug;
 WiFiManager wifiManager;
+SEN0658 sen0658(Serial1);
 bool remoteDebugStarted = false;
 
 void startRemoteDebugIfNeeded();
@@ -183,6 +185,7 @@ void onWiFiEvent(arduino_event_id_t event) {
 
 void setup() {
     Serial.begin(115200);
+    sen0658.begin();
 
     delay(2000);
 

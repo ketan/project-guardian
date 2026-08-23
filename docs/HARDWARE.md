@@ -55,4 +55,4 @@ Possible future improvements:
 
 Current pinout
 
-![alt text](image.png)
+![ESP32 Pinout](hardware/pinout.png)
