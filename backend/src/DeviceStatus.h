@@ -15,7 +15,14 @@ public:
     String currentTime = "2026-03-19T08:21:53Z";
     String lastBootReason = "power_on";
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["deviceId"] = deviceId;
+        json["firmwareVersion"] = firmwareVersion;
+        json["hardwareModel"] = hardwareModel;
+        json["uptimeSeconds"] = uptimeSeconds;
+        json["currentTime"] = currentTime;
+        json["lastBootReason"] = lastBootReason;
+    }
 };
 
 class WifiStatus : public HttpJsonSerializable {
@@ -27,7 +34,14 @@ public:
     String ipAddress = "192.168.4.1";
     int rssiDbm = -59;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["enabled"] = enabled;
+        json["active"] = active;
+        json["connected"] = connected;
+        json["ssid"] = ssid;
+        json["ipAddress"] = ipAddress;
+        json["rssiDbm"] = rssiDbm;
+    }
 };
 
 class CellularStatus : public HttpJsonSerializable {
@@ -42,7 +56,16 @@ public:
     String ipv6 = "2409:4043:9c2:1::9";
     String imei;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["enabled"] = enabled;
+        json["active"] = active;
+        json["registered"] = registered;
+        json["modemType"] = modemType;
+        json["operatorName"] = operatorName;
+        json["signalQuality"] = signalQuality;
+        json["ipv4"] = ipv4;
+        json["ipv6"] = ipv6;
+    }
 };
 
 class ConnectivityStatus : public HttpJsonSerializable {
@@ -50,7 +73,10 @@ public:
     WifiStatus wifi;
     CellularStatus cellular;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        wifi.toJSON(json["wifi"].to<JsonObject>());
+        cellular.toJSON(json["cellular"].to<JsonObject>());
+    }
 };
 
 class StorageStatus : public HttpJsonSerializable {
@@ -62,7 +88,14 @@ public:
     String oldestRecordAt = "2026-03-01T00:00:00Z";
     String newestRecordAt = "2026-03-19T08:21:30Z";
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["sdCardPresent"] = sdCardPresent;
+        json["freeBytes"] = freeBytes;
+        json["usedBytes"] = usedBytes;
+        json["retentionDays"] = retentionDays;
+        json["oldestRecordAt"] = oldestRecordAt;
+        json["newestRecordAt"] = newestRecordAt;
+    }
 };
 
 class SamplingStatus : public HttpJsonSerializable {
@@ -73,7 +106,13 @@ public:
     bool sleepEnabled = true;
     bool smoothingEnabled = true;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["intervalSeconds"] = intervalSeconds;
+        json["nextSampleAt"] = nextSampleAt;
+        json["lastSampleAt"] = lastSampleAt;
+        json["sleepEnabled"] = sleepEnabled;
+        json["smoothingEnabled"] = smoothingEnabled;
+    }
 };
 
 class AdminWindowStatus : public HttpJsonSerializable {
@@ -83,7 +122,12 @@ public:
     String expiresAt;
     String requestedBy;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["active"] = active;
+        if (!openedAt.isEmpty()) json["openedAt"] = openedAt;
+        if (!expiresAt.isEmpty()) json["expiresAt"] = expiresAt;
+        if (!requestedBy.isEmpty()) json["requestedBy"] = requestedBy;
+    }
 };
 
 class SensorStatus : public HttpJsonSerializable {
@@ -95,7 +139,14 @@ public:
     String lastReadAt = "2026-03-19T08:21:50Z";
     String message = "All metrics updating on schedule";
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["id"] = id;
+        json["kind"] = kind;
+        json["enabled"] = enabled;
+        json["healthy"] = healthy;
+        json["lastReadAt"] = lastReadAt;
+        json["message"] = message;
+    }
 };
 
 class PublisherStatus : public HttpJsonSerializable {
@@ -106,7 +157,13 @@ public:
     String lastResult = "unknown";
     String message;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        json["type"] = type;
+        json["enabled"] = enabled;
+        if (!lastPublishAt.isEmpty()) json["lastPublishAt"] = lastPublishAt;
+        json["lastResult"] = lastResult;
+        json["message"] = message;
+    }
 };
 
 class DeviceStatus : public HttpJsonSerializable {
@@ -119,7 +176,17 @@ public:
     std::vector<SensorStatus> sensors;
     std::vector<PublisherStatus> publishers;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        device.toJSON(json["device"].to<JsonObject>());
+        connectivity.toJSON(json["connectivity"].to<JsonObject>());
+        storage.toJSON(json["storage"].to<JsonObject>());
+        sampling.toJSON(json["sampling"].to<JsonObject>());
+        adminWindow.toJSON(json["adminWindow"].to<JsonObject>());
+        JsonArray sensorsJson = json["sensors"].to<JsonArray>();
+        for (const SensorStatus &sensor: sensors) sensor.toJSON(sensorsJson.add<JsonObject>());
+        JsonArray publishersJson = json["publishers"].to<JsonArray>();
+        for (const PublisherStatus &publisher: publishers) publisher.toJSON(publishersJson.add<JsonObject>());
+    }
 };
 
 class WeatherSample : public HttpJsonSerializable {
@@ -138,9 +205,22 @@ public:
         return toJSON(json, false);
     }
 
-    void toJSON(JsonObject json, bool includeSmoothingApplied) const;
+    void toJSON(JsonObject json, bool includeSmoothingApplied) const {
+        json["recordedAt"] = recordedAt;
+        json["temperatureC"] = temperatureC;
+        json["humidityPct"] = humidityPct;
+        json["pressureHpa"] = pressureHpa;
+        json["windSpeedMps"] = windSpeedMps;
+        json["windGustMps"] = windGustMps;
+        json["windDirectionDeg"] = windDirectionDeg;
+        json["rainfallMm"] = rainfallMm;
+        json["illuminanceLux"] = illuminanceLux;
+        if (includeSmoothingApplied) json["smoothingApplied"] = true;
+    }
 
-    static void writeArray(JsonArray array, const std::vector<WeatherSample> &history);
+    static void writeArray(JsonArray array, const std::vector<WeatherSample> &history) {
+        for (const WeatherSample &sample: history) sample.toJSON(array.add<JsonObject>());
+    }
 };
 
 class LatestSensorReadings : public HttpJsonSerializable {
@@ -149,5 +229,8 @@ public:
     WeatherSample smoothed;
     bool smoothingApplied = true;
 
-    void toJSON(JsonObject json) const override;
+    void toJSON(JsonObject json) const override {
+        latest.toJSON(json["latest"].to<JsonObject>());
+        smoothed.toJSON(json["smoothed"].to<JsonObject>(), smoothingApplied);
+    }
 };
