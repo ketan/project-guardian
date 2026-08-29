@@ -34,7 +34,7 @@ void logSerialInfo(const char *format, ...) {
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
-    Serial.println(buffer);
+    Serial.printf("(I t:%lums) %s\n", millis(), buffer);
 }
 
 IPAddress calculateNetworkAddress(const IPAddress &address, const IPAddress &subnetMask) {
@@ -119,9 +119,9 @@ void startRemoteDebugIfNeeded() {
 
     Debug.begin(mdnsHostname);
     Debug.setSerialEnabled(true);
+    Debug.showColors(true);
     Debug.setResetCmdEnabled(true);
     Debug.showTime(true);
-    Debug.showColors(true);
     Debug.showDebugLevel(true);
     remoteDebugStarted = true;
     debugI("RemoteDebug ready");
@@ -180,10 +180,12 @@ void onWiFiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 void setup() {
     Serial.begin(115200);
 
-    delay(2000);
+    Debug.setSerialEnabled(true);
+    Debug.showColors(true);
 
     Serial.println();
     Serial.println("Project Guardian starting...");
+    logSerialInfo("PSRAM available: %u bytes", ESP.getPsramSize());
 
     WiFi.onEvent(onWiFiEvent);
     configureWiFiManager();
@@ -199,5 +201,5 @@ void setup() {
 
 void loop() {
     Debug.handle();
-    delay(2);
+    delay(10);
 }
