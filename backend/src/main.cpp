@@ -12,6 +12,7 @@
 #include "TelnetLogger.h"
 
 constexpr uint16_t httpPort = 80;
+constexpr uint32_t lowPowerCpuFrequencyMhz = 80;
 constexpr const char *accessPointSsid = "guardian-admin";
 constexpr const char *accessPointPassword = "guardian123";
 constexpr const char *mdnsHostname = "project-guardian";
@@ -30,6 +31,10 @@ SEN0658 sen0658(Serial1);
 bool telnetLoggerStarted = false;
 
 void startTelnetLoggerIfNeeded();
+
+bool configureLowPowerCpuFrequency() {
+    return setCpuFrequencyMhz(lowPowerCpuFrequencyMhz);
+}
 
 String stationGlobalIPv6() {
     esp_netif_t *stationNetif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
@@ -225,6 +230,7 @@ void onWiFiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 }
 
 void setup() {
+    const bool cpuFrequencySet = configureLowPowerCpuFrequency();
     Serial.begin(115200);
     logDestinations.add(Serial);
     logger.setInfoCallback(printInfo);
@@ -232,6 +238,11 @@ void setup() {
 
     Serial.println();
     LOG_INFO(logger, "Project Guardian starting...");
+    if (cpuFrequencySet) {
+        LOG_INFO(logger, "CPU frequency set to %u MHz", ESP.getCpuFreqMHz());
+    } else {
+        LOG_WARNING(logger, "CPU frequency remains at %u MHz", ESP.getCpuFreqMHz());
+    }
     LOG_INFO(logger, "PSRAM available: %u bytes", ESP.getPsramSize());
 
     WiFi.onEvent(onWiFiEvent);
