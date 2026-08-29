@@ -32,8 +32,12 @@ bool telnetLoggerStarted = false;
 
 void startTelnetLoggerIfNeeded();
 
-bool configureLowPowerCpuFrequency() {
-    return setCpuFrequencyMhz(lowPowerCpuFrequencyMhz);
+void configureLowPowerCpuFrequency() {
+    if (setCpuFrequencyMhz(lowPowerCpuFrequencyMhz)) {
+        LOG_INFO(logger, "CPU frequency set to %u MHz", ESP.getCpuFreqMHz());
+    } else {
+        LOG_WARNING(logger, "CPU frequency remains at %u MHz", ESP.getCpuFreqMHz());
+    }
 }
 
 String stationGlobalIPv6() {
@@ -230,7 +234,6 @@ void onWiFiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 }
 
 void setup() {
-    const bool cpuFrequencySet = configureLowPowerCpuFrequency();
     Serial.begin(115200);
     logDestinations.add(Serial);
     logger.setInfoCallback(printInfo);
@@ -238,11 +241,7 @@ void setup() {
 
     Serial.println();
     LOG_INFO(logger, "Project Guardian starting...");
-    if (cpuFrequencySet) {
-        LOG_INFO(logger, "CPU frequency set to %u MHz", ESP.getCpuFreqMHz());
-    } else {
-        LOG_WARNING(logger, "CPU frequency remains at %u MHz", ESP.getCpuFreqMHz());
-    }
+    configureLowPowerCpuFrequency();
     LOG_INFO(logger, "PSRAM available: %u bytes", ESP.getPsramSize());
 
     WiFi.onEvent(onWiFiEvent);
