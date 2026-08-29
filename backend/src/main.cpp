@@ -3,6 +3,7 @@
 #include <ESPmDNS.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
+#include <esp_netif.h>
 
 #include "ApiServer.h"
 #include "AppLogger.h"
@@ -29,6 +30,15 @@ SEN0658 sen0658(Serial1);
 bool telnetLoggerStarted = false;
 
 void startTelnetLoggerIfNeeded();
+
+String stationGlobalIPv6() {
+    esp_netif_t *stationNetif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_ip6_addr_t address;
+    if (stationNetif == nullptr || esp_netif_get_ip6_global(stationNetif, &address) != ESP_OK) {
+        return "unavailable";
+    }
+    return IPv6Address(address.addr).toString();
+}
 
 void printInfoValue(Stream &output, const char *label, const String &value) {
     output.print(label);
@@ -60,7 +70,8 @@ void printInfo(Stream &output, const char *, void *) {
     printInfoValue(output, "Wi-Fi: ", WiFi.status() == WL_CONNECTED ? "connected" : "disconnected");
     printInfoValue(output, "Station SSID: ", WiFi.SSID());
     printInfoValue(output, "Station IPv4: ", WiFi.localIP().toString());
-    printInfoValue(output, "Station IPv6: ", WiFi.localIPv6().toString());
+    printInfoValue(output, "Station global IPv6: ", stationGlobalIPv6());
+    printInfoValue(output, "Station link-local IPv6: ", WiFi.localIPv6().toString());
     printInfoValue(output, "Access point IPv4: ", WiFi.softAPIP().toString());
     printInfoValue(output, "Access point IPv6: ", WiFi.softAPIPv6().toString());
     printInfoValue(output, "Wi-Fi RSSI (dBm): ", static_cast<long>(WiFi.RSSI()));

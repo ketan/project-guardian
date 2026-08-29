@@ -81,8 +81,8 @@ public:
     }
 
     void handle(Stream &serial, Stream &telnet) {
-        read(serial, serialLine, serialLength);
-        read(telnet, telnetLine, telnetLength);
+        read(serial, serialLine, serialLength, true);
+        read(telnet, telnetLine, telnetLength, false);
     }
 
     bool addCommand(const char *name, CommandCallback callback, void *context = nullptr) {
@@ -110,7 +110,7 @@ public:
     }
 
     void printHelp(Stream &output) const {
-        output.print("help | info | reset | status | level <error|warning|info|debug|trace> | log <level> <message>");
+        output.print("help | info | reset | level <error|warning|info|debug|trace> | log <level> <message>");
         for (size_t index = 0; index < commandCount; ++index) {
             output.print(" | ");
             output.print(commands[index].name);
@@ -129,17 +129,28 @@ private:
         void *context;
     };
 
-    void read(Stream &input, char *line, size_t &length) {
+    void read(Stream &input, char *line, size_t &length, bool echo) {
         while (input.available() > 0) {
             const int next = input.read();
             if (next == '\r' || next == '\n') {
                 if (length > 0) {
+                    if (echo) {
+                        input.write(static_cast<uint8_t>('\n'));
+                    }
                     line[length] = '\0';
                     execute(input, line);
                     length = 0;
                 }
+            } else if ((next == '\b' || next == 127) && length > 0) {
+                --length;
+                if (echo) {
+                    input.print("\b \b");
+                }
             } else if (length < maxLineLength) {
                 line[length++] = static_cast<char>(next);
+                if (echo) {
+                    input.write(static_cast<uint8_t>(next));
+                }
             }
         }
     }
@@ -167,9 +178,6 @@ private:
             } else {
                 resetCallback(output, arguments == nullptr ? "" : arguments, resetContext);
             }
-        } else if (std::strcmp(line, "status") == 0) {
-            output.print("Logger level: ");
-            reply(output, levelName(level()));
         } else if (std::strcmp(line, "level") == 0) {
             setConsoleLevel(output, arguments);
         } else if (std::strcmp(line, "log") == 0) {
@@ -190,8 +198,8 @@ private:
     }
 
     static bool isBuiltinCommand(const char *name) {
-        return std::strcmp(name, "help") == 0 || std::strcmp(name, "status") == 0 ||
-               std::strcmp(name, "info") == 0 || std::strcmp(name, "reset") == 0 ||
+        return std::strcmp(name, "help") == 0 || std::strcmp(name, "info") == 0 ||
+               std::strcmp(name, "reset") == 0 ||
                std::strcmp(name, "level") == 0 || std::strcmp(name, "log") == 0;
     }
 
@@ -274,18 +282,31 @@ private:
         char timestamp[16];
         snprintf(timestamp, sizeof(timestamp), "[%lums]", millis());
         output.print(timestamp);
+        output.print(color(level));
         output.print(prefix(level));
+        output.print("\033[0m ");
         output.write(reinterpret_cast<const uint8_t *>(buffer), length < static_cast<int>(bufferSize) ? length : bufferSize - 1);
         output.write(static_cast<uint8_t>('\n'));
     }
 
     static const char *prefix(Level level) {
         switch (level) {
-            case Level::Error: return "[E] ";
-            case Level::Warning: return "[W] ";
-            case Level::Info: return "[I] ";
-            case Level::Debug: return "[D] ";
-            case Level::Trace: return "[T] ";
+            case Level::Error: return "[E]";
+            case Level::Warning: return "[W]";
+            case Level::Info: return "[I]";
+            case Level::Debug: return "[D]";
+            case Level::Trace: return "[T]";
+        }
+        return "";
+    }
+
+    static const char *color(Level level) {
+        switch (level) {
+            case Level::Error: return "\033[31m";
+            case Level::Warning: return "\033[33m";
+            case Level::Info: return "\033[32m";
+            case Level::Debug: return "\033[36m";
+            case Level::Trace: return "\033[90m";
         }
         return "";
     }

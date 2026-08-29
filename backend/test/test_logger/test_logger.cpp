@@ -56,7 +56,7 @@ void test_logger_formats_messages_with_their_level() {
 
     logger.warning("Wi-Fi retry %u", 2U);
 
-    TEST_ASSERT_EQUAL_STRING("[0ms][W] Wi-Fi retry 2\n", output.value.c_str());
+    TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m Wi-Fi retry 2\n", output.value.c_str());
 }
 
 void test_logger_filters_messages_below_its_runtime_level() {
@@ -67,7 +67,7 @@ void test_logger_filters_messages_below_its_runtime_level() {
     logger.info("hidden");
     logger.error("visible");
 
-    TEST_ASSERT_EQUAL_STRING("[0ms][E] visible\n", output.value.c_str());
+    TEST_ASSERT_EQUAL_STRING("[0ms]\033[31m[E]\033[0m visible\n", output.value.c_str());
 }
 
 void test_compiled_out_macros_do_not_compile_their_arguments() {
@@ -77,7 +77,7 @@ void test_compiled_out_macros_do_not_compile_their_arguments() {
     LOG_INFO(logger, missingSymbol);
     LOG_WARNING(logger, "visible");
 
-    TEST_ASSERT_EQUAL_STRING("[0ms][W] visible\n", output.value.c_str());
+    TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m visible\n", output.value.c_str());
 }
 
 void test_logger_writes_to_every_tee_destination() {
@@ -90,8 +90,8 @@ void test_logger_writes_to_every_tee_destination() {
 
     LOG_WARNING(logger, "visible");
 
-    TEST_ASSERT_EQUAL_STRING("[0ms][W] visible\n", serial.value.c_str());
-    TEST_ASSERT_EQUAL_STRING("[0ms][W] visible\n", telnet.value.c_str());
+    TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m visible\n", serial.value.c_str());
+    TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m visible\n", telnet.value.c_str());
 }
 
 void test_logger_changes_level_from_serial_commands() {
@@ -103,7 +103,7 @@ void test_logger_changes_level_from_serial_commands() {
     logger.handle(serial, telnet);
 
     TEST_ASSERT_EQUAL_INT(static_cast<int>(Logger::Level::Debug), static_cast<int>(logger.level()));
-    TEST_ASSERT_EQUAL_STRING("Logger level: debug\n", serial.output.c_str());
+    TEST_ASSERT_EQUAL_STRING("level debug\nLogger level: debug\n", serial.output.c_str());
 }
 
 void test_logger_prints_help_and_logs_telnet_commands() {
@@ -115,9 +115,9 @@ void test_logger_prints_help_and_logs_telnet_commands() {
     logger.printHelp(telnet);
     logger.handle(serial, telnet);
 
-    TEST_ASSERT_EQUAL_STRING("help | info | reset | status | level <error|warning|info|debug|trace> | log <level> <message>\n",
+    TEST_ASSERT_EQUAL_STRING("help | info | reset | level <error|warning|info|debug|trace> | log <level> <message>\n",
                              telnet.output.c_str());
-    TEST_ASSERT_EQUAL_STRING("[0ms][W] antenna disconnected\n", output.value.c_str());
+    TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m antenna disconnected\n", output.value.c_str());
 }
 
 void test_logger_calls_registered_commands_with_their_arguments() {
@@ -135,7 +135,7 @@ void test_logger_calls_registered_commands_with_their_arguments() {
 
     TEST_ASSERT_TRUE(called);
     TEST_ASSERT_EQUAL_STRING("weather station\n"
-                             "help | info | reset | status | level <error|warning|info|debug|trace> | log <level> <message> | echo\n",
+                             "help | info | reset | level <error|warning|info|debug|trace> | log <level> <message> | echo\n",
                              telnet.output.c_str());
 }
 
@@ -150,7 +150,7 @@ void test_logger_invokes_the_built_in_info_callback() {
     logger.handle(serial, telnet);
 
     TEST_ASSERT_TRUE(called);
-    TEST_ASSERT_EQUAL_STRING("weather station\n", serial.output.c_str());
+    TEST_ASSERT_EQUAL_STRING("info weather station\nweather station\n", serial.output.c_str());
 }
 
 void test_logger_invokes_the_built_in_reset_callback() {
@@ -164,7 +164,7 @@ void test_logger_invokes_the_built_in_reset_callback() {
     logger.handle(serial, telnet);
 
     TEST_ASSERT_TRUE(called);
-    TEST_ASSERT_EQUAL_STRING("\n", serial.output.c_str());
+    TEST_ASSERT_EQUAL_STRING("reset\n\n", serial.output.c_str());
 }
 
 int main(int, char **) {
