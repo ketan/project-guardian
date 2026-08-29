@@ -106,18 +106,18 @@ void test_logger_changes_level_from_serial_commands() {
     TEST_ASSERT_EQUAL_STRING("level debug\nLogger level: debug\n", serial.output.c_str());
 }
 
-void test_logger_prints_help_and_logs_telnet_commands() {
+void test_logger_prints_help_to_telnet() {
     BufferPrint output;
     Logger logger(output);
     ConsoleStream serial;
-    ConsoleStream telnet("log warning antenna disconnected\r\n");
+    ConsoleStream telnet;
 
     logger.printHelp(telnet);
     logger.handle(serial, telnet);
 
-    TEST_ASSERT_EQUAL_STRING("help | info | reset | level <error|warning|info|debug|trace> | log <level> <message>\n",
+    TEST_ASSERT_EQUAL_STRING("Commands: help | info | reset | level\n",
                              telnet.output.c_str());
-    TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m antenna disconnected\n", output.value.c_str());
+    TEST_ASSERT_TRUE(output.value.isEmpty());
 }
 
 void test_logger_calls_registered_commands_with_their_arguments() {
@@ -135,7 +135,7 @@ void test_logger_calls_registered_commands_with_their_arguments() {
 
     TEST_ASSERT_TRUE(called);
     TEST_ASSERT_EQUAL_STRING("weather station\n"
-                             "help | info | reset | level <error|warning|info|debug|trace> | log <level> <message> | echo\n",
+                             "Commands: help | info | reset | level | echo\n",
                              telnet.output.c_str());
 }
 
@@ -174,7 +174,7 @@ int main(int, char **) {
     RUN_TEST(test_compiled_out_macros_do_not_compile_their_arguments);
     RUN_TEST(test_logger_writes_to_every_tee_destination);
     RUN_TEST(test_logger_changes_level_from_serial_commands);
-    RUN_TEST(test_logger_prints_help_and_logs_telnet_commands);
+    RUN_TEST(test_logger_prints_help_to_telnet);
     RUN_TEST(test_logger_calls_registered_commands_with_their_arguments);
     RUN_TEST(test_logger_invokes_the_built_in_info_callback);
     RUN_TEST(test_logger_invokes_the_built_in_reset_callback);

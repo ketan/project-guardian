@@ -29,7 +29,12 @@ public:
         Trace = LOGGER_LEVEL_TRACE,
     };
 
-    explicit Logger(Print &output) : output(output) {}
+    explicit Logger(Print &output) : output(output) {
+        addCommand("help", helpCommand, this);
+        addCommand("info", infoCommand, this);
+        addCommand("reset", resetCommand, this);
+        addCommand("level", levelCommand, this);
+    }
 
     void setLevel(Level level) { minimumLevel = level; }
     Level level() const { return minimumLevel; }
@@ -86,7 +91,7 @@ public:
     }
 
     bool addCommand(const char *name, CommandCallback callback, void *context = nullptr) {
-        if (name == nullptr || callback == nullptr || commandCount == maxCommands || isBuiltinCommand(name)) {
+        if (name == nullptr || callback == nullptr || commandCount == maxCommands) {
             return false;
         }
         for (size_t index = 0; index < commandCount; ++index) {
@@ -110,9 +115,11 @@ public:
     }
 
     void printHelp(Stream &output) const {
-        output.print("help | info | reset | level <error|warning|info|debug|trace> | log <level> <message>");
+        output.print("Commands: ");
         for (size_t index = 0; index < commandCount; ++index) {
-            output.print(" | ");
+            if (index > 0) {
+                output.print(" | ");
+            }
             output.print(commands[index].name);
         }
         output.write(static_cast<uint8_t>('\n'));
@@ -121,7 +128,7 @@ public:
 private:
     static constexpr size_t bufferSize = 256;
     static constexpr size_t maxLineLength = 95;
-    static constexpr size_t maxCommands = 4;
+    static constexpr size_t maxCommands = 16;
 
     struct Command {
         const char *name;
@@ -164,32 +171,8 @@ private:
             }
         }
 
-        if (std::strcmp(line, "help") == 0) {
-            printHelp(output);
-        } else if (std::strcmp(line, "info") == 0) {
-            if (infoCallback == nullptr) {
-                reply(output, "Info unavailable");
-            } else {
-                infoCallback(output, arguments == nullptr ? "" : arguments, infoContext);
-            }
-        } else if (std::strcmp(line, "reset") == 0) {
-            if (resetCallback == nullptr) {
-                reply(output, "Reset unavailable");
-            } else {
-                resetCallback(output, arguments == nullptr ? "" : arguments, resetContext);
-            }
-        } else if (std::strcmp(line, "level") == 0) {
-            setConsoleLevel(output, arguments);
-        } else if (std::strcmp(line, "log") == 0) {
-            writeConsoleLog(output, arguments);
-        } else {
-            executeCustomCommand(output, line, arguments);
-        }
-    }
-
-    void executeCustomCommand(Stream &output, const char *name, const char *arguments) {
         for (size_t index = 0; index < commandCount; ++index) {
-            if (std::strcmp(commands[index].name, name) == 0) {
+            if (std::strcmp(commands[index].name, line) == 0) {
                 commands[index].callback(output, arguments == nullptr ? "" : arguments, commands[index].context);
                 return;
             }
@@ -197,10 +180,30 @@ private:
         reply(output, "Unknown command; use help");
     }
 
-    static bool isBuiltinCommand(const char *name) {
-        return std::strcmp(name, "help") == 0 || std::strcmp(name, "info") == 0 ||
-               std::strcmp(name, "reset") == 0 ||
-               std::strcmp(name, "level") == 0 || std::strcmp(name, "log") == 0;
+    static void helpCommand(Stream &output, const char *, void *context) {
+        static_cast<Logger *>(context)->printHelp(output);
+    }
+
+    static void infoCommand(Stream &output, const char *arguments, void *context) {
+        Logger *logger = static_cast<Logger *>(context);
+        if (logger->infoCallback == nullptr) {
+            reply(output, "Info unavailable");
+            return;
+        }
+        logger->infoCallback(output, arguments, logger->infoContext);
+    }
+
+    static void resetCommand(Stream &output, const char *arguments, void *context) {
+        Logger *logger = static_cast<Logger *>(context);
+        if (logger->resetCallback == nullptr) {
+            reply(output, "Reset unavailable");
+            return;
+        }
+        logger->resetCallback(output, arguments, logger->resetContext);
+    }
+
+    static void levelCommand(Stream &output, const char *arguments, void *context) {
+        static_cast<Logger *>(context)->setConsoleLevel(output, arguments);
     }
 
     void setConsoleLevel(Stream &output, const char *name) {
@@ -213,34 +216,6 @@ private:
         setLevel(requestedLevel);
         output.print("Logger level: ");
         reply(output, levelName(requestedLevel));
-    }
-
-    void writeConsoleLog(Stream &output, char *arguments) {
-        if (arguments == nullptr) {
-            reply(output, "Usage: log <level> <message>");
-            return;
-        }
-
-        char *message = std::strchr(arguments, ' ');
-        if (message == nullptr) {
-            reply(output, "Usage: log <level> <message>");
-            return;
-        }
-        *message++ = '\0';
-
-        Level requestedLevel;
-        if (!parseLevel(arguments, requestedLevel) || *message == '\0') {
-            reply(output, "Usage: log <level> <message>");
-            return;
-        }
-
-        switch (requestedLevel) {
-            case Level::Error: error("%s", message); break;
-            case Level::Warning: warning("%s", message); break;
-            case Level::Info: info("%s", message); break;
-            case Level::Debug: debug("%s", message); break;
-            case Level::Trace: trace("%s", message); break;
-        }
     }
 
     static bool parseLevel(const char *name, Level &level) {
