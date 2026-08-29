@@ -28,7 +28,6 @@ ApiServer apiServer(httpPort, state);
 TelnetLogger telnetLogger;
 WiFiManager wifiManager;
 SEN0658 sen0658(Serial1);
-bool telnetLoggerStarted = false;
 
 void startTelnetLoggerIfNeeded();
 
@@ -173,13 +172,12 @@ void startMdns() {
 }
 
 void startTelnetLoggerIfNeeded() {
-    if (telnetLoggerStarted) {
+    if (telnetLogger.isRunning()) {
         return;
     }
 
     telnetLogger.begin();
     logDestinations.add(telnetLogger);
-    telnetLoggerStarted = true;
     LOG_INFO(logger, "Telnet logger listening on port 23");
 }
 

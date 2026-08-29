@@ -11,7 +11,11 @@ void test_telnet_logger_writes_to_connected_client() {
     WiFiServer::queueClient(client);
     TelnetLogger logger;
 
+    TEST_ASSERT_FALSE(logger.isRunning());
     logger.begin();
+    TEST_ASSERT_TRUE(logger.isRunning());
+    logger.begin();
+    TEST_ASSERT_TRUE(logger.isRunning());
     logger.handle();
 
     TEST_ASSERT_TRUE(logger.takeClientConnected());

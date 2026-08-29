@@ -7,9 +7,14 @@ public:
     explicit TelnetLogger(uint16_t port = 23) : server(port) {}
 
     void begin() {
+        if (started) {
+            return;
+        }
         server.begin();
         started = true;
     }
+
+    bool isRunning() const { return started; }
 
     void handle() {
         if (!started) {
