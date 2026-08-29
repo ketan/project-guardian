@@ -127,7 +127,7 @@ void startRemoteDebugIfNeeded() {
     debugI("RemoteDebug ready");
 }
 
-void onWiFiEvent(arduino_event_id_t event) {
+void onWiFiEvent(arduino_event_id_t event, arduino_event_info_t info) {
     const IPAddress ipv4NetworkAddress = calculateNetworkAddress(accessPointIp, accessPointSubnet);
     const uint8_t prefixLength = calculatePrefixLength(accessPointSubnet);
 
@@ -159,17 +159,11 @@ void onWiFiEvent(arduino_event_id_t event) {
         case ARDUINO_EVENT_WIFI_STA_GOT_IP: {
             const IPv6Address stationIpv6Address = WiFi.localIPv6();
             logSerialInfo("Station IPv4 address: %s", WiFi.localIP().toString().c_str());
-            if (isZeroIpv6Address(stationIpv6Address)) {
-                logSerialInfo("Station IPv6 address: pending");
-            } else {
-                logSerialInfo("Station IPv6 address: %s", stationIpv6Address.toString().c_str());
-            }
             break;
         }
 
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6: {
-            const IPv6Address stationIpv6Address = WiFi.localIPv6();
-            logSerialInfo("Station IPv4 address: %s", WiFi.localIP().toString().c_str());
+            const IPv6Address stationIpv6Address(info.got_ip6.ip6_info.ip.addr);
             if (isZeroIpv6Address(stationIpv6Address)) {
                 logSerialInfo("Station IPv6 address: pending");
             } else {
@@ -185,7 +179,6 @@ void onWiFiEvent(arduino_event_id_t event) {
 
 void setup() {
     Serial.begin(115200);
-    sen0658.begin();
 
     delay(2000);
 
@@ -198,6 +191,8 @@ void setup() {
     startRemoteDebugIfNeeded();
     startMdns();
     apiServer.begin();
+    sen0658.begin();
+    Debug.begin(mdnsHostname, RemoteDebug::VERBOSE);
 
     debugI("HTTP server listening on port %u", httpPort);
 }

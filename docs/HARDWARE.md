@@ -55,4 +55,6 @@ Possible future improvements:
 
 Current pinout
 
+We use waveshare ESP32-S3 SIM7670G board (https://www.waveshare.com/esp32-s3-sim7670g-4g.htm). Part number (ESP32-S3-SIM7670G-4G-EN) and the pinout is as follows:
+
 ![ESP32 Pinout](hardware/pinout.png)
