@@ -4,6 +4,21 @@
 
 #include <Arduino.h>
 
+constexpr int WL_CONNECTED = 3;
+
+class WiFiClass {
+public:
+    int status() const { return WL_CONNECTED; }
+    String SSID() const { return "test-network"; }
+    IPAddress localIP() const { return {}; }
+    IPv6Address localIPv6() const { return IPv6Address(nullptr); }
+    IPAddress softAPIP() const { return {}; }
+    IPv6Address softAPIPv6() const { return IPv6Address(nullptr); }
+    int RSSI() const { return 0; }
+};
+
+static WiFiClass WiFi;
+
 class WiFiClient : public Stream {
 public:
     struct State {

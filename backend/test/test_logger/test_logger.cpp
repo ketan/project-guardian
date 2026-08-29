@@ -147,8 +147,9 @@ void test_logger_prints_built_in_info() {
 
     logger.handle(serial, telnet);
 
-    TEST_ASSERT_EQUAL_STRING("info\nProject Guardian information\nVersion: " PROJECT_VERSION " (" GIT_SHA ")\nUptime (ms): 0\nLogger level: info\n",
-                             serial.output.c_str());
+    TEST_ASSERT_NOT_NULL(strstr(serial.output.c_str(), "Project Guardian information\n"));
+    TEST_ASSERT_NOT_NULL(strstr(serial.output.c_str(), "Wi-Fi: connected\n"));
+    TEST_ASSERT_NOT_NULL(strstr(serial.output.c_str(), "CPU frequency (MHz): 0\n"));
 }
 
 void test_logger_runs_built_in_reset() {

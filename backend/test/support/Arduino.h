@@ -15,6 +15,33 @@ public:
 inline unsigned long millis() { return 0; }
 inline void delay(unsigned long) {}
 
+class IPAddress {
+public:
+    String toString() const { return "0.0.0.0"; }
+};
+
+class IPv6Address {
+public:
+    explicit IPv6Address(const uint32_t *) {}
+    String toString() const { return "::"; }
+};
+
+class EspClass {
+public:
+    void restart() {}
+    uint32_t getFreeHeap() const { return 0; }
+    uint32_t getHeapSize() const { return 0; }
+    uint32_t getMinFreeHeap() const { return 0; }
+    uint32_t getMaxAllocHeap() const { return 0; }
+    uint32_t getFreePsram() const { return 0; }
+    uint32_t getPsramSize() const { return 0; }
+    uint32_t getFreeSketchSpace() const { return 0; }
+    uint32_t getSketchSize() const { return 0; }
+    uint32_t getCpuFreqMHz() const { return 0; }
+};
+
+static EspClass ESP;
+
 class Print {
 public:
     virtual ~Print() = default;

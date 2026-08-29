@@ -7,10 +7,8 @@
 #include <cstring>
 #include <Version.h>
 
-#if defined(ESP32)
 #include <WiFi.h>
 #include <esp_netif.h>
-#endif
 
 #define LOGGER_LEVEL_OFF 0
 #define LOGGER_LEVEL_ERROR 1
@@ -187,9 +185,7 @@ private:
     static void resetCommand(Stream &output, const char *, void *) {
         reply(output, "Restarting...");
         output.flush();
-#if defined(ESP32)
         ESP.restart();
-#endif
     }
 
     static void levelCommand(Stream &output, const char *arguments, void *context) {
@@ -243,7 +239,6 @@ private:
         printInfoNumber(output, "Uptime (ms): ", millis());
         printInfoValue(output, "Logger level: ", levelName(level()));
 
-#if defined(ESP32)
         printInfoValue(output, "Wi-Fi: ", WiFi.status() == WL_CONNECTED ? "connected" : "disconnected");
         printInfoValue(output, "Station SSID: ", WiFi.SSID().c_str());
         printInfoValue(output, "Station IPv4: ", WiFi.localIP().toString().c_str());
@@ -259,7 +254,6 @@ private:
         printMemoryInfo(output, "Sketch space", ESP.getFreeSketchSpace(),
                         ESP.getSketchSize() + ESP.getFreeSketchSpace());
         printInfoNumber(output, "CPU frequency (MHz): ", static_cast<unsigned long>(ESP.getCpuFreqMHz()));
-#endif
     }
 
     static void printInfoValue(Stream &output, const char *label, const char *value) {
@@ -279,7 +273,6 @@ private:
         printInfoValue(output, label, buffer);
     }
 
-#if defined(ESP32)
     static String stationGlobalIPv6() {
         esp_netif_t *stationNetif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
         esp_ip6_addr_t address;
@@ -297,7 +290,6 @@ private:
                  static_cast<unsigned long>(percentFree));
         printInfoValue(output, label, buffer);
     }
-#endif
 
     void log(Level level, const char *format, va_list arguments) {
         if (static_cast<uint8_t>(level) > static_cast<uint8_t>(minimumLevel)) {
