@@ -1,12 +1,14 @@
 #include <Arduino.h>
 #include <SEN0658.h>
 #include <ESPmDNS.h>
-#include <RemoteDebug.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
 
 #include "ApiServer.h"
+#include "AppLogger.h"
 #include "AppState.h"
+#include "Tee.h"
+#include "TelnetLogger.h"
 
 constexpr uint16_t httpPort = 80;
 constexpr const char *accessPointSsid = "guardian-admin";
@@ -18,23 +20,63 @@ const IPAddress accessPointGateway(192, 168, 50, 1);
 const IPAddress accessPointSubnet(255, 255, 255, 0);
 
 AppState state;
+Tee logDestinations;
+Logger logger(logDestinations);
 ApiServer apiServer(httpPort, state);
-RemoteDebug Debug;
+TelnetLogger telnetLogger;
 WiFiManager wifiManager;
 SEN0658 sen0658(Serial1);
-bool remoteDebugStarted = false;
+bool telnetLoggerStarted = false;
 
-void startRemoteDebugIfNeeded();
+void startTelnetLoggerIfNeeded();
 
-void logSerialInfo(const char *format, ...) {
-    char buffer[256];
+void printInfoValue(Stream &output, const char *label, const String &value) {
+    output.print(label);
+    output.println(value);
+}
 
-    va_list args;
-    va_start(args, format);
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
+template<typename Number>
+void printInfoValue(Stream &output, const char *label, Number value) {
+    output.print(label);
+    output.println(value);
+}
 
-    Serial.printf("(I t:%lums) %s\n", millis(), buffer);
+void printMemoryInfo(Stream &output, const char *label, uint32_t freeBytes, uint32_t totalBytes) {
+    const uint32_t percentFree = totalBytes == 0 ? 0 : static_cast<uint64_t>(freeBytes) * 100 / totalBytes;
+    output.print(label);
+    output.print(": ");
+    output.print(freeBytes);
+    output.print(" / ");
+    output.print(totalBytes);
+    output.print(" bytes (");
+    output.print(percentFree);
+    output.println("% free)");
+}
+
+void printInfo(Stream &output, const char *, void *) {
+    output.println("Project Guardian information");
+    printInfoValue(output, "Uptime (ms): ", millis());
+    printInfoValue(output, "Logger level: ", Logger::levelName(logger.level()));
+    printInfoValue(output, "Wi-Fi: ", WiFi.status() == WL_CONNECTED ? "connected" : "disconnected");
+    printInfoValue(output, "Station SSID: ", WiFi.SSID());
+    printInfoValue(output, "Station IPv4: ", WiFi.localIP().toString());
+    printInfoValue(output, "Station IPv6: ", WiFi.localIPv6().toString());
+    printInfoValue(output, "Access point IPv4: ", WiFi.softAPIP().toString());
+    printInfoValue(output, "Access point IPv6: ", WiFi.softAPIPv6().toString());
+    printInfoValue(output, "Wi-Fi RSSI (dBm): ", static_cast<long>(WiFi.RSSI()));
+    printMemoryInfo(output, "Heap", ESP.getFreeHeap(), ESP.getHeapSize());
+    printInfoValue(output, "Heap low-water mark: ", ESP.getMinFreeHeap());
+    printInfoValue(output, "Heap largest allocation: ", ESP.getMaxAllocHeap());
+    printMemoryInfo(output, "PSRAM", ESP.getFreePsram(), ESP.getPsramSize());
+    printMemoryInfo(output, "Sketch space", ESP.getFreeSketchSpace(),
+                    ESP.getSketchSize() + ESP.getFreeSketchSpace());
+    printInfoValue(output, "CPU frequency (MHz): ", ESP.getCpuFreqMHz());
+}
+
+void resetDevice(Stream &output, const char *, void *) {
+    output.println("Restarting...");
+    output.flush();
+    ESP.restart();
 }
 
 IPAddress calculateNetworkAddress(const IPAddress &address, const IPAddress &subnetMask) {
@@ -74,57 +116,51 @@ void configureWiFiManager() {
     wifiManager.setCaptivePortalEnable(true);
     wifiManager.setAPCallback([](WiFiManager *manager) {
         WiFi.softAPenableIpV6();
-        startRemoteDebugIfNeeded();
-        logSerialInfo("Captive portal active");
-        logSerialInfo("Portal SSID: %s", manager->getConfigPortalSSID().c_str());
-        logSerialInfo("Password: %s", accessPointPassword);
-        logSerialInfo("API token: secret");
+        startTelnetLoggerIfNeeded();
+        LOG_INFO(logger, "Captive portal active");
+        LOG_INFO(logger, "Portal SSID: %s", manager->getConfigPortalSSID().c_str());
     });
     wifiManager.setSaveConfigCallback([]() {
-        logSerialInfo("Wi-Fi credentials saved through captive portal");
+        LOG_INFO(logger, "Wi-Fi credentials saved through captive portal");
     });
 }
 
 void ensureWiFiConnection() {
-    logSerialInfo("Starting Wi-Fi provisioning flow");
+    LOG_INFO(logger, "Starting Wi-Fi provisioning flow");
     const bool connected = wifiManager.autoConnect(accessPointSsid, accessPointPassword);
     if (connected) {
         const bool ipv6Enabled = WiFi.enableIpV6();
-        logSerialInfo("Wi-Fi connected");
-        logSerialInfo("Station IPv6 enable request: %s", ipv6Enabled ? "ok" : "failed");
-        logSerialInfo("Station SSID: %s", WiFi.SSID().c_str());
-        logSerialInfo("Station IPv4 address: %s", WiFi.localIP().toString().c_str());
-        logSerialInfo("Station IPv6 address: %s", WiFi.localIPv6().toString().c_str());
+        LOG_INFO(logger, "Wi-Fi connected");
+        LOG_INFO(logger, "Station IPv6 enable request: %s", ipv6Enabled ? "ok" : "failed");
+        LOG_INFO(logger, "Station SSID: %s", WiFi.SSID().c_str());
+        LOG_INFO(logger, "Station IPv4 address: %s", WiFi.localIP().toString().c_str());
+        LOG_INFO(logger, "Station IPv6 address: %s", WiFi.localIPv6().toString().c_str());
         return;
     }
 
-    logSerialInfo("Wi-Fi provisioning did not complete a station connection");
+    LOG_WARNING(logger, "Wi-Fi provisioning did not complete a station connection");
 }
 
 void startMdns() {
     if (!MDNS.begin(mdnsHostname)) {
-        debugW("mDNS start: failed");
+        LOG_WARNING(logger, "mDNS start: failed");
         return;
     }
 
     MDNS.addService("http", "tcp", httpPort);
-    debugI("mDNS start: ok");
-    debugI("mDNS HTTP name: http://%s.local", mdnsHostname);
+    LOG_INFO(logger, "mDNS start: ok");
+    LOG_INFO(logger, "mDNS HTTP name: http://%s.local", mdnsHostname);
 }
 
-void startRemoteDebugIfNeeded() {
-    if (remoteDebugStarted) {
+void startTelnetLoggerIfNeeded() {
+    if (telnetLoggerStarted) {
         return;
     }
 
-    Debug.begin(mdnsHostname);
-    Debug.setSerialEnabled(true);
-    Debug.showColors(true);
-    Debug.setResetCmdEnabled(true);
-    Debug.showTime(true);
-    Debug.showDebugLevel(true);
-    remoteDebugStarted = true;
-    debugI("RemoteDebug ready");
+    telnetLogger.begin();
+    logDestinations.add(telnetLogger);
+    telnetLoggerStarted = true;
+    LOG_INFO(logger, "Telnet logger listening on port 23");
 }
 
 void onWiFiEvent(arduino_event_id_t event, arduino_event_info_t info) {
@@ -133,41 +169,41 @@ void onWiFiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 
     switch (event) {
         case ARDUINO_EVENT_WIFI_AP_START:
-            logSerialInfo("Access point start: ok");
-            logSerialInfo("SSID: %s", accessPointSsid);
+            LOG_INFO(logger, "Access point start: ok");
+            LOG_INFO(logger, "SSID: %s", accessPointSsid);
             break;
 
         case ARDUINO_EVENT_WIFI_AP_GOT_IP6: {
             const IPAddress portalIpv4Address = WiFi.softAPIP();
             const IPv6Address portalIpv6Address = WiFi.softAPIPv6();
 
-            logSerialInfo("Portal IPv4 address: %s", portalIpv4Address.toString().c_str());
+            LOG_INFO(logger, "Portal IPv4 address: %s", portalIpv4Address.toString().c_str());
             if (isZeroIpv6Address(portalIpv6Address)) {
-                logSerialInfo("Portal IPv6 address: pending");
+                LOG_INFO(logger, "Portal IPv6 address: pending");
             } else {
-                logSerialInfo("Portal IPv6 address: %s", portalIpv6Address.toString().c_str());
+                LOG_INFO(logger, "Portal IPv6 address: %s", portalIpv6Address.toString().c_str());
             }
-            logSerialInfo("IPv4 client subnet: %s/%u", ipv4NetworkAddress.toString().c_str(), prefixLength);
+            LOG_INFO(logger, "IPv4 client subnet: %s/%u", ipv4NetworkAddress.toString().c_str(), prefixLength);
             break;
         }
 
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-            logSerialInfo("Station IPv6 enable request: %s", WiFi.enableIpV6() ? "ok" : "failed");
-            logSerialInfo("Station connected to Wi-Fi: %s", WiFi.SSID().c_str());
+            LOG_INFO(logger, "Station IPv6 enable request: %s", WiFi.enableIpV6() ? "ok" : "failed");
+            LOG_INFO(logger, "Station connected to Wi-Fi: %s", WiFi.SSID().c_str());
             break;
 
         case ARDUINO_EVENT_WIFI_STA_GOT_IP: {
             const IPv6Address stationIpv6Address = WiFi.localIPv6();
-            logSerialInfo("Station IPv4 address: %s", WiFi.localIP().toString().c_str());
+            LOG_INFO(logger, "Station IPv4 address: %s", WiFi.localIP().toString().c_str());
             break;
         }
 
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6: {
             const IPv6Address stationIpv6Address(info.got_ip6.ip6_info.ip.addr);
             if (isZeroIpv6Address(stationIpv6Address)) {
-                logSerialInfo("Station IPv6 address: pending");
+                LOG_INFO(logger, "Station IPv6 address: pending");
             } else {
-                logSerialInfo("Station IPv6 address: %s", stationIpv6Address.toString().c_str());
+                LOG_INFO(logger, "Station IPv6 address: %s", stationIpv6Address.toString().c_str());
             }
             break;
         }
@@ -179,27 +215,29 @@ void onWiFiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 
 void setup() {
     Serial.begin(115200);
-
-    Debug.setSerialEnabled(true);
-    Debug.showColors(true);
+    logDestinations.add(Serial);
+    logger.setInfoCallback(printInfo);
+    logger.setResetCallback(resetDevice);
 
     Serial.println();
-    Serial.println("Project Guardian starting...");
-    logSerialInfo("PSRAM available: %u bytes", ESP.getPsramSize());
+    LOG_INFO(logger, "Project Guardian starting...");
+    LOG_INFO(logger, "PSRAM available: %u bytes", ESP.getPsramSize());
 
     WiFi.onEvent(onWiFiEvent);
     configureWiFiManager();
     ensureWiFiConnection();
-    startRemoteDebugIfNeeded();
+    startTelnetLoggerIfNeeded();
     startMdns();
     apiServer.begin();
     sen0658.begin();
-    Debug.begin(mdnsHostname, RemoteDebug::VERBOSE);
-
-    debugI("HTTP server listening on port %u", httpPort);
+    LOG_INFO(logger, "HTTP server listening on port %u", httpPort);
 }
 
 void loop() {
-    Debug.handle();
+    telnetLogger.handle();
+    if (telnetLogger.takeClientConnected()) {
+        logger.printHelp(telnetLogger);
+    }
+    logger.handle(Serial, telnetLogger);
     delay(10);
 }
