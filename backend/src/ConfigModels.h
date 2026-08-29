@@ -226,8 +226,8 @@ public:
     bool hasIncludeHistoryWindowMinutes = false;
     int includeHistoryWindowMinutes = 0;
     String stationId;
-    String apiKey;
-    bool apiKeyConfigured = false;
+    String stationPassword;
+    bool stationPasswordConfigured = false;
 
     void toJSON(JsonObject json) const override;
 

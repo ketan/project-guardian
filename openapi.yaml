@@ -658,14 +658,14 @@ components:
           required:
             - type
             - stationId
-            - apiKeyConfigured
+            - stationPasswordConfigured
           properties:
             type:
               type: string
               const: windy
             stationId:
               type: string
-            apiKeyConfigured:
+            stationPasswordConfigured:
               type: boolean
     WindyPublisherInput:
       allOf:
@@ -680,7 +680,7 @@ components:
               const: windy
             stationId:
               type: string
-            apiKey:
+            stationPassword:
               type: string
     MqttPublisherView:
       allOf:

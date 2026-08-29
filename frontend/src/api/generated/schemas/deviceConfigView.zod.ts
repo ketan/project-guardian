@@ -162,7 +162,7 @@ export const DeviceConfigView = zod.object({
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
-  "apiKeyConfigured": zod.boolean()
+  "stationPasswordConfigured": zod.boolean()
 })).optional(),
   "mqtt": zod.object({
   "type": zod.string(),

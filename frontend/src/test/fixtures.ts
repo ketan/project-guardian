@@ -142,7 +142,7 @@ export const testConfig: UiConfig = {
       enabled: false,
       publishIntervalSeconds: 60,
       stationId: "",
-      apiKeyConfigured: false,
+      stationPasswordConfigured: false,
     },
     mqtt: {
       type: "mqtt",

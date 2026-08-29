@@ -31,7 +31,6 @@ public:
         config.publishers.mqtt.username = "guardian";
 
         status.device.deviceId = "guardian-kamshet-01";
-        status.device.firmwareVersion = "0.1.0";
         status.device.hardwareModel = "ESP32-S3 + SIM7670G + SEN0658";
         status.device.currentTime = "2026-03-19T08:21:53Z";
         status.device.lastBootReason = "power_on";

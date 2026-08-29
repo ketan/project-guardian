@@ -139,32 +139,27 @@ void test_logger_calls_registered_commands_with_their_arguments() {
                              telnet.output.c_str());
 }
 
-void test_logger_invokes_the_built_in_info_callback() {
+void test_logger_prints_built_in_info() {
     BufferPrint output;
     Logger logger(output);
-    bool called = false;
-    ConsoleStream serial("info weather station\n");
+    ConsoleStream serial("info\n");
     ConsoleStream telnet;
 
-    logger.setInfoCallback(echoCommand, &called);
     logger.handle(serial, telnet);
 
-    TEST_ASSERT_TRUE(called);
-    TEST_ASSERT_EQUAL_STRING("info weather station\nweather station\n", serial.output.c_str());
+    TEST_ASSERT_EQUAL_STRING("info\nProject Guardian information\nVersion: " PROJECT_VERSION " (" GIT_SHA ")\nUptime (ms): 0\nLogger level: info\n",
+                             serial.output.c_str());
 }
 
-void test_logger_invokes_the_built_in_reset_callback() {
+void test_logger_runs_built_in_reset() {
     BufferPrint output;
     Logger logger(output);
-    bool called = false;
     ConsoleStream serial("reset\n");
     ConsoleStream telnet;
 
-    logger.setResetCallback(echoCommand, &called);
     logger.handle(serial, telnet);
 
-    TEST_ASSERT_TRUE(called);
-    TEST_ASSERT_EQUAL_STRING("reset\n\n", serial.output.c_str());
+    TEST_ASSERT_EQUAL_STRING("reset\nRestarting...\n", serial.output.c_str());
 }
 
 int main(int, char **) {
@@ -176,7 +171,7 @@ int main(int, char **) {
     RUN_TEST(test_logger_changes_level_from_serial_commands);
     RUN_TEST(test_logger_prints_help_to_telnet);
     RUN_TEST(test_logger_calls_registered_commands_with_their_arguments);
-    RUN_TEST(test_logger_invokes_the_built_in_info_callback);
-    RUN_TEST(test_logger_invokes_the_built_in_reset_callback);
+    RUN_TEST(test_logger_prints_built_in_info);
+    RUN_TEST(test_logger_runs_built_in_reset);
     return UNITY_END();
 }

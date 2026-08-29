@@ -25,7 +25,7 @@ export const WindyPublisherInput = zod.object({
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
-  "apiKey": zod.string().optional()
+  "stationPassword": zod.string().optional()
 }))
 
 export type WindyPublisherInput = zod.input<typeof WindyPublisherInput>;

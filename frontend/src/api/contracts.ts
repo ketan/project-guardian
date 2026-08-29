@@ -28,7 +28,7 @@ const UiWundergroundPublisherSchema = WundergroundPublisherView.and(
 
 const UiWindyPublisherSchema = WindyPublisherView.and(
   z.object({
-    apiKey: z.string().optional(),
+    stationPassword: z.string().optional(),
   }),
 );
 

@@ -651,7 +651,7 @@ export const GetWindyPublisherConfigResponse = zod.object({
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
-  "apiKeyConfigured": zod.boolean()
+  "stationPasswordConfigured": zod.boolean()
 }))
 
 
@@ -673,7 +673,7 @@ export const UpdateWindyPublisherConfigBody = zod.object({
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
-  "apiKey": zod.string().optional()
+  "stationPassword": zod.string().optional()
 }))
 
 export const updateWindyPublisherConfigResponseOnePublishIntervalSecondsMin = 30;
@@ -691,7 +691,7 @@ export const UpdateWindyPublisherConfigResponse = zod.object({
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
-  "apiKeyConfigured": zod.boolean()
+  "stationPasswordConfigured": zod.boolean()
 }))
 
 

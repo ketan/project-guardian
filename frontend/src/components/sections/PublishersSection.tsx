@@ -109,11 +109,15 @@ function PublisherCard({ slot, title, subtitle, icon, publisher, updatePublisher
               </Grid.Col>
               <Grid.Col span={{ base: 12, sm: 6 }}>
                 <PasswordInput
-                  label="API key"
-                  placeholder={publisher.apiKeyConfigured ? "Configured" : "Enter API key"}
-                  value={publisher.apiKey ?? ""}
+                  label={publisher.type === "windy" ? "Station password" : "API key"}
+                  placeholder={publisher.type === "windy"
+                    ? (publisher.stationPasswordConfigured ? "Configured" : "Enter station password")
+                    : (publisher.apiKeyConfigured ? "Configured" : "Enter API key")}
+                  value={publisher.type === "windy" ? (publisher.stationPassword ?? "") : (publisher.apiKey ?? "")}
                   onChange={(event) =>
-                    updatePublisher(slot, { apiKey: event.currentTarget.value })
+                    updatePublisher(slot, publisher.type === "windy"
+                      ? { stationPassword: event.currentTarget.value }
+                      : { apiKey: event.currentTarget.value })
                   }
                 />
               </Grid.Col>

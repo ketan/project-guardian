@@ -51,6 +51,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 - Add a `Publisher` interface with concrete adapters for `wunderground`, `windy`, and Meshtastic-compatible `mqtt`.
 - Add MQTT publishing support as a Meshtastic-compatible protobuf publisher.
 - Give each publisher its own config block, enable flag, credentials, and publish interval.
+- Use Windy's per-station password for observation uploads; account API keys are only for station management.
 - Use a normalized internal weather sample model that publishers transform into service-specific payloads.
 - Add a `CellularModem` abstraction with an initial `SIM7670G` implementation supporting power control, SMS read/delete, IP query, and data session lifecycle.
 - Add a captive-portal onboarding path for first boot and Wi-Fi recovery, separate from the normal admin frontend.

@@ -46,7 +46,7 @@ export const PublishersConfigInput = zod.object({
 }).and(zod.object({
   "type": zod.literal("windy"),
   "stationId": zod.string(),
-  "apiKey": zod.string().optional()
+  "stationPassword": zod.string().optional()
 })).optional(),
   "mqtt": zod.object({
   "type": zod.string(),

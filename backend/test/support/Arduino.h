@@ -13,6 +13,7 @@ public:
 };
 
 inline unsigned long millis() { return 0; }
+inline void delay(unsigned long) {}
 
 class Print {
 public:

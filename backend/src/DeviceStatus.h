@@ -4,12 +4,13 @@
 #include <ArduinoJson.h>
 #include <vector>
 #include "HttpJsonSerializable.h"
+#include "Version.h"
 
 
 class DeviceSummary : public HttpJsonSerializable {
 public:
     String deviceId = "guardian-kamshet-01";
-    String firmwareVersion = "0.1.0";
+    String firmwareVersion = VERSION;
     String hardwareModel = "ESP32-S3 + SIM7670G + SEN0658";
     unsigned long uptimeSeconds = 0;
     String currentTime = "2026-03-19T08:21:53Z";

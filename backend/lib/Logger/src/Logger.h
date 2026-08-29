@@ -5,6 +5,12 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <Version.h>
+
+#if defined(ESP32)
+#include <WiFi.h>
+#include <esp_netif.h>
+#endif
 
 #define LOGGER_LEVEL_OFF 0
 #define LOGGER_LEVEL_ERROR 1
@@ -104,16 +110,6 @@ public:
         return true;
     }
 
-    void setInfoCallback(CommandCallback callback, void *context = nullptr) {
-        infoCallback = callback;
-        infoContext = context;
-    }
-
-    void setResetCallback(CommandCallback callback, void *context = nullptr) {
-        resetCallback = callback;
-        resetContext = context;
-    }
-
     void printHelp(Stream &output) const {
         output.print("Commands: ");
         for (size_t index = 0; index < commandCount; ++index) {
@@ -184,22 +180,16 @@ private:
         static_cast<Logger *>(context)->printHelp(output);
     }
 
-    static void infoCommand(Stream &output, const char *arguments, void *context) {
-        Logger *logger = static_cast<Logger *>(context);
-        if (logger->infoCallback == nullptr) {
-            reply(output, "Info unavailable");
-            return;
-        }
-        logger->infoCallback(output, arguments, logger->infoContext);
+    static void infoCommand(Stream &output, const char *, void *context) {
+        static_cast<Logger *>(context)->printInfo(output);
     }
 
-    static void resetCommand(Stream &output, const char *arguments, void *context) {
-        Logger *logger = static_cast<Logger *>(context);
-        if (logger->resetCallback == nullptr) {
-            reply(output, "Reset unavailable");
-            return;
-        }
-        logger->resetCallback(output, arguments, logger->resetContext);
+    static void resetCommand(Stream &output, const char *, void *) {
+        reply(output, "Restarting...");
+        output.flush();
+#if defined(ESP32)
+        ESP.restart();
+#endif
     }
 
     static void levelCommand(Stream &output, const char *arguments, void *context) {
@@ -242,6 +232,72 @@ private:
         output.print(message);
         output.write(static_cast<uint8_t>('\n'));
     }
+
+    void printInfo(Stream &output) const {
+        reply(output, "Project Guardian information");
+        output.print("Version: ");
+        output.print(VERSION);
+        output.print(" (");
+        output.print(GIT_SHA);
+        reply(output, ")");
+        printInfoNumber(output, "Uptime (ms): ", millis());
+        printInfoValue(output, "Logger level: ", levelName(level()));
+
+#if defined(ESP32)
+        printInfoValue(output, "Wi-Fi: ", WiFi.status() == WL_CONNECTED ? "connected" : "disconnected");
+        printInfoValue(output, "Station SSID: ", WiFi.SSID().c_str());
+        printInfoValue(output, "Station IPv4: ", WiFi.localIP().toString().c_str());
+        printInfoValue(output, "Station global IPv6: ", stationGlobalIPv6().c_str());
+        printInfoValue(output, "Station link-local IPv6: ", WiFi.localIPv6().toString().c_str());
+        printInfoValue(output, "Access point IPv4: ", WiFi.softAPIP().toString().c_str());
+        printInfoValue(output, "Access point IPv6: ", WiFi.softAPIPv6().toString().c_str());
+        printInfoNumber(output, "Wi-Fi RSSI (dBm): ", static_cast<long>(WiFi.RSSI()));
+        printMemoryInfo(output, "Heap", ESP.getFreeHeap(), ESP.getHeapSize());
+        printInfoNumber(output, "Heap low-water mark: ", static_cast<unsigned long>(ESP.getMinFreeHeap()));
+        printInfoNumber(output, "Heap largest allocation: ", static_cast<unsigned long>(ESP.getMaxAllocHeap()));
+        printMemoryInfo(output, "PSRAM", ESP.getFreePsram(), ESP.getPsramSize());
+        printMemoryInfo(output, "Sketch space", ESP.getFreeSketchSpace(),
+                        ESP.getSketchSize() + ESP.getFreeSketchSpace());
+        printInfoNumber(output, "CPU frequency (MHz): ", static_cast<unsigned long>(ESP.getCpuFreqMHz()));
+#endif
+    }
+
+    static void printInfoValue(Stream &output, const char *label, const char *value) {
+        output.print(label);
+        reply(output, value);
+    }
+
+    static void printInfoNumber(Stream &output, const char *label, unsigned long value) {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "%lu", value);
+        printInfoValue(output, label, buffer);
+    }
+
+    static void printInfoNumber(Stream &output, const char *label, long value) {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "%ld", value);
+        printInfoValue(output, label, buffer);
+    }
+
+#if defined(ESP32)
+    static String stationGlobalIPv6() {
+        esp_netif_t *stationNetif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+        esp_ip6_addr_t address;
+        if (stationNetif == nullptr || esp_netif_get_ip6_global(stationNetif, &address) != ESP_OK) {
+            return "unavailable";
+        }
+        return IPv6Address(address.addr).toString();
+    }
+
+    static void printMemoryInfo(Stream &output, const char *label, uint32_t freeBytes, uint32_t totalBytes) {
+        const uint32_t percentFree = totalBytes == 0 ? 0 : static_cast<uint64_t>(freeBytes) * 100 / totalBytes;
+        char buffer[64];
+        snprintf(buffer, sizeof(buffer), "%lu / %lu bytes (%lu%% free)",
+                 static_cast<unsigned long>(freeBytes), static_cast<unsigned long>(totalBytes),
+                 static_cast<unsigned long>(percentFree));
+        printInfoValue(output, label, buffer);
+    }
+#endif
 
     void log(Level level, const char *format, va_list arguments) {
         if (static_cast<uint8_t>(level) > static_cast<uint8_t>(minimumLevel)) {
@@ -294,10 +350,6 @@ private:
     size_t telnetLength = 0;
     Command commands[maxCommands]{};
     size_t commandCount = 0;
-    CommandCallback infoCallback = nullptr;
-    void *infoContext = nullptr;
-    CommandCallback resetCallback = nullptr;
-    void *resetContext = nullptr;
 };
 
 #if LOGGER_COMPILED_LEVEL >= LOGGER_LEVEL_ERROR

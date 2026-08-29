@@ -671,8 +671,8 @@ void WindyPublisherConfig::toJSON(JsonObject json) const {
         json["includeHistoryWindowMinutes"] = includeHistoryWindowMinutes;
     }
     json["stationId"] = stationId;
-    json["apiKey"] = apiKey;
-    json["apiKeyConfigured"] = apiKeyConfigured;
+    json["stationPassword"] = stationPassword;
+    json["stationPasswordConfigured"] = stationPasswordConfigured;
 }
 
 bool WindyPublisherConfig::fromJSON(JsonObject json) {
@@ -692,8 +692,8 @@ bool WindyPublisherConfig::fromJSON(JsonObject json) {
     }
     publishIntervalSeconds = parsedPublishIntervalSeconds;
     stationId = json["stationId"].as<String>();
-    apiKey = json["apiKey"] | "";
-    apiKeyConfigured = !apiKey.isEmpty() || apiKeyConfigured;
+    stationPassword = json["stationPassword"] | "";
+    stationPasswordConfigured = !stationPassword.isEmpty() || stationPasswordConfigured;
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
     if (hasIncludeHistoryWindowMinutes) {
         const int parsedIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].as<int>();
@@ -715,7 +715,7 @@ void WindyPublisherConfig::toHttpResponseJSON(JsonObject json) const {
         json["includeHistoryWindowMinutes"] = includeHistoryWindowMinutes;
     }
     json["stationId"] = stationId;
-    json["apiKeyConfigured"] = apiKeyConfigured;
+    json["stationPasswordConfigured"] = stationPasswordConfigured;
 }
 
 bool WindyPublisherConfig::fromHttpRequestJSON(JsonObject json) {
@@ -735,10 +735,10 @@ bool WindyPublisherConfig::fromHttpRequestJSON(JsonObject json) {
     }
     publishIntervalSeconds = parsedPublishIntervalSeconds;
     stationId = json["stationId"].as<String>();
-    if (json["apiKey"].is<String>()) {
-        apiKey = json["apiKey"].as<String>();
-        apiKeyConfigured = !apiKey.isEmpty();
-    } else if (!json["apiKey"].isNull()) {
+    if (json["stationPassword"].is<String>()) {
+        stationPassword = json["stationPassword"].as<String>();
+        stationPasswordConfigured = !stationPassword.isEmpty();
+    } else if (!json["stationPassword"].isNull()) {
         return false;
     }
     hasIncludeHistoryWindowMinutes = json["includeHistoryWindowMinutes"].is<int>();
