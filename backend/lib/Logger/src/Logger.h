@@ -352,32 +352,34 @@ private:
     size_t commandCount = 0;
 };
 
+extern Logger logger;
+
 #if LOGGER_COMPILED_LEVEL >= LOGGER_LEVEL_ERROR
-#define LOG_ERROR(logger, ...) (logger).error(__VA_ARGS__)
+#define ERROR(...) logger.error(__VA_ARGS__)
 #else
-#define LOG_ERROR(...) do {} while (false)
+#define ERROR(...) do {} while (false)
 #endif
 
 #if LOGGER_COMPILED_LEVEL >= LOGGER_LEVEL_WARNING
-#define LOG_WARNING(logger, ...) (logger).warning(__VA_ARGS__)
+#define WARN(...) logger.warning(__VA_ARGS__)
 #else
-#define LOG_WARNING(...) do {} while (false)
+#define WARN(...) do {} while (false)
 #endif
 
 #if LOGGER_COMPILED_LEVEL >= LOGGER_LEVEL_INFO
-#define LOG_INFO(logger, ...) (logger).info(__VA_ARGS__)
+#define INFO(...) logger.info(__VA_ARGS__)
 #else
-#define LOG_INFO(...) do {} while (false)
+#define INFO(...) do {} while (false)
 #endif
 
 #if LOGGER_COMPILED_LEVEL >= LOGGER_LEVEL_DEBUG
-#define LOG_DEBUG(logger, ...) (logger).debug(__VA_ARGS__)
+#define DEBUG(...) logger.debug(__VA_ARGS__)
 #else
-#define LOG_DEBUG(...) do {} while (false)
+#define DEBUG(...) do {} while (false)
 #endif
 
 #if LOGGER_COMPILED_LEVEL >= LOGGER_LEVEL_TRACE
-#define LOG_TRACE(logger, ...) (logger).trace(__VA_ARGS__)
+#define TRACE(...) logger.trace(__VA_ARGS__)
 #else
-#define LOG_TRACE(...) do {} while (false)
+#define TRACE(...) do {} while (false)
 #endif

@@ -74,8 +74,8 @@ void test_compiled_out_macros_do_not_compile_their_arguments() {
     BufferPrint output;
     Logger logger(output);
 
-    LOG_INFO(logger, missingSymbol);
-    LOG_WARNING(logger, "visible");
+    INFO(missingSymbol);
+    WARN("visible");
 
     TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m visible\n", output.value.c_str());
 }
@@ -88,7 +88,7 @@ void test_logger_writes_to_every_tee_destination() {
     destinations.add(telnet);
     Logger logger(destinations);
 
-    LOG_WARNING(logger, "visible");
+    WARN("visible");
 
     TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m visible\n", serial.value.c_str());
     TEST_ASSERT_EQUAL_STRING("[0ms]\033[33m[W]\033[0m visible\n", telnet.value.c_str());

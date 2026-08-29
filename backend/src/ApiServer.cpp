@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <mbedtls/sha256.h>
-#include "AppLogger.h"
+#include <Logger.h>
 #include "ConfigModels.h"
 
 namespace {
@@ -75,7 +75,7 @@ namespace {
         const unsigned long startMs = static_cast<unsigned long>(
             request->getAttribute(requestStartMsAttribute, static_cast<long>(millis())));
         const unsigned long elapsedMs = millis() - startMs;
-        LOG_INFO(logger, "HTTP %s %s -> %d %s (%lums)", toMethodName(request->method()), request->url().c_str(),
+        INFO("HTTP %s %s -> %d %s (%lums)", toMethodName(request->method()), request->url().c_str(),
                  statusCode, result, elapsedMs);
     }
 
@@ -124,7 +124,7 @@ namespace {
             return;
         }
 
-        LOG_INFO(logger, "Updated %s", label);
+        INFO("Updated %s", label);
         logFn();
         sendJson(request, [&](JsonObject root) { writeFn(root, model); });
     }
@@ -235,7 +235,7 @@ void ApiServer::registerSamplingConfigRoutes() {
             return;
         }
         appState.status.sampling.intervalSeconds = appState.config.sampling.intervalSeconds;
-        LOG_INFO(logger, "Updated sampling config");
+        INFO("Updated sampling config");
         sendJson(request, [&](JsonObject root) { appState.config.sampling.toHttpResponseJSON(root); });
     });
 }
@@ -255,7 +255,7 @@ void ApiServer::registerSmoothingConfigRoutes() {
             return;
         }
         appState.status.sampling.smoothingEnabled = appState.config.smoothing.enabled;
-        LOG_INFO(logger, "Updated smoothing config");
+        INFO("Updated smoothing config");
         sendJson(request, [&](JsonObject root) { appState.config.smoothing.toHttpResponseJSON(root); });
     });
 }
@@ -275,7 +275,7 @@ void ApiServer::registerStorageConfigRoutes() {
             return;
         }
         appState.status.storage.retentionDays = appState.config.storage.retentionDays;
-        LOG_INFO(logger, "Updated storage config");
+        INFO("Updated storage config");
         sendJson(request, [&](JsonObject root) { appState.config.storage.toHttpResponseJSON(root); });
     });
 }
@@ -297,7 +297,7 @@ void ApiServer::registerNetworkConfigRoutes() {
         appState.status.connectivity.wifi.enabled = appState.config.network.wifi.enabled;
         appState.status.connectivity.wifi.ssid = appState.config.network.wifi.ssid;
         appState.status.connectivity.cellular.enabled = appState.config.network.cellular.enabled;
-        LOG_INFO(logger, "Updated network config");
+        INFO("Updated network config");
         sendJson(request, [&](JsonObject root) { appState.config.network.toHttpResponseJSON(root); });
     });
 }
@@ -316,7 +316,7 @@ void ApiServer::registerSmsAdminConfigRoutes() {
             sendError(request, 400, "validation_error", "Invalid SMS admin configuration.");
             return;
         }
-        LOG_INFO(logger, "Updated SMS admin config");
+        INFO("Updated SMS admin config");
         sendJson(request, [&](JsonObject root) { appState.config.smsAdmin.toHttpResponseJSON(root); });
     });
 }
@@ -334,7 +334,7 @@ void ApiServer::registerWebUiConfigRoutes() {
             sendError(request, 400, "validation_error", "Invalid web UI configuration.");
             return;
         }
-        LOG_INFO(logger, "Updated web UI config");
+        INFO("Updated web UI config");
         sendJson(request, [&](JsonObject root) { appState.config.webUi.toHttpResponseJSON(root); });
     });
 }
@@ -351,7 +351,7 @@ void ApiServer::registerSensorConfigRoutes() {
             sendError(request, 400, "validation_error", "Invalid sensor configuration.");
             return;
         }
-        LOG_INFO(logger, "Updated sensors config");
+        INFO("Updated sensors config");
         sendJsonArray(request, [&](JsonArray root) {
             SensorConfig::writeHttpResponseArray(root, appState.config.sensors);
         });
@@ -376,7 +376,7 @@ void ApiServer::registerPublisherConfigRoutes() {
                                    "Invalid Weather Underground publisher configuration.");
                          return;
                      }
-                     LOG_INFO(logger, "Updated Weather Underground publisher config");
+                     INFO("Updated Weather Underground publisher config");
                      sendJson(request, [&](JsonObject root) {
                          appState.config.publishers.wunderground.toHttpResponseJSON(root);
                      });
@@ -395,7 +395,7 @@ void ApiServer::registerPublisherConfigRoutes() {
                          sendError(request, 400, "validation_error", "Invalid Windy publisher configuration.");
                          return;
                      }
-                     LOG_INFO(logger, "Updated Windy publisher config");
+                     INFO("Updated Windy publisher config");
                      sendJson(request, [&](JsonObject root) {
                          appState.config.publishers.windy.toHttpResponseJSON(root);
                      });
@@ -413,7 +413,7 @@ void ApiServer::registerPublisherConfigRoutes() {
             sendError(request, 400, "validation_error", "Invalid MQTT publisher configuration.");
             return;
         }
-        LOG_INFO(logger, "Updated MQTT publisher config");
+        INFO("Updated MQTT publisher config");
         sendJson(request, [&](JsonObject root) { appState.config.publishers.mqtt.toHttpResponseJSON(root); });
     });
 }
@@ -451,9 +451,9 @@ void ApiServer::registerOtaRoutes() {
                 appState.lastOtaUpload.message = "Firmware verification failed. Upload discarded.";
             }
 
-            LOG_INFO(logger, "OTA upload finished");
-            LOG_INFO(logger, "Provided SHA-256: %s", otaUpload.providedSha256.c_str());
-            LOG_INFO(logger, "Calculated SHA-256: %s", otaUpload.calculatedSha256.c_str());
+            INFO("OTA upload finished");
+            INFO("Provided SHA-256: %s", otaUpload.providedSha256.c_str());
+            INFO("Calculated SHA-256: %s", otaUpload.calculatedSha256.c_str());
             sendJson(request, [&](JsonObject root) { appState.lastOtaUpload.toJSON(root); });
         },
         [](AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len,
@@ -464,7 +464,7 @@ void ApiServer::registerOtaRoutes() {
                 otaUpload.providedSha256 = request->arg("sha256sum");
                 mbedtls_sha256_init(&otaUpload.sha256);
                 mbedtls_sha256_starts_ret(&otaUpload.sha256, 0);
-                LOG_INFO(logger, "OTA upload started: %s", filename.c_str());
+                INFO("OTA upload started: %s", filename.c_str());
             }
 
             if (len > 0) {
