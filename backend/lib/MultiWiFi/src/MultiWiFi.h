@@ -9,7 +9,9 @@
 class MultiWiFi {
 public:
     bool begin(const char *portalSsid, const char *portalPassword);
+
     void loop();
+
     bool isPortalActive() const;
 
 private:
@@ -22,9 +24,14 @@ private:
     bool portalActive = false;
 
     void loadNetworks();
+
     void startPortal(const char *ssid, const char *password);
+
     void sendPortalPage();
+
     void saveNetwork(const String &ssid, const String &password);
+
     static String key(const char *prefix, uint8_t index);
+
     static String escapeHtml(const String &value);
 };

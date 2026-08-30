@@ -12,6 +12,16 @@ public:
     bool isEmpty() const { return empty(); }
 };
 
+constexpr uint32_t SERIAL_8N1 = 0;
+
+class HardwareSerial {
+public:
+    void begin(uint32_t, uint32_t, int8_t, int8_t) {}
+    size_t write(const uint8_t *, size_t size) { return size; }
+    int available() const { return 0; }
+    int read() { return -1; }
+};
+
 inline unsigned long millis() { return 0; }
 inline void delay(unsigned long) {}
 

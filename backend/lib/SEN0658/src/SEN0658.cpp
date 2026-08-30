@@ -48,6 +48,18 @@ bool SEN0658::readLatestSnapshot(SEN0658Readings &readings) {
     return true;
 }
 
+bool SEN0658::readWind(float &speedMetersPerSecond, uint16_t &directionDegrees) {
+    uint8_t wind[4 * 2];
+    if (!readRegisterBlock(MeasurementRegister::WindSpeed, 4, wind)) {
+        return false;
+    }
+
+    speedMetersPerSecond = readUnsigned16(wind) / 10.0F;
+    directionDegrees = readUnsigned16(wind + 6) % 360;
+    error = SEN0658Error::None;
+    return true;
+}
+
 bool SEN0658::setWindDirectionOffset(WindDirectionOffset offset) {
     return writeCalibrationRegister(CalibrationRegister::WindDirectionOffset, static_cast<uint16_t>(offset));
 }

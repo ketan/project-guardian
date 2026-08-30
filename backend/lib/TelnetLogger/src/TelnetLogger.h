@@ -4,7 +4,8 @@
 
 class TelnetLogger : public Stream {
 public:
-    explicit TelnetLogger(uint16_t port = 23) : server(port) {}
+    explicit TelnetLogger(uint16_t port = 23) : server(port) {
+    }
 
     void begin() {
         if (started) {

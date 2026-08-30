@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ConfigModels.h"
+#include <ConfigModels.h>
 #include "DeviceStatus.h"
 #include "OtaUploadResult.h"
 

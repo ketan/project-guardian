@@ -1,20 +1,29 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
+#include <SD_MMC.h>
 #include <SEN0658.h>
 #include <ESPmDNS.h>
 #include <WiFi.h>
 #include <Logger.h>
+#include <esp_sleep.h>
 
 #include "ApiServer.h"
 #include "AppState.h"
 #include "MultiWiFi.h"
 #include "Tee.h"
 #include "TelnetLogger.h"
+#include "WeatherCapture.h"
 
 constexpr uint16_t httpPort = 80;
 constexpr uint32_t lowPowerCpuFrequencyMhz = 80;
 constexpr const char *accessPointSsid = "guardian-admin";
 constexpr const char *accessPointPassword = "guardian123";
 constexpr const char *mdnsHostname = "project-guardian";
+constexpr uint32_t windPollIntervalMicroseconds = 1000000;
+constexpr int sdMmcClkPin = 5;
+constexpr int sdMmcCmdPin = 4;
+constexpr int sdMmcD0Pin = 6;
+constexpr const char *weatherLogPath = "/weather.ndjson";
 
 AppState state;
 Tee logDestinations;
@@ -23,8 +32,41 @@ ApiServer apiServer(httpPort, state);
 TelnetLogger telnetLogger;
 MultiWiFi wifiManager;
 SEN0658 sen0658(Serial1);
+WeatherCapture weatherCapture;
+bool sdAvailable = false;
 
 void startTelnetLoggerIfNeeded();
+
+bool appendAggregate(const WeatherRecord &record) {
+    if (!sdAvailable || !record.hasTimestamp()) {
+        WARN("Weather aggregate skipped: %s", sdAvailable ? "clock unavailable" : "SD unavailable");
+        return false;
+    }
+
+    File log = SD_MMC.open(weatherLogPath, FILE_APPEND);
+    if (!log) {
+        WARN("Weather log open: failed");
+        sdAvailable = false;
+        return false;
+    }
+    JsonDocument document;
+    record.toJSON(document.to<JsonObject>());
+    const size_t recordStart = serializeJson(document, log);
+    const size_t recordEnd = log.print('\n');
+    log.close();
+    if (recordStart == 0 || recordEnd != 1) {
+        WARN("Weather log append: failed");
+        return false;
+    }
+    INFO("Weather aggregate appended");
+    return true;
+}
+
+void beginSdCard() {
+    SD_MMC.setPins(sdMmcClkPin, sdMmcCmdPin, sdMmcD0Pin);
+    sdAvailable = SD_MMC.begin("/sdcard", true);
+    INFO("SD card init: %s", sdAvailable ? "ok" : "unavailable");
+}
 
 void configureLowPowerCpuFrequency() {
     if (setCpuFrequencyMhz(lowPowerCpuFrequencyMhz)) {
@@ -129,6 +171,7 @@ void setup() {
         INFO("HTTP server listening on port %u", httpPort);
     }
     sen0658.begin();
+    beginSdCard();
 }
 
 void loop() {
@@ -138,5 +181,10 @@ void loop() {
         logger.printHelp(telnetLogger);
     }
     logger.handle(Serial, telnetLogger);
-    delay(10);
+    WeatherRecord weatherRecord;
+    if (weatherCapture.capture(sen0658, weatherRecord)) {
+        appendAggregate(weatherRecord);
+    }
+    esp_sleep_enable_timer_wakeup(windPollIntervalMicroseconds);
+    esp_light_sleep_start();
 }

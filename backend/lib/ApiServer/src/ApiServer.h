@@ -1,5 +1,51 @@
-#include "ApiServer.h"
+#pragma once
 
+#include <ESPAsyncWebServer.h>
+#include "AppState.h"
+
+class ApiServer {
+public:
+    ApiServer(uint16_t port, AppState &state);
+
+    void begin();
+
+private:
+    void registerRoutes();
+
+    void registerGlobalMiddleware();
+
+    void registerNotFoundRoute();
+
+    void registerStatusRoutes();
+
+    void registerStationConfigRoutes();
+
+    void registerSamplingConfigRoutes();
+
+    void registerSmoothingConfigRoutes();
+
+    void registerStorageConfigRoutes();
+
+    void registerNetworkConfigRoutes();
+
+    void registerSmsAdminConfigRoutes();
+
+    void registerWebUiConfigRoutes();
+
+    void registerSensorConfigRoutes();
+
+    void registerPublisherConfigRoutes();
+
+    void registerDataRoutes();
+
+    void registerOtaRoutes();
+
+    AsyncWebServer webServer;
+    AsyncAuthenticationMiddleware authMiddleware;
+    AppState &appState;
+};
+
+// Implementation
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <mbedtls/sha256.h>
@@ -76,7 +122,7 @@ namespace {
             request->getAttribute(requestStartMsAttribute, static_cast<long>(millis())));
         const unsigned long elapsedMs = millis() - startMs;
         INFO("HTTP %s %s -> %d %s (%lums)", toMethodName(request->method()), request->url().c_str(),
-                 statusCode, result, elapsedMs);
+             statusCode, result, elapsedMs);
     }
 
     void sendDocument(AsyncWebServerRequest *request, int statusCode, JsonDocument &doc, const char *result) {
@@ -137,18 +183,18 @@ namespace {
     }
 } // namespace
 
-ApiServer::ApiServer(uint16_t port, AppState &state)
+inline ApiServer::ApiServer(uint16_t port, AppState &state)
     : webServer(port), appState(state) {
     authMiddleware.setAuthType(AUTH_BEARER);
     authMiddleware.setToken(bearerToken);
 }
 
-void ApiServer::begin() {
+inline void ApiServer::begin() {
     registerRoutes();
     webServer.begin();
 }
 
-void ApiServer::registerRoutes() {
+inline void ApiServer::registerRoutes() {
     registerGlobalMiddleware();
     registerNotFoundRoute();
     registerStatusRoutes();
@@ -165,7 +211,7 @@ void ApiServer::registerRoutes() {
     registerOtaRoutes();
 }
 
-void ApiServer::registerGlobalMiddleware() {
+inline void ApiServer::registerGlobalMiddleware() {
     webServer.addMiddleware([this](AsyncWebServerRequest *request, ArMiddlewareNext next) {
         markRequestStart(request);
 
@@ -188,13 +234,13 @@ void ApiServer::registerGlobalMiddleware() {
     });
 }
 
-void ApiServer::registerNotFoundRoute() {
+inline void ApiServer::registerNotFoundRoute() {
     webServer.onNotFound([](AsyncWebServerRequest *request) {
         sendError(request, 404, "not_found", "Endpoint not found.");
     });
 }
 
-void ApiServer::registerStatusRoutes() {
+inline void ApiServer::registerStatusRoutes() {
     webServer.on("/api/v1/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
         appState.status.device.uptimeSeconds = millis() / 1000;
         appState.status.connectivity.wifi.ipAddress = WiFi.softAPIP().toString();
@@ -202,7 +248,7 @@ void ApiServer::registerStatusRoutes() {
     });
 }
 
-void ApiServer::registerStationConfigRoutes() {
+inline void ApiServer::registerStationConfigRoutes() {
     webServer.on("/api/v1/config/station", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.station.toHttpResponseJSON(root); });
     });
@@ -220,7 +266,7 @@ void ApiServer::registerStationConfigRoutes() {
     });
 }
 
-void ApiServer::registerSamplingConfigRoutes() {
+inline void ApiServer::registerSamplingConfigRoutes() {
     webServer.on("/api/v1/config/sampling", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.sampling.toHttpResponseJSON(root); });
     });
@@ -240,7 +286,7 @@ void ApiServer::registerSamplingConfigRoutes() {
     });
 }
 
-void ApiServer::registerSmoothingConfigRoutes() {
+inline void ApiServer::registerSmoothingConfigRoutes() {
     webServer.on("/api/v1/config/smoothing", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.smoothing.toHttpResponseJSON(root); });
     });
@@ -260,7 +306,7 @@ void ApiServer::registerSmoothingConfigRoutes() {
     });
 }
 
-void ApiServer::registerStorageConfigRoutes() {
+inline void ApiServer::registerStorageConfigRoutes() {
     webServer.on("/api/v1/config/storage", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.storage.toHttpResponseJSON(root); });
     });
@@ -280,7 +326,7 @@ void ApiServer::registerStorageConfigRoutes() {
     });
 }
 
-void ApiServer::registerNetworkConfigRoutes() {
+inline void ApiServer::registerNetworkConfigRoutes() {
     webServer.on("/api/v1/config/network", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.network.toHttpResponseJSON(root); });
     });
@@ -302,7 +348,7 @@ void ApiServer::registerNetworkConfigRoutes() {
     });
 }
 
-void ApiServer::registerSmsAdminConfigRoutes() {
+inline void ApiServer::registerSmsAdminConfigRoutes() {
     webServer.on("/api/v1/config/sms-admin", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.smsAdmin.toHttpResponseJSON(root); });
     });
@@ -321,7 +367,7 @@ void ApiServer::registerSmsAdminConfigRoutes() {
     });
 }
 
-void ApiServer::registerWebUiConfigRoutes() {
+inline void ApiServer::registerWebUiConfigRoutes() {
     webServer.on("/api/v1/config/web-ui", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.config.webUi.toHttpResponseJSON(root); });
     });
@@ -339,7 +385,7 @@ void ApiServer::registerWebUiConfigRoutes() {
     });
 }
 
-void ApiServer::registerSensorConfigRoutes() {
+inline void ApiServer::registerSensorConfigRoutes() {
     webServer.on("/api/v1/config/sensors", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJsonArray(request, [&](JsonArray root) {
             SensorConfig::writeHttpResponseArray(root, appState.config.sensors);
@@ -358,7 +404,7 @@ void ApiServer::registerSensorConfigRoutes() {
     });
 }
 
-void ApiServer::registerPublisherConfigRoutes() {
+inline void ApiServer::registerPublisherConfigRoutes() {
     webServer.on("/api/v1/config/publishers/wunderground", HTTP_GET,
                  [this](AsyncWebServerRequest *request) {
                      sendJson(request, [&](JsonObject root) {
@@ -418,7 +464,7 @@ void ApiServer::registerPublisherConfigRoutes() {
     });
 }
 
-void ApiServer::registerDataRoutes() {
+inline void ApiServer::registerDataRoutes() {
     webServer.on("/api/v1/sensors/latest", HTTP_GET, [this](AsyncWebServerRequest *request) {
         sendJson(request, [&](JsonObject root) { appState.latestReadings.toJSON(root); });
     });
@@ -430,7 +476,7 @@ void ApiServer::registerDataRoutes() {
     });
 }
 
-void ApiServer::registerOtaRoutes() {
+inline void ApiServer::registerOtaRoutes() {
     webServer.on(
         "/api/v1/admin/ota",
         HTTP_POST,

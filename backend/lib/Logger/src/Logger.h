@@ -226,7 +226,7 @@ private:
 
     static void reply(Stream &output, const char *message) {
         output.print(message);
-        output.write(static_cast<uint8_t>('\n'));
+        output.write('\n');
     }
 
     void printInfo(Stream &output) const {
@@ -308,7 +308,8 @@ private:
         output.print(color(level));
         output.print(prefix(level));
         output.print("\033[0m ");
-        output.write(reinterpret_cast<const uint8_t *>(buffer), length < static_cast<int>(bufferSize) ? length : bufferSize - 1);
+        output.write(reinterpret_cast<const uint8_t *>(buffer),
+                     length < static_cast<int>(bufferSize) ? length : bufferSize - 1);
         output.write(static_cast<uint8_t>('\n'));
     }
 

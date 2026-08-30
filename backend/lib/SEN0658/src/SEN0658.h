@@ -48,6 +48,8 @@ public:
 
     bool readLatestSnapshot(SEN0658Readings &readings);
 
+    bool readWind(float &speedMetersPerSecond, uint16_t &directionDegrees);
+
     bool setWindDirectionOffset(WindDirectionOffset offset);
 
     bool startWindSpeedZeroing();

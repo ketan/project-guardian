@@ -5,9 +5,9 @@
 #include <HTTPClient.h>
 #include <WiFi.h>
 
-#include "ConfigModels.h"
-#include "DeviceStatus.h"
-#include "Version.h"
+#include <ConfigModels.h>
+#include <DeviceStatus.h>
+#include <Version.h>
 
 class WindyClient {
 public:

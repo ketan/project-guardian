@@ -1,7 +1,7 @@
 # Weather Station Platform Restructure and v1 Architecture
 
 ## Summary
-Build a two-part project with `backend/` for ESP32-S3 firmware and `frontend/` for a Vite + React admin app, with a top-level `openapi.yaml` as the contract between them. The firmware will sample the DFRobot `SEN0658` every 30 seconds, smooth selected measurements, log records to microSD as JSON, and publish to Weather Underground, Windy, and Meshtastic-compatible MQTT on independent configurable intervals. The system will be designed around measurement-type abstractions so future pressure/temperature/etc. hardware can be swapped without changing the rest of the stack.
+Build a two-part project with `backend/` for ESP32-S3 firmware and `frontend/` for a Vite + React admin app, with a top-level `openapi.yaml` as the contract between them. The firmware samples wind at 1 Hz, stores five-minute JSON aggregates on microSD, and will publish to weather services on independent configurable intervals. The system will be designed around measurement-type abstractions so future pressure/temperature/etc. hardware can be swapped without changing the rest of the stack.
 
 Production access will target a direct HTTPS endpoint on the device when reachable, with GitHub Pages hosting the frontend shell and a planned relay fallback because carrier inbound reachability is still unknown. Initial Wi-Fi onboarding will use a captive portal flow, after which the normal admin frontend can connect to the configured device endpoint. SMS admin will use a command-based interface, including `OPEN SESAME`, and the reply will include both a URL and raw IP details.
 
@@ -24,7 +24,7 @@ Production access will target a direct HTTPS endpoint on the device when reachab
 ### Pending
 - [ ] Implement the backend HTTP server in `backend/`.
 - [ ] Implement handwritten C++ config/status models and JSON parsing/serialization on the firmware side.
-- [ ] Implement sensor abstraction and the `SEN0658` integration.
+- [x] Implement 1 Hz SEN0658 wind capture, five-minute aggregation, and microSD JSON-line persistence.
 - [ ] Implement persistence to microSD, including streaming JSON responses directly from storage.
 - [ ] Implement 14-day retention and history generation on the device.
 - [ ] Implement captive-portal onboarding for initial Wi-Fi provisioning and recovery.

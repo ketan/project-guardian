@@ -3,7 +3,7 @@
 #include <HTTPClient.h>
 #include <WiFi.h>
 
-#include "../../src/ConfigModels.cpp"
+#include <ConfigModels.h>
 #include "WindyClient.h"
 
 void setUp() {}
